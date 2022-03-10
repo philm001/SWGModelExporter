@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\parsers">
+      <UniqueIdentifier>{9b9bce23-6374-473e-b5c9-0b098663a4e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\objects">
+      <UniqueIdentifier>{b0968ef4-1374-4463-9350-6dfde7470208}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tre_structs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tre_reader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tre_library.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IFF_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base_buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\animated_object.h">
+      <Filter>Source Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="parsers\cat_parser.h">
+      <Filter>Source Files\parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\static_object.h">
+      <Filter>Source Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\geometry_common.h">
+      <Filter>Source Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="parsers\parser_selector.h">
+      <Filter>Source Files\parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\base_object.h">
+      <Filter>Source Files\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="parsers\lmg_parser.h">
+      <Filter>Source Files\parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="parsers\mgn_parser.h">
+      <Filter>Source Files\parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="parsers\skt_parser.h">
+      <Filter>Source Files\parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="parsers\sht_parser.h">
+      <Filter>Source Files\parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="parsers\anim_parser.h">
+      <Filter>Source Files\parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="latt_parser.h">
+      <Filter>Source Files\parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="UncompressQuaternion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="defines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SWGModelExporter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tre_reader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tre_library.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IFF_file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base_buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="parsers\cat_parser.cpp">
+      <Filter>Source Files\parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="parsers\parser_selector.cpp">
+      <Filter>Source Files\parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\animated_object.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="parsers\lmg_parser.cpp">
+      <Filter>Source Files\parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="parsers\mgn_parser.cpp">
+      <Filter>Source Files\parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="parsers\skt_parser.cpp">
+      <Filter>Source Files\parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="parsers\sht_parser.cpp">
+      <Filter>Source Files\parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\static_object.cpp">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="parsers\anim_parser.cpp">
+      <Filter>Source Files\parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="latt_parser.cpp">
+      <Filter>Source Files\parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="UncompressQuaternion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="Scene.fbx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="libfbxsdk.dll" />
+  </ItemGroup>
+</Project>
