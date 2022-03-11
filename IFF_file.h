@@ -25,6 +25,9 @@ public:
   ~IFF_file();
 
   void full_process(std::shared_ptr<IFF_visitor> visitor);
+  void combinedObjectProcess(std::shared_ptr<IFF_visitor> visitor);
+
+  base_buffer* getBuffer() { return &m_buffer; }
 private:
   std::string _get_iff_name();
   bool _is_form(const std::string& name);

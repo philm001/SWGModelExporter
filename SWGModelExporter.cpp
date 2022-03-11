@@ -7,6 +7,7 @@
 #include "IFF_file.h"
 #include "parsers/parser_selector.h"
 #include "objects/animated_object.h"
+#include "SWGMainObject.h"
 
 using namespace std;
 namespace fs = boost::filesystem;
@@ -207,6 +208,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		{
 			queue<std::string> frontValue = objects_to_process.front();
 			objects_to_process.pop();
+			SWGMainObject SWGObject;
 
 			while (!frontValue.empty())
 			{
@@ -239,6 +241,9 @@ int _tmain(int argc, _TCHAR* argv[])
 				}
 
 				IFF_file iff_file(buffer);
+
+				SWGObject.SetIFFBuffer(&iff_file);
+				SWGObject.beginParsingProcess();
 
 				iff_file.full_process(parser);
 
