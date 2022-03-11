@@ -76,7 +76,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	string full_name;
 	std::cout << "Looking for object" << endl;
 
-	queue<string> objects_to_process;
+	queue<queue<std::string>> objects_to_process;
 
 	Context context;
 
@@ -99,7 +99,11 @@ int _tmain(int argc, _TCHAR* argv[])
 		{
 			context.batch_mode = true;
 			for (const auto& obj_name : selected_objects)
-				objects_to_process.push(obj_name);
+			{
+				queue<std::string> singleVector;
+				singleVector.push(obj_name);
+				objects_to_process.push(singleVector);
+			}
 		}
 		else
 		{
@@ -113,11 +117,15 @@ int _tmain(int argc, _TCHAR* argv[])
 		replace_if(object_name.begin(), object_name.end(), [](const char& value) { return value == '\\'; }, '/');
 		if (library->is_object_present(object_name))
 		{
-			objects_to_process.push(object_name);
+			queue<std::string> singleVector;
+			singleVector.push(object_name);
+			objects_to_process.push(singleVector);
 		}
 		else if (library->get_object_name(object_name, full_name))
 		{
-			objects_to_process.push(full_name);
+			queue<std::string> singleVector;
+			singleVector.push(full_name);
+			objects_to_process.push(singleVector);
 		}
 		else
 			std::cout << "Object with name \"" << object_name << "\" has not been found" << std::endl;
@@ -126,64 +134,144 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	while (objects_to_process.empty() == false)
 	{
-		full_name = objects_to_process.front();
-		objects_to_process.pop();
-
-		// normalize path
-		replace_if(full_name.begin(), full_name.end(), [](const char& value) { return value == '\\'; }, '/');
-		string ext = full_name.substr(full_name.length() - 3);
-		boost::to_lower(ext);
-
-		// skip already parsed object
-		if (context.object_list.find(full_name) != context.object_list.end())
-			continue;
-
-		cout << "Processing : " << full_name << endl;
-		std::vector<uint8_t> buffer;
-		// do not try find object on this step
-		if (!library->get_object(full_name, buffer))
-			continue;
-
-		//special processing for pure binary files (WAV, DDS, TGA, etc)
-		if (ext == "dds")
-		{
-			auto texture = DDS_Texture::construct(full_name, buffer.data(), buffer.size());
-			if (texture)
-				context.object_list.insert(make_pair(full_name, dynamic_pointer_cast<Base_object>(texture)));
-
-			continue;
-		}
-
-		IFF_file iff_file(buffer);
-
+		queue<std::string> frontValue = objects_to_process.front();
 		shared_ptr<Parser_selector> parser = make_shared<Parser_selector>();
-		iff_file.full_process(parser);
-		if (parser->is_object_parsed())
-		{
-			auto object = parser->get_parsed_object();
-			if (object)
-			{
-				object->set_object_name(full_name);
-				context.object_list.insert(make_pair(full_name, object));
 
-				auto references_objects = object->get_referenced_objects();
-				std::for_each(references_objects.begin(), references_objects.end(),
-					[&context, &objects_to_process, &full_name](const string& object_name)
-					{
-						if (context.object_list.find(object_name) == context.object_list.end() &&
-							context.unknown.find(object_name) == context.unknown.end())
+		if (frontValue.size() == 1)
+		{
+			objects_to_process.pop();
+			full_name = frontValue.front();
+
+			// normalize path
+			replace_if(full_name.begin(), full_name.end(), [](const char& value) { return value == '\\'; }, '/');
+			string ext = full_name.substr(full_name.length() - 3);
+			boost::to_lower(ext);
+
+			// skip already parsed object
+			if (context.object_list.find(full_name) != context.object_list.end())
+				continue;
+
+			cout << "Processing : " << full_name << endl;
+			std::vector<uint8_t> buffer;
+			// do not try find object on this step
+			if (!library->get_object(full_name, buffer))
+				continue;
+
+			//special processing for pure binary files (WAV, DDS, TGA, etc)
+			if (ext == "dds")
+			{
+				auto texture = DDS_Texture::construct(full_name, buffer.data(), buffer.size());
+				if (texture)
+					context.object_list.insert(make_pair(full_name, dynamic_pointer_cast<Base_object>(texture)));
+
+				continue;
+			}
+
+			IFF_file iff_file(buffer);
+
+			iff_file.full_process(parser);
+
+			if (parser->is_object_parsed())
+			{
+				auto object = parser->get_parsed_object();
+				if (object)
+				{
+					object->set_object_name(full_name);
+					context.object_list.insert(make_pair(full_name, object));
+
+					std::set<std::string> references_objects = object->get_referenced_objects();
+					queue<std::string> ObjectVector;
+
+					std::for_each(references_objects.begin(), references_objects.end(),
+						[&context, &objects_to_process, &full_name, &ObjectVector](const string& object_name)
 						{
-							objects_to_process.push(object_name);
-							context.opened_by[object_name] = full_name;
+							if (context.object_list.find(object_name) == context.object_list.end() &&
+								context.unknown.find(object_name) == context.unknown.end())
+							{
+								ObjectVector.push(object_name);
+								context.opened_by[object_name] = full_name;
+							}
 						}
-					}
-				);
+					);
+
+					objects_to_process.push(ObjectVector);
+				}
+			}
+			else
+			{
+				std::cout << "Objects of this type could not be converted at this time. Sorry!" << std::endl;
+				context.unknown.insert(full_name);
 			}
 		}
-		else
+		else if(frontValue.size() > 1)
 		{
-			std::cout << "Objects of this type could not be converted at this time. Sorry!" << std::endl;
-			context.unknown.insert(full_name);
+			queue<std::string> frontValue = objects_to_process.front();
+			objects_to_process.pop();
+
+			while (!frontValue.empty())
+			{
+				full_name = frontValue.front();
+				frontValue.pop();
+
+				// normalize path
+				replace_if(full_name.begin(), full_name.end(), [](const char& value) { return value == '\\'; }, '/');
+				string ext = full_name.substr(full_name.length() - 3);
+				boost::to_lower(ext);
+
+				// skip already parsed object
+				if (context.object_list.find(full_name) != context.object_list.end())
+					continue;
+
+				cout << "Processing : " << full_name << endl;
+				std::vector<uint8_t> buffer;
+				// do not try find object on this step
+				if (!library->get_object(full_name, buffer))
+					continue;
+
+				//special processing for pure binary files (WAV, DDS, TGA, etc)
+				if (ext == "dds")
+				{
+					auto texture = DDS_Texture::construct(full_name, buffer.data(), buffer.size());
+					if (texture)
+						context.object_list.insert(make_pair(full_name, dynamic_pointer_cast<Base_object>(texture)));
+
+					continue;
+				}
+
+				IFF_file iff_file(buffer);
+
+				iff_file.full_process(parser);
+
+				if (parser->is_object_parsed())
+				{
+					auto object = parser->get_parsed_object();
+					if (object)
+					{
+						object->set_object_name(full_name);
+						context.object_list.insert(make_pair(full_name, object));
+
+						std::set<std::string> references_objects = object->get_referenced_objects();
+						queue<std::string> ObjectVector;
+
+						std::for_each(references_objects.begin(), references_objects.end(),
+							[&context, &objects_to_process, &full_name, &frontValue](const string& object_name)
+							{
+								if (context.object_list.find(object_name) == context.object_list.end() &&
+									context.unknown.find(object_name) == context.unknown.end())
+								{
+									frontValue.push(object_name);
+									context.opened_by[object_name] = full_name;
+								}
+							}
+						);
+					}
+				}
+				else
+				{
+					std::cout << "Objects of this type could not be converted at this time. Sorry!" << std::endl;
+					context.unknown.insert(full_name);
+				}
+			}
 		}
 	}
 

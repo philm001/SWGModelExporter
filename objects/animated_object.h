@@ -17,6 +17,15 @@ public:
 	// meshes
 	size_t get_mesh_count() const { return m_mesh_names.size(); }
 	std::string get_mesh_name(size_t idx) { return m_mesh_names[idx]; }
+	void setMeshNames(std::vector<std::string> names)
+	{
+		m_mesh_names = names;
+	}
+
+	std::vector<std::string> getMeshNames()
+	{
+		return m_mesh_names;
+	}
 
 	// skeletons
 	size_t get_skeletons_count() const { return m_skeleton_info.size(); }

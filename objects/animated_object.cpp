@@ -1306,13 +1306,6 @@ void Animation::store(const std::string& path, const Context& context)
 
 	if (fs::exists(target_path))
 		fs::remove(target_path);
-
-	FbxManager* fbx_manager_ptr = FbxManager::Create();
-	FbxScene* fbx_scene = FbxScene::Create(fbx_manager_ptr, "acklay_cbt_attack_add");
-
-	if (fbx_manager_ptr == nullptr)
-		return;
-
 }
 
 std::set<std::string> Animation::get_referenced_objects() const
