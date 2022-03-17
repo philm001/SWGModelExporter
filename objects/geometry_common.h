@@ -20,6 +20,10 @@ struct Point
 
     return z < right.z;
   }
+  bool operator == (const Point& compare)
+  {
+      return compare.x == this->x && compare.y == this->y && compare.z && this->z;
+  }
 };
 
 typedef Point Vector3;
@@ -31,6 +35,10 @@ struct Vector4 : public Vector3
   Vector4() { }
   Vector4(float x_, float y_, float z_, float a_) : Point(x_, y_, z_), a(a_) { }
   Vector4(double x_, double y_, double z_, double a_) : Point((float)x_, (float)y_, (float)z_), a((float)a_) { }
+  bool operator==(const Vector4& point)
+  {
+      return point.a == this->a && point.x == this->x && point.y == this->y && point.z == this->z;
+  }
 };
 
 struct Sphere

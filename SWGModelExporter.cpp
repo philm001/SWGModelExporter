@@ -72,7 +72,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	File_read_callback read_callback;
 	std::cout << "Loading TRE library..." << std::endl;
 
-	auto library = make_shared<Tre_library>(swg_path, &read_callback);
+	std::shared_ptr<Tre_library> library = make_shared<Tre_library>(swg_path, &read_callback);
 
 	string full_name;
 	std::cout << "Looking for object" << endl;
@@ -209,74 +209,9 @@ int _tmain(int argc, _TCHAR* argv[])
 			queue<std::string> frontValue = objects_to_process.front();
 			objects_to_process.pop();
 			SWGMainObject SWGObject;
-
-			while (!frontValue.empty())
-			{
-				full_name = frontValue.front();
-				frontValue.pop();
-
-				// normalize path
-				replace_if(full_name.begin(), full_name.end(), [](const char& value) { return value == '\\'; }, '/');
-				string ext = full_name.substr(full_name.length() - 3);
-				boost::to_lower(ext);
-
-				// skip already parsed object
-				if (context.object_list.find(full_name) != context.object_list.end())
-					continue;
-
-				cout << "Processing : " << full_name << endl;
-				std::vector<uint8_t> buffer;
-				// do not try find object on this step
-				if (!library->get_object(full_name, buffer))
-					continue;
-
-				//special processing for pure binary files (WAV, DDS, TGA, etc)
-				if (ext == "dds")
-				{
-					auto texture = DDS_Texture::construct(full_name, buffer.data(), buffer.size());
-					if (texture)
-						context.object_list.insert(make_pair(full_name, dynamic_pointer_cast<Base_object>(texture)));
-
-					continue;
-				}
-
-				IFF_file iff_file(buffer);
-
-				SWGObject.SetIFFBuffer(&iff_file);
-				SWGObject.beginParsingProcess();
-
-				iff_file.full_process(parser);
-
-				if (parser->is_object_parsed())
-				{
-					auto object = parser->get_parsed_object();
-					if (object)
-					{
-						object->set_object_name(full_name);
-						context.object_list.insert(make_pair(full_name, object));
-
-						std::set<std::string> references_objects = object->get_referenced_objects();
-						queue<std::string> ObjectVector;
-
-						std::for_each(references_objects.begin(), references_objects.end(),
-							[&context, &objects_to_process, &full_name, &frontValue](const string& object_name)
-							{
-								if (context.object_list.find(object_name) == context.object_list.end() &&
-									context.unknown.find(object_name) == context.unknown.end())
-								{
-									frontValue.push(object_name);
-									context.opened_by[object_name] = full_name;
-								}
-							}
-						);
-					}
-				}
-				else
-				{
-					std::cout << "Objects of this type could not be converted at this time. Sorry!" << std::endl;
-					context.unknown.insert(full_name);
-				}
-			}
+			SWGObject.SetLibrary(library);
+			SWGObject.beginParsingProcess(frontValue);
+			SWGObject.StoreObject(output_pathname);
 		}
 	}
 

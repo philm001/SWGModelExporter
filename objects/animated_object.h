@@ -383,6 +383,48 @@ public:
 		const Geometry::Point& get_position() const { return m_position; }
 		std::vector<std::pair<uint32_t, float>>& get_weights() { return m_weights; }
 		const std::vector<std::pair<uint32_t, float>>& get_weights() const { return m_weights; }
+		bool isEqual(const Vertex& compareVertex)
+		{
+			bool firstCheck = false;
+			bool secondCheck = false;
+			bool thirdCheck = true;
+
+			if (compareVertex.get_position().x == m_position.x &&
+				compareVertex.get_position().y == m_position.y &&
+				compareVertex.get_position().z == m_position.z)
+				firstCheck = true;
+
+			if (compareVertex.get_weights().size() == m_weights.size())
+				secondCheck = true;
+
+			if (secondCheck)
+			{
+				for (auto weightIterator : compareVertex.get_weights())
+				{
+					bool isEqual = false;
+					for (auto otherWeightIterator : m_weights)
+					{
+						if (weightIterator == otherWeightIterator)
+						{
+							isEqual = true;
+							break;
+						}
+					}
+
+					if (!isEqual)
+					{
+						thirdCheck = false;
+						break;
+					}
+				}
+			}
+			else
+				thirdCheck = false;
+
+			
+			return firstCheck && secondCheck && thirdCheck;
+		}
+
 	private:
 		Geometry::Point m_position;
 		std::vector<std::pair<uint32_t, float>> m_weights;
@@ -450,15 +492,25 @@ public:
 	void set_info(const Info& info);
 
 	void add_vertex_position(const Geometry::Point& position) { m_vertices.emplace_back(position); }
+	void addVertex(Vertex point) { m_vertices.push_back(point); }
+
 	Vertex& get_vertex(const uint32_t pos_num) { return m_vertices[pos_num]; }
 	const std::vector<Vertex>& get_vertices() const { return m_vertices; }
 	const std::vector<std::string>& get_joint_names() const { return m_joint_names; }
 
 	void add_normal(const Geometry::Vector3& norm) { m_normals.emplace_back(norm); }
+	std::vector<Geometry::Vector3>& getNormals() { return m_normals; }
+
 	void add_lighting_normal(const Geometry::Vector4& light_norm) { m_lighting_normals.emplace_back(light_norm); }
+	std::vector<Geometry::Vector4>& getNormalLighting() { return m_lighting_normals; }
+
 	void add_skeleton_name(const std::string& name) { m_skeletons_names.emplace_back(name); }
 	void add_joint_name(const std::string& name) { m_joint_names.emplace_back(name); }
+
 	void add_new_shader(const std::string& name) { m_shaders.emplace_back(name); }
+	void addShader(const Shader_appliance& shader) { m_shaders.push_back(shader); }
+	std::vector<Shader_appliance>& getShaders() { return m_shaders; }
+
 	void add_new_morph(const std::string& name) { m_morphs.emplace_back(name); }
 	Shader_appliance& get_current_shader() { assert(m_shaders.empty() == false); return m_shaders.back(); }
 	Morph_target& get_current_morph() { assert(m_morphs.empty() == false); return m_morphs.back(); }
@@ -470,7 +522,30 @@ public:
 	virtual void resolve_dependencies(const Context& context) override;
 	virtual void set_object_name(const std::string& obj_name) override { m_object_name = obj_name; }
 	virtual std::string get_object_name() const override { return m_object_name; }
+	uint32_t getLodLevel() 
+	{ 
+		std::string name = m_object_name;
+		if (name.find("0") != std::string::npos)
+		{
+			return 0;
+		}
 
+		if (name.find("1") != std::string::npos)
+		{
+			return 1;
+		}
+
+		if (name.find("2") != std::string::npos)
+		{
+			return 2;
+		}
+
+		if (name.find("3") != std::string::npos)
+		{
+			return 3;
+		}
+		return m_lod_level;
+	}
 private:
 
 	float GetTranslationAnimationValue(int frame, std::vector<float>& translationValues);

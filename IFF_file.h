@@ -2,6 +2,7 @@
 
 #include "base_buffer.h"
 #include "objects\base_object.h"
+#include "parsers/mgn_parser.h"/// Circular reference here
 
 class IFF_visitor
 {
@@ -18,7 +19,7 @@ public:
 class IFF_file
 {
 public:
-  IFF_file() = delete;
+	IFF_file() {};
   explicit IFF_file(uint8_t *data_ptr, size_t data_size);
   explicit IFF_file(const std::vector<uint8_t>& buffer);
 
@@ -26,6 +27,7 @@ public:
 
   void full_process(std::shared_ptr<IFF_visitor> visitor);
   void combinedObjectProcess(std::shared_ptr<IFF_visitor> visitor);
+  void combinedObjectProcess(std::shared_ptr<mgn_parser> visitor);
 
   base_buffer* getBuffer() { return &m_buffer; }
 private:

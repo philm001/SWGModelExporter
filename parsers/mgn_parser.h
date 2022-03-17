@@ -18,6 +18,20 @@ public:
 		return std::dynamic_pointer_cast<Base_object>(m_object);
 	}
 
+	void setAnimatedMeshExists(bool state)
+	{
+		p_MeshExists = state;
+	}
+
+	bool getMeshState()
+	{
+		return p_MeshExists;
+	}
+
+	bool checkMeshStat()
+	{
+		return m_object != NULL;
+	}
 private:
 	void read_normals_(base_buffer& buffer);
 	void read_vertex_weights_(base_buffer& buffer);
@@ -39,6 +53,8 @@ private:
 
 	void clear_blt_flags_();
 	bool is_blt_correct_();
+
+	bool p_MeshExists = false;
 
 private:
 	enum section_received

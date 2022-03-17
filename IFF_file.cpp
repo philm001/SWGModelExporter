@@ -11,6 +11,49 @@ IFF_file::IFF_file(const std::vector<uint8_t>& data) : m_buffer(data.data(), dat
 IFF_file::~IFF_file()
 { }
 
+void IFF_file::combinedObjectProcess(std::shared_ptr<mgn_parser> visitor)
+{
+	// go to begin of stream
+	m_buffer.set_position(0);
+	std::stack<size_t> positions;
+	uint32_t depth = 0;
+
+	auto buffer_size = m_buffer.get_size();
+	while (!m_buffer.end_of_buffer())
+	{
+		if (!positions.empty() && m_buffer.get_position() == positions.top())
+		{
+			positions.pop();
+			depth--;
+			if (visitor)
+				visitor->section_end(depth);
+		}
+		else
+		{
+			auto name = _get_iff_name();
+
+			uint32_t size = IFF_utility::swap_bytes(m_buffer.read_uint32());
+			if (size >= 4 && _is_form(name))
+			{
+				positions.push(m_buffer.get_position() + size);
+				if (visitor)
+				{
+					visitor->section_begin(name, m_buffer.raw().data() + m_buffer.get_position(), size, depth);
+					visitor->setAnimatedMeshExists(true);
+				}
+				depth++;
+			}
+			else
+			{
+				auto next_pos = m_buffer.get_position() + size;
+				if (visitor)
+					visitor->parse_data(name, m_buffer.raw().data() + m_buffer.get_position(), size);
+				m_buffer.set_position(next_pos);
+			}
+		}
+	}
+}
+
 void IFF_file::combinedObjectProcess(std::shared_ptr<IFF_visitor> visitor)
 {
 	// go to begin of stream

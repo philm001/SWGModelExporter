@@ -8,7 +8,8 @@ void mgn_parser::section_begin(const string& name, uint8_t* data_ptr, size_t dat
 	if (name == "SKMGFORM")
 	{
 		m_section_received[skmg] = true;
-		m_object = make_shared<Animated_mesh>();
+		if(!getMeshState())
+			m_object = make_shared<Animated_mesh>();
 	}
 	else
 	{
