@@ -5,6 +5,8 @@
 #include "parsers/parser_selector.h"
 #include "tre_library.h"
 #include "parsers/mgn_parser.h"
+#include <fbxsdk.h>
+
 
 enum class ParseSelector
 {
@@ -29,7 +31,7 @@ private:
 	std::queue<std::string> p_queueArray;
 	std::string p_fullName;
 	std::shared_ptr<Tre_navigator::Tre_library> p_Library;
-	std::vector<Animated_mesh> p_CompleteModels;
+	std::vector<std::vector<Animated_mesh>> p_CompleteModels;
 
 	std::vector<Animation> p_CompleteAnimations;
 

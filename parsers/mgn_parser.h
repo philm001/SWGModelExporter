@@ -6,7 +6,7 @@
 class mgn_parser : public IFF_visitor
 {
 public:
-	mgn_parser() : m_in_blts(false), m_in_psdt(false) { }
+	mgn_parser() : m_in_blts(false), m_in_psdt(false) { this->setMGNParserState(true); }
 	// Inherited via IFF_visitor
 	virtual void section_begin(const std::string& name, uint8_t* data_ptr, size_t data_size, uint32_t depth) override;
 	virtual void parse_data(const std::string& name, uint8_t* data_ptr, size_t data_size) override;
@@ -18,20 +18,18 @@ public:
 		return std::dynamic_pointer_cast<Base_object>(m_object);
 	}
 
-	void setAnimatedMeshExists(bool state)
-	{
-		p_MeshExists = state;
-	}
-
-	bool getMeshState()
-	{
-		return p_MeshExists;
-	}
+	
 
 	bool checkMeshStat()
 	{
 		return m_object != NULL;
 	}
+
+	void combinedObjectProcess()
+	{
+		//p_Bufferfile.combinedObjectProcessMGN(std::make_shared<mgn_parser>(this));
+	}
+	void setBuffer(IFF_file buffer) { p_Bufferfile = buffer; }
 private:
 	void read_normals_(base_buffer& buffer);
 	void read_vertex_weights_(base_buffer& buffer);
@@ -54,7 +52,7 @@ private:
 	void clear_blt_flags_();
 	bool is_blt_correct_();
 
-	bool p_MeshExists = false;
+	IFF_file p_Bufferfile;
 
 private:
 	enum section_received

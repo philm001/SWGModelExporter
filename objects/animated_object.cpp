@@ -60,7 +60,17 @@ set<string> Animated_file_list::get_referenced_objects() const
 
 void Animated_mesh::set_info(const Info& info)
 {
-	m_mesh_info = info;
+	m_mesh_info.num_skeletons = (m_mesh_info.num_skeletons > info.num_skeletons) ? m_mesh_info.num_skeletons : info.num_skeletons;
+	m_mesh_info.num_joints += info.num_joints;
+	m_mesh_info.position_counts += info.position_counts;
+	m_mesh_info.joint_weight_data_count += info.joint_weight_data_count;
+	m_mesh_info.normals_count += info.normals_count;
+	m_mesh_info.num_shaders += info.num_shaders;
+	m_mesh_info.blend_targets += info.blend_targets;
+	m_mesh_info.occlusion_zones += info.occlusion_zones;
+	m_mesh_info.occlusion_zones_combinations += info.occlusion_zones_combinations;
+	m_mesh_info.occluded_zones += info.occluded_zones;
+	m_mesh_info.occlusion_layer += info.occlusion_layer;
 
 	m_vertices.reserve(m_mesh_info.position_counts);
 	m_normals.reserve(m_mesh_info.normals_count);
@@ -906,11 +916,21 @@ void Animated_mesh::resolve_dependencies(const Context& context)
 		for (auto& shader : m_shaders)
 		{
 			for (auto& vert_idx : shader.get_pos_indexes())
+			{
+				if (vert_idx >= counters.size())
+					break;
 				counters[vert_idx]++;
+			}
+				
 
 			if (shader.get_definition() == nullptr)
 				for (auto& vert_idx : shader.get_pos_indexes())
+				{
+					if (vert_idx >= counters.size())
+						break;
 					counters[vert_idx]--;
+				}
+					
 		}
 
 		auto safe_clear = is_partitioned(counters.begin(), counters.end(),

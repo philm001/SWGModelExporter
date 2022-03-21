@@ -324,6 +324,15 @@ void mgn_parser::read_weight_counters_(base_buffer& buffer)
 	uint32_t counters_readed = 0;
 	while (!buffer.end_of_buffer() && counters_readed < mesh_info.position_counts)
 	{
+		if (counters_readed == 156)
+		{
+			int a = 0;
+			a++;
+		}
+		if (counters_readed >= m_object->get_vertices().size())
+		{
+			break;
+		}
 		auto& vertex = m_object->get_vertex(counters_readed);
 		uint32_t num_weights = buffer.read_uint32();
 		vertex.get_weights().resize(num_weights);
@@ -421,3 +430,6 @@ bool mgn_parser::is_blt_correct_()
 	return m_section_received[blts_blt_info] && m_section_received[blts_blt_posn]
 		&& m_section_received[blts_blt_norm] && m_section_received[blts_blt_dot3];
 }
+
+
+

@@ -2,7 +2,6 @@
 
 #include "base_buffer.h"
 #include "objects\base_object.h"
-#include "parsers/mgn_parser.h"/// Circular reference here
 
 class IFF_visitor
 {
@@ -14,6 +13,22 @@ public:
 
   virtual bool is_object_parsed() const { return false; }
   virtual std::shared_ptr<Base_object> get_parsed_object() const { return nullptr; }
+
+  bool getMGNParserState() { return p_isMGNParser; }
+  void setMGNParserState(bool state) { p_isMGNParser = state; }
+
+  void setAnimatedMeshExists(bool state)
+  {
+	  p_MeshExists = state;
+  }
+
+  bool getMeshState()
+  {
+	  return p_MeshExists;
+  }
+private:
+	bool p_isMGNParser = false;
+	bool p_MeshExists = false;
 };
 
 class IFF_file
@@ -26,10 +41,13 @@ public:
   ~IFF_file();
 
   void full_process(std::shared_ptr<IFF_visitor> visitor);
+  void combinedObjectProcessMGN(std::shared_ptr<IFF_visitor> visitor);
   void combinedObjectProcess(std::shared_ptr<IFF_visitor> visitor);
-  void combinedObjectProcess(std::shared_ptr<mgn_parser> visitor);
+ 
 
   base_buffer* getBuffer() { return &m_buffer; }
+
+  void setBuffer(base_buffer* buffer) { m_buffer = *buffer; }
 private:
   std::string _get_iff_name();
   bool _is_form(const std::string& name);

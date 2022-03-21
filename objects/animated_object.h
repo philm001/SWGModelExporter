@@ -486,7 +486,20 @@ public:
 	};
 
 public:
-	Animated_mesh() : m_lod_level(0) { }
+	Animated_mesh() : m_lod_level(0) 
+	{ 
+		m_mesh_info.num_skeletons = 0;
+		m_mesh_info.num_joints = 0;
+		m_mesh_info.position_counts = 0;
+		m_mesh_info.joint_weight_data_count = 0;
+		m_mesh_info.normals_count = 0;
+		m_mesh_info.num_shaders = 0;
+		m_mesh_info.blend_targets = 0;
+		m_mesh_info.occlusion_zones = 0;
+		m_mesh_info.occlusion_zones_combinations = 0;
+		m_mesh_info.occluded_zones = 0;
+		m_mesh_info.occlusion_layer = 0;
+	}
 
 	const Info& get_info() const { return m_mesh_info; }
 	void set_info(const Info& info);
@@ -494,7 +507,10 @@ public:
 	void add_vertex_position(const Geometry::Point& position) { m_vertices.emplace_back(position); }
 	void addVertex(Vertex point) { m_vertices.push_back(point); }
 
-	Vertex& get_vertex(const uint32_t pos_num) { return m_vertices[pos_num]; }
+	Vertex& get_vertex(const uint32_t pos_num)
+	{ 
+		return m_vertices.at(pos_num);
+	}
 	const std::vector<Vertex>& get_vertices() const { return m_vertices; }
 	const std::vector<std::string>& get_joint_names() const { return m_joint_names; }
 
@@ -510,6 +526,8 @@ public:
 	void add_new_shader(const std::string& name) { m_shaders.emplace_back(name); }
 	void addShader(const Shader_appliance& shader) { m_shaders.push_back(shader); }
 	std::vector<Shader_appliance>& getShaders() { return m_shaders; }
+
+	std::vector<std::pair<std::string, std::shared_ptr<Skeleton>>> getSkeleton() { return m_used_skeletons; }
 
 	void add_new_morph(const std::string& name) { m_morphs.emplace_back(name); }
 	Shader_appliance& get_current_shader() { assert(m_shaders.empty() == false); return m_shaders.back(); }
@@ -546,6 +564,7 @@ public:
 		}
 		return m_lod_level;
 	}
+	Info m_mesh_info;
 private:
 
 	float GetTranslationAnimationValue(int frame, std::vector<float>& translationValues);
@@ -558,7 +577,7 @@ private:
 	EulerAngles ConvertCombineCompressQuat(Geometry::Vector4 DecompressedQuaterion, Skeleton::Bone BoneReference, bool isStatic = false);
 
 	std::string m_object_name;
-	Info m_mesh_info;
+	
 	std::vector<std::string> m_skeletons_names;
 	std::vector<std::string> m_joint_names;
 	std::vector<Vertex> m_vertices;
