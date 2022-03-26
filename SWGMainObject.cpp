@@ -551,6 +551,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 
 	for (auto modelIterator : p_CompleteModels.at(0))
 	{
+
 		uint32_t m_lod_level = modelIterator.getLodLevel();
 
 		std::for_each(modelIterator.getSkeleton().begin(), modelIterator.getSkeleton().end(),
@@ -559,9 +560,17 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 				if (item.second->get_lod_count() > m_lod_level)
 				{
 					item.second->set_current_lod(m_lod_level);
-					BoneInfoList = item.second->generate_skeleton_in_scene(scene_ptr, mesh_node_ptr, this);
+
+					m_bones.at(m_lod_level).insert(m_bones.at(m_lod_level).end(), item.second->getBonesatLOD(0).begin(), item.second->getBonesatLOD(0).end());
 				}
 			});
 	}
+
+
 	
+}
+
+std::vector<Skeleton::Bone> generateSkeletonInScene()
+{
+
 }

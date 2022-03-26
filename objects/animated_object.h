@@ -250,6 +250,7 @@ public:
 	void add_bone(const std::string& bone_name) { m_bones[m_current_lod].emplace_back(bone_name); }
 	Bone& get_bone(uint32_t idx) { return m_bones[m_current_lod][idx]; }
 	uint32_t get_bones_count() const { return static_cast<uint32_t>(m_bones[m_current_lod].size()); }
+	std::vector<Bone> getBonesatLOD(int lodLevel) { return m_bones.at(lodLevel); }
 
 	std::vector<Skeleton::Bone> generate_skeleton_in_scene(FbxScene* scene_ptr, FbxNode* parent_ptr, Animated_mesh* source_mesh);
 	void join_skeleton_to_point(const std::string& attach_point, const std::shared_ptr<Skeleton>& skel_to_join);

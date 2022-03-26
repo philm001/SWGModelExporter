@@ -32,6 +32,9 @@ private:
 	std::string p_fullName;
 	std::shared_ptr<Tre_navigator::Tre_library> p_Library;
 	std::vector<std::vector<Animated_mesh>> p_CompleteModels;
+	std::vector<std::vector<Skeleton::Bone>> m_bones;
+
+
 
 	std::vector<Animation> p_CompleteAnimations;
 
@@ -39,6 +42,8 @@ private:
 	std::vector<std::string> p_CompleteNames;
 
 	void CombineMeshProcess(std::shared_ptr<Animated_mesh> mainMesh, std::shared_ptr<Animated_mesh> secondaryMesh);
+
+	std::vector<Skeleton::Bone> generateSkeletonInScene();
 
 public:
 	void SetLibrary(std::shared_ptr<Tre_navigator::Tre_library> library)
