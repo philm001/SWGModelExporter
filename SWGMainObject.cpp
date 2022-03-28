@@ -560,17 +560,235 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 				if (item.second->get_lod_count() > m_lod_level)
 				{
 					item.second->set_current_lod(m_lod_level);
-
+					// Might need to check for duplicates here
 					m_bones.at(m_lod_level).insert(m_bones.at(m_lod_level).end(), item.second->getBonesatLOD(0).begin(), item.second->getBonesatLOD(0).end());
 				}
 			});
 	}
 
+	BoneInfoList = generateSkeletonInScene(scene_ptr, mesh_node_ptr);
 
+	// build morph targets
+	// prepare base vector
+	auto total_vertices = m_vertices.size();
+
+	FbxBlendShape* blend_shape_ptr = FbxBlendShape::Create(scene_ptr, "BlendShapes");
+	for (const auto& morph : m_morphs)
+	{
+		FbxBlendShapeChannel* morph_channel = FbxBlendShapeChannel::Create(scene_ptr, morph.get_name().c_str());
+		FbxShape* shape = FbxShape::Create(scene_ptr, morph_channel->GetName());
+
+		shape->InitControlPoints(static_cast<int>(total_vertices));
+		auto shape_vertices = shape->GetControlPoints();
+
+		// copy base vertices to shape vertices
+		for (size_t idx = 0; idx < total_vertices; ++idx)
+		{
+			auto& pos = m_vertices[idx].get_position();
+			shape_vertices[idx].Set(pos.x, pos.y, pos.z);
+		}
+
+		// apply morph
+		for (auto& morph_pt : morph.get_positions())
+		{
+			size_t idx = morph_pt.first;
+			auto& offset = morph_pt.second;
+			if (idx >= total_vertices)
+				continue;
+			auto& pos = m_vertices[idx].get_position();
+			shape_vertices[idx].Set(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
+		}
+
+		if (!normal_indexes.empty() && !context.batch_mode)
+		{
+			// get normals
+			auto normal_element = shape->CreateElementNormal();
+			normal_element->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+			normal_element->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+
+			auto& direct_array = normal_element->GetDirectArray();
+			// set a base normals
+			for (auto modelIterator : p_CompleteModels.at(0))
+			{
+				std::for_each(modelIterator.getNormals().begin(), modelIterator.getNormals().end(),
+					[&direct_array](const Geometry::Vector3& elem)
+					{
+						direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
+					});
+			}
+			
+
+			for (auto& morph_normal : morph.get_normals())
+			{
+				uint32_t idx = morph_normal.first;
+				auto& offset = morph_normal.second;
+				auto& base = m_normals[idx];
+				direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
+			}
+
+			auto& index_array = normal_element->GetIndexArray();
+			std::for_each(normal_indexes.begin(), normal_indexes.end(),
+				[&index_array](const uint32_t& idx) { index_array.Add(idx); });
+		}
+
+		if (!tangents_idxs.empty() && !context.batch_mode)
+		{
+			// get tangents
+			auto tangents_ptr = shape->CreateElementTangent();
+			tangents_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+			tangents_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+
+			auto& direct_array = tangents_ptr->GetDirectArray();
+			std::for_each(m_lighting_normals.begin(), m_lighting_normals.end(),
+				[&direct_array](const Geometry::Vector4& elem)
+				{
+					direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
+				});
+
+			for (auto& morph_tangent : morph.get_tangents())
+			{
+				uint32_t idx = morph_tangent.first;
+				auto& offset = morph_tangent.second;
+				auto& base = m_lighting_normals[idx];
+				direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
+			}
+
+			auto& index_array = tangents_ptr->GetIndexArray();
+			std::for_each(tangents_idxs.begin(), tangents_idxs.end(),
+				[&index_array](const uint32_t& idx) { index_array.Add(idx); });
+		}
+
+		auto success = morph_channel->AddTargetShape(shape);
+		success = blend_shape_ptr->AddBlendShapeChannel(morph_channel);
+	}
+	mesh_node_ptr->GetGeometry()->AddDeformer(blend_shape_ptr);
 	
 }
 
-std::vector<Skeleton::Bone> generateSkeletonInScene()
+std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr)
 {
+	assert(parent_ptr != nullptr && scene_ptr != nullptr);
+	std::vector<Skeleton::Bone> boneListing;
 
+	uint32_t boneCount = get_bones_count(0); // Turn this into a loop??
+
+	std::vector<FbxNode*> nodes(boneCount, nullptr);
+	std::vector<FbxCluster*> clusters(boneCount, nullptr);
+
+	auto pose_ptr2 = FbxPose::Create(scene_ptr, "Rest Pose"); // Also create the binding pose
+	pose_ptr2->SetIsBindPose(true);
+
+	for (uint32_t boneCounter = 0; boneCounter < boneCount; boneCounter++)
+	{
+		Skeleton::Bone& bone = getBone(boneCount, 0);
+
+		FbxNode* node_ptr = FbxNode::Create(scene_ptr, bone.name.c_str());
+		FbxSkeleton* skeleton_ptr = FbxSkeleton::Create(scene_ptr, bone.name.c_str());
+
+		if (bone.parent_idx == -1)
+			skeleton_ptr->SetSkeletonType(FbxSkeleton::eRoot);
+		else
+			skeleton_ptr->SetSkeletonType(FbxSkeleton::eLimbNode);
+
+		FbxQuaternion pre_rot_quat{ bone.pre_rot_quaternion.x, bone.pre_rot_quaternion.y, bone.pre_rot_quaternion.z, bone.pre_rot_quaternion.a };
+		FbxQuaternion post_rot_quat{ bone.post_rot_quaternion.x, bone.post_rot_quaternion.y, bone.post_rot_quaternion.z, bone.post_rot_quaternion.a };
+		FbxQuaternion bind_rot_quat{ bone.bind_pose_rotation.x, bone.bind_pose_rotation.y, bone.bind_pose_rotation.z, bone.bind_pose_rotation.a };
+
+		auto full_rot = post_rot_quat * bind_rot_quat * pre_rot_quat;
+
+		node_ptr->SetPreRotation(FbxNode::eSourcePivot, pre_rot_quat.DecomposeSphericalXYZ());
+
+		node_ptr->SetPostTargetRotation(post_rot_quat.DecomposeSphericalXYZ());
+
+		FbxMatrix  lTransformMatrix;
+		node_ptr->LclRotation.Set(full_rot.DecomposeSphericalXYZ());
+		node_ptr->LclTranslation.Set(FbxDouble3{ bone.bind_pose_transform.x, bone.bind_pose_transform.y, bone.bind_pose_transform.z });
+		FbxVector4 lT, lR, lS;
+		lT = FbxVector4(node_ptr->LclTranslation.Get());
+		lR = FbxVector4(node_ptr->LclRotation.Get());
+		lS = FbxVector4(node_ptr->LclScaling.Get());
+
+		lTransformMatrix.SetTRS(lT, lR, lS);
+
+		boneListing.push_back(bone);
+		nodes[boneCounter] = node_ptr;
+	}
+
+	// build hierarchy
+	for (uint32_t bone_num = 0; bone_num < boneCount; ++bone_num)
+	{
+		Skeleton::Bone& bone = getBone(bone_num, 0);
+		auto idx_parent = bone.parent_idx;
+		if (idx_parent == -1)
+			parent_ptr->AddChild(nodes[bone_num]);
+		else
+		{
+			auto& parent = nodes[idx_parent];
+			parent->AddChild(nodes[bone_num]);
+		}
+	}
+
+	// build bind pose
+	auto mesh_attr = reinterpret_cast<FbxGeometry*>(parent_ptr->GetNodeAttribute());
+	auto skin = FbxSkin::Create(scene_ptr, parent_ptr->GetName());
+	auto xmatr = parent_ptr->EvaluateGlobalTransform();
+	FbxAMatrix link_transform;
+
+	// create clusters
+	// create vertex index arrays for clusters
+	const auto& vertices = SourceMesh.get_vertices();
+	std::map<std::string, std::vector<std::pair<uint32_t, float>>> cluster_vertices;
+	const auto& mesh_joint_names = SourceMesh.get_joint_names();
+	for (uint32_t vertex_num = 0; vertex_num < vertices.size(); ++vertex_num)
+	{
+		const auto& vertex = vertices[vertex_num];
+		for (const auto& weight : vertex.get_weights())
+		{
+			auto joint_name = mesh_joint_names[weight.first];
+			boost::to_lower(joint_name);
+			cluster_vertices[joint_name].emplace_back(vertex_num, weight.second);
+		}
+	}
+
+	for (uint32_t bone_num = 0; bone_num < boneCount; ++bone_num)
+	{
+		Skeleton::Bone& bone = getBone(bone_num, 0);
+		auto cluster = FbxCluster::Create(scene_ptr, bone.name.c_str());
+		cluster->SetLink(nodes[bone_num]);
+		cluster->SetLinkMode(FbxCluster::eAdditive);
+
+		auto bone_name = bone.name;
+		boost::to_lower(bone_name);
+
+		if (cluster_vertices.find(bone_name) != cluster_vertices.end())
+		{
+			auto& cluster_vertex_array = cluster_vertices[bone_name];
+			for (const auto& vertex_weight : cluster_vertex_array)
+				cluster->AddControlPointIndex(vertex_weight.first, vertex_weight.second);
+		}
+
+		cluster->SetTransformMatrix(xmatr);
+		link_transform = nodes[bone_num]->EvaluateGlobalTransform();
+		cluster->SetTransformLinkMatrix(link_transform);
+
+		clusters[bone_num] = cluster;
+		skin->AddCluster(cluster);
+	}
+
+	mesh_attr->AddDeformer(skin);
+
+	auto pose_ptr = FbxPose::Create(scene_ptr, parent_ptr->GetName());
+	pose_ptr->SetIsBindPose(true);
+
+	FbxAMatrix matrix;
+	for (uint32_t bone_num = 0; bone_num < boneCount; ++bone_num)
+	{
+		matrix = nodes[bone_num]->EvaluateGlobalTransform();
+		FbxVector4 TranVec = matrix.GetT();
+		FbxVector4 RotVec = matrix.GetR();
+
+		pose_ptr->Add(nodes[bone_num], matrix);
+	}
+	scene_ptr->AddPose(pose_ptr);
+	return boneListing;
 }

@@ -41,10 +41,14 @@ private:
 	std::vector<mgn_parser> p_CompleteParsers;
 	std::vector<std::string> p_CompleteNames;
 
+	Animated_mesh SourceMesh;
+
 	void CombineMeshProcess(std::shared_ptr<Animated_mesh> mainMesh, std::shared_ptr<Animated_mesh> secondaryMesh);
 
-	std::vector<Skeleton::Bone> generateSkeletonInScene();
-
+	// ------ Section that works on the bones -----
+	std::vector<Skeleton::Bone> generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr);
+	uint32_t get_bones_count(int LODLevel) { return m_bones.at(LODLevel).size(); }
+	Skeleton::Bone& getBone(uint32_t index, int LODLevel) { return m_bones.at(LODLevel).at(index); }
 public:
 	void SetLibrary(std::shared_ptr<Tre_navigator::Tre_library> library)
 	{

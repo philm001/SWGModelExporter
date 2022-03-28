@@ -1146,7 +1146,6 @@ std::vector<Skeleton::Bone> Skeleton::generate_skeleton_in_scene(FbxScene* scene
 	for (uint32_t bone_num = 0; bone_num < bones_count; ++bone_num)
 	{
 		matrix = nodes[bone_num]->EvaluateGlobalTransform();
-		matrix = GetGlobalDefaultPosition(nodes[bone_num]);
 		FbxVector4 TranVec = matrix.GetT();
 		FbxVector4 RotVec = matrix.GetR();
 
