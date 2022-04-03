@@ -303,7 +303,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 					if (!tangents.empty())
 					{
 						auto remapped_tangent = tangents[tri.points[i]];
-						tangents.emplace_back(remapped_tangent);
+						tangents_idxs.emplace_back(remapped_tangent);
 					}
 					uv_indexes.emplace_back(idx_offset + tri.points[i]);
 				}

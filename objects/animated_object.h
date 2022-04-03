@@ -442,7 +442,7 @@ public:
 		std::vector<Graphics::Tex_coord>& get_texels() { return m_texels; }
 		std::vector<Graphics::Triangle_indexed>& get_triangles() { return m_triangles; }
 		std::vector<std::pair<uint32_t, uint32_t>>& get_primivites() { return m_primitives; }
-		void set_definition(const std::shared_ptr<Shader>& shader_def) { m_shader_definition = shader_def; }
+		void set_definition(const std::shared_ptr<Shader> shader_def) { m_shader_definition = shader_def; }
 		const std::shared_ptr<Shader>& get_definition() const { return m_shader_definition; }
 
 		void add_primitive();
@@ -522,15 +522,28 @@ public:
 	std::vector<Geometry::Vector4>& getNormalLighting() { return m_lighting_normals; }
 
 	void add_skeleton_name(const std::string& name) { m_skeletons_names.emplace_back(name); }
+	std::vector<std::string>& getSkeletonNames() { return m_skeletons_names; }
+	
 	void add_joint_name(const std::string& name) { m_joint_names.emplace_back(name); }
 
 	void add_new_shader(const std::string& name) { m_shaders.emplace_back(name); }
 	void addShader(const Shader_appliance& shader) { m_shaders.push_back(shader); }
-	std::vector<Shader_appliance>& getShaders() { return m_shaders; }
+	std::vector<Shader_appliance>& getShaders() 
+	{
+		return m_shaders; 
+	}
 
-	std::vector<std::pair<std::string, std::shared_ptr<Skeleton>>> getSkeleton() { return m_used_skeletons; }
+	std::shared_ptr<std::vector<Shader_appliance>> ShaderPointer()
+	{
+		std::shared_ptr<std::vector<Shader_appliance>> returnValue = std::make_shared< std::vector<Shader_appliance>>(m_shaders);
+		return returnValue;
+	}
+
+	std::vector<std::pair<std::string, std::shared_ptr<Skeleton>>>& getSkeleton() { return m_used_skeletons; }
 
 	void add_new_morph(const std::string& name) { m_morphs.emplace_back(name); }
+	std::vector<Morph_target> getMorphs() { return m_morphs; }
+
 	Shader_appliance& get_current_shader() { assert(m_shaders.empty() == false); return m_shaders.back(); }
 	Morph_target& get_current_morph() { assert(m_morphs.empty() == false); return m_morphs.back(); }
 

@@ -274,37 +274,152 @@ void SWGMainObject::CombineMeshProcess(std::shared_ptr<Animated_mesh> mainMesh, 
 }
 
 
+void SWGMainObject::resolve_dependencies(const Context& context)
+{
+	// p_CompleteModels is the "master" vector that stores the data
+	// This code is suppose to be iteratering through this data structure and making
+	// modifications to what is inside of it
+	std::shared_ptr< std::vector<Animated_mesh>> modelPointer = std::make_shared< std::vector<Animated_mesh>>(p_CompleteModels.at(0));
+
+	for (auto& modelIterator : p_CompleteModels.at(0))
+	{
+		auto it = p_Context.opened_by.find(modelIterator.get_object_name());
+		std::string openedByName;
+
+		while (it != p_Context.opened_by.end())
+		{
+			openedByName = it->second;
+			it = p_Context.opened_by.find(openedByName);
+		}
+		// I want to edit the shaders that are inside the data structure.
+		// There are multiple shaders for each model. So we also need to iterate through them
+		auto shaderPointer = modelIterator.ShaderPointer();// Just getting the pointer that is pointing to the vector containing the shaders used
+		
+		for(auto& shaderIterator : modelIterator.getShaders())
+		{
+			auto obj_it = p_Context.object_list.find(shaderIterator.get_name());
+			if (obj_it != p_Context.object_list.end())
+			{
+				if (std::dynamic_pointer_cast<Shader>(obj_it->second))
+				{
+					// Once checks are passed, we need to set the shader definition.
+					// This is a where everything gets tricky.
+					// Function takes in a shared pointer and sets
+					// that equal to the definition object stored within the shader
+					// However, when viewing from the scope of the p_CompleteModels,
+					// the definition object is still empty
+					shaderIterator.set_definition(std::dynamic_pointer_cast<Shader>(obj_it->second));
+				}
+			}
+		}
+	
+
+		auto bad_shaders = std::any_of(modelIterator.getShaders().begin(), modelIterator.getShaders().end(),
+			[](const Animated_mesh::Shader_appliance& shader) { return shader.get_definition() == nullptr; });
+
+		if (bad_shaders)
+		{
+			std::vector<uint8_t> counters(modelIterator.get_vertices().size(), 0);
+			for (auto& shader : modelIterator.getShaders())
+			{
+				for (auto& vert_idx : shader.get_pos_indexes())
+				{
+					if (vert_idx >= counters.size())
+						break;
+					counters[vert_idx]++;
+				}
+
+
+				if (shader.get_definition() == nullptr)
+				{
+					for (auto& vert_idx : shader.get_pos_indexes())
+					{
+						if (vert_idx >= counters.size())
+							break;
+						counters[vert_idx]--;
+					}
+				}
+			}
+
+			auto safe_clear = is_partitioned(counters.begin(), counters.end(),
+				[](uint8_t val) { return val > 0; });
+
+			if (safe_clear)
+			{
+				// we can do safe clear of trouble shader, if not - oops
+				auto beg = find_if(counters.begin(), counters.end(),
+					[](uint8_t val) { return val == 0; });
+				auto idx = distance(counters.begin(), beg);
+				std::vector<Animated_mesh::Vertex> vertexMesh = modelIterator.get_vertices();
+
+				vertexMesh.erase(vertexMesh.begin() + idx, vertexMesh.end());
+				
+				for (size_t idx = 0; idx < modelIterator.get_vertices().size(); ++idx)
+				{
+					if (modelIterator.getShaders().at(idx).get_definition() == nullptr)
+					{
+						modelIterator.getShaders().erase(modelIterator.getShaders().begin() + idx);
+						break;
+					}
+				}
+			}
+		}
+
+		auto mesh_description = std::dynamic_pointer_cast<Animated_object_descriptor>(p_Context.object_list.find(openedByName)->second);
+
+		// get skeletons
+		size_t skel_idx = 0;
+		for (auto it_skel = modelIterator.getSkeletonNames().begin(); it_skel != modelIterator.getSkeletonNames().end(); ++it_skel, ++skel_idx)
+		{
+			auto skel_name = *it_skel;
+			// check name against name in description
+			if (mesh_description)
+			{
+				auto descr_skel_name = mesh_description->get_skeleton_name(skel_idx);
+				if (!boost::iequals(skel_name, descr_skel_name))
+					skel_name = descr_skel_name;
+			}
+			auto obj_it = p_Context.object_list.find(skel_name);
+			if (obj_it != p_Context.object_list.end() && std::dynamic_pointer_cast<Skeleton>(obj_it->second))
+				modelIterator.getSkeleton().emplace_back(skel_name, std::dynamic_pointer_cast<Skeleton>(obj_it->second)->clone());
+		}
+
+		if (!openedByName.empty() && modelIterator.getSkeleton().size() > 1 && mesh_description)
+		{
+			// check if we opened through SAT and have multiple skeleton definitions
+			//  then we have unite them to one, so we need SAT to get join information from it's skeleton info;
+			auto skel_count = mesh_description->get_skeletons_count();
+			std::shared_ptr<Skeleton> root_skeleton;
+			for (uint32_t skel_idx = 0; skel_idx < skel_count; ++skel_idx)
+			{
+				auto skel_name = mesh_description->get_skeleton_name(skel_idx);
+				auto point_name = mesh_description->get_skeleton_attach_point(skel_idx);
+
+				auto this_it = std::find_if(modelIterator.getSkeleton().begin(), modelIterator.getSkeleton().end(),
+					[&skel_name](const std::pair<std::string, std::shared_ptr<Skeleton>>& info)
+					{
+						return (boost::iequals(skel_name, info.first));
+					});
+
+				if (point_name.empty() && this_it != modelIterator.getSkeleton().end())
+					// mark this skeleton as root
+					root_skeleton = this_it->second;
+				else if (this_it != modelIterator.getSkeleton().end())
+				{
+					// attach skeleton to root
+					root_skeleton->join_skeleton_to_point(point_name, this_it->second);
+					// remove it from used list
+					modelIterator.getSkeleton().erase(this_it);
+				}
+			}
+		}
+	}
+}
+
+
+
 void SWGMainObject::store(const std::string& path, const Context& context)
 {
-	Context& otherContext = p_Context;
-	std::cout << "Resolve dependencies..." << std::endl;
-	std::for_each(p_Context.object_list.begin(), p_Context.object_list.end(),
-		[&otherContext](const std::pair<std::string, std::shared_ptr<Base_object>>& item)
-		{
-			std::cout << "Object : " << item.first;
-			item.second->resolve_dependencies(otherContext);
-			std::cout << " done." << std::endl;
-		});
-
-	// Possibly load up the mesh objects here????
-
-	std::cout << "Store objects..." << std::endl;
-	std::for_each(otherContext.object_list.begin(), otherContext.object_list.end(),
-		[&path, &otherContext](const std::pair<std::string, std::shared_ptr<Base_object>>& item)
-		{
-			if (item.second->get_object_name().find("ans") == std::string::npos)
-			{
-				// Block the storage of the animated object
-				std::cout << "Object : " << item.first;
-				item.second->store(path, otherContext);
-				std::cout << " done." << std::endl;
-			}
-			else
-			{
-				std::cout << "Does not support saving directly" << std::endl;
-			}
-		});
-
 	boost::filesystem::path obj_name(p_CompleteModels.at(0).at(0).get_object_name());
 	boost::filesystem::path target_path(path);
 	target_path /= obj_name.filename();
@@ -361,7 +476,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	uint32_t verticesNum = 0;
 	uint32_t normalsNum = 0;
 
-	for (auto modelIterator : p_CompleteModels.at(0))
+	for (auto& modelIterator : p_CompleteModels.at(0))
 	{
 		verticesNum += modelIterator.get_vertices().size();
 		normalsNum += modelIterator.getNormals().size();
@@ -373,7 +488,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	uint32_t counter = 0;
 	uint32_t otherCounter = 0;
 
-	for (auto modelIterator : p_CompleteModels.at(0))
+	for (auto& modelIterator : p_CompleteModels.at(0))
 	{
 		for (uint32_t vertexCounter = 0; vertexCounter < modelIterator.get_vertices().size(); vertexCounter++)
 		{
@@ -396,7 +511,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	std::vector<uint32_t> uv_indexes;
 	counter = 0;
 
-	for (auto modelIterator : p_CompleteModels.at(0))
+	for (auto& modelIterator : p_CompleteModels.at(0))
 	{
 		for (uint32_t shader_idx = 0; shader_idx < modelIterator.getShaders().size(); shader_idx++)
 		{
@@ -510,7 +625,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 		normals_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 		auto& direct_array = normals_ptr->GetDirectArray();
 
-		for (auto modelIterator : p_CompleteModels.at(0))
+		for (auto& modelIterator : p_CompleteModels.at(0))
 		{
 			std::for_each(modelIterator.getNormals().begin(), modelIterator.getNormals().end(),
 				[&direct_array](const Geometry::Vector3& elem)
@@ -532,7 +647,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 		normals_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 		auto& direct_array = normals_ptr->GetDirectArray();
 
-		for (auto modelIterator : p_CompleteModels.at(0))
+		for (auto& modelIterator : p_CompleteModels.at(0))
 		{
 			std::for_each(modelIterator.getNormalLighting().begin(), modelIterator.getNormalLighting().end(),
 				[&direct_array](const Geometry::Vector4& elem)
@@ -549,7 +664,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	mesh_ptr->BuildMeshEdgeArray();
 	std::vector<Skeleton::Bone> BoneInfoList;
 
-	for (auto modelIterator : p_CompleteModels.at(0))
+	for (auto& modelIterator : p_CompleteModels.at(0))
 	{
 
 		uint32_t m_lod_level = modelIterator.getLodLevel();
@@ -559,9 +674,30 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 			{
 				if (item.second->get_lod_count() > m_lod_level)
 				{
-					item.second->set_current_lod(m_lod_level);
+					//item.second->set_current_lod(m_lod_level);
 					// Might need to check for duplicates here
-					m_bones.at(m_lod_level).insert(m_bones.at(m_lod_level).end(), item.second->getBonesatLOD(0).begin(), item.second->getBonesatLOD(0).end());
+					for (auto boneIterator : item.second->getBonesatLOD(0))
+					{
+						bool foundBone = false;
+						if (m_bones.size() == m_lod_level)
+						{
+							std::vector<Skeleton::Bone> firstOne;
+							m_bones.push_back(firstOne);
+						}
+
+						for (auto otherBoneIterator : m_bones.at(m_lod_level))
+						{
+							if (otherBoneIterator.name == boneIterator.name)
+							{
+								foundBone = true;
+								break;
+							}
+						}
+
+						if(!foundBone)
+							m_bones.at(m_lod_level).push_back(boneIterator);
+					}
+
 				}
 			});
 	}
@@ -570,100 +706,459 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 
 	// build morph targets
 	// prepare base vector
-	auto total_vertices = m_vertices.size();
+	
 
 	FbxBlendShape* blend_shape_ptr = FbxBlendShape::Create(scene_ptr, "BlendShapes");
-	for (const auto& morph : m_morphs)
+
+	for (auto& modelIterator : p_CompleteModels.at(0))
 	{
-		FbxBlendShapeChannel* morph_channel = FbxBlendShapeChannel::Create(scene_ptr, morph.get_name().c_str());
-		FbxShape* shape = FbxShape::Create(scene_ptr, morph_channel->GetName());
-
-		shape->InitControlPoints(static_cast<int>(total_vertices));
-		auto shape_vertices = shape->GetControlPoints();
-
-		// copy base vertices to shape vertices
-		for (size_t idx = 0; idx < total_vertices; ++idx)
+		auto total_vertices = modelIterator.get_vertices().size();
+		for (const auto& morph : modelIterator.getMorphs())
 		{
-			auto& pos = m_vertices[idx].get_position();
-			shape_vertices[idx].Set(pos.x, pos.y, pos.z);
-		}
+			FbxBlendShapeChannel* morph_channel = FbxBlendShapeChannel::Create(scene_ptr, morph.get_name().c_str());
+			FbxShape* shape = FbxShape::Create(scene_ptr, morph_channel->GetName());
 
-		// apply morph
-		for (auto& morph_pt : morph.get_positions())
-		{
-			size_t idx = morph_pt.first;
-			auto& offset = morph_pt.second;
-			if (idx >= total_vertices)
-				continue;
-			auto& pos = m_vertices[idx].get_position();
-			shape_vertices[idx].Set(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
-		}
+			shape->InitControlPoints(static_cast<int>(total_vertices));
+			auto shape_vertices = shape->GetControlPoints();
 
-		if (!normal_indexes.empty() && !context.batch_mode)
-		{
-			// get normals
-			auto normal_element = shape->CreateElementNormal();
-			normal_element->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
-			normal_element->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
-
-			auto& direct_array = normal_element->GetDirectArray();
-			// set a base normals
-			for (auto modelIterator : p_CompleteModels.at(0))
+			// copy base vertices to shape vertices
+			for (size_t idx = 0; idx < total_vertices; ++idx)
 			{
+				auto& pos = modelIterator.get_vertices().at(idx).get_position();
+				shape_vertices[idx].Set(pos.x, pos.y, pos.z);
+			}
+
+			// apply morph
+			for (auto& morph_pt : morph.get_positions())
+			{
+				size_t idx = morph_pt.first;
+				auto& offset = morph_pt.second;
+				if (idx >= total_vertices)
+					continue;
+				auto& pos = modelIterator.get_vertices().at(idx).get_position();
+				shape_vertices[idx].Set(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
+			}
+
+			if (!normal_indexes.empty() && !context.batch_mode)
+			{
+				// get normals
+				auto normal_element = shape->CreateElementNormal();
+				normal_element->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+				normal_element->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+
+				auto& direct_array = normal_element->GetDirectArray();
+				// set a base normals
 				std::for_each(modelIterator.getNormals().begin(), modelIterator.getNormals().end(),
 					[&direct_array](const Geometry::Vector3& elem)
 					{
 						direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
 					});
-			}
-			
 
-			for (auto& morph_normal : morph.get_normals())
-			{
-				uint32_t idx = morph_normal.first;
-				auto& offset = morph_normal.second;
-				auto& base = m_normals[idx];
-				direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
-			}
 
-			auto& index_array = normal_element->GetIndexArray();
-			std::for_each(normal_indexes.begin(), normal_indexes.end(),
-				[&index_array](const uint32_t& idx) { index_array.Add(idx); });
-		}
-
-		if (!tangents_idxs.empty() && !context.batch_mode)
-		{
-			// get tangents
-			auto tangents_ptr = shape->CreateElementTangent();
-			tangents_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
-			tangents_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
-
-			auto& direct_array = tangents_ptr->GetDirectArray();
-			std::for_each(m_lighting_normals.begin(), m_lighting_normals.end(),
-				[&direct_array](const Geometry::Vector4& elem)
+				for (auto& morph_normal : morph.get_normals())
 				{
-					direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
-				});
+					uint32_t idx = morph_normal.first;
+					auto& offset = morph_normal.second;
+					auto& base = modelIterator.getNormals().at(idx);
+					direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
+				}
 
-			for (auto& morph_tangent : morph.get_tangents())
-			{
-				uint32_t idx = morph_tangent.first;
-				auto& offset = morph_tangent.second;
-				auto& base = m_lighting_normals[idx];
-				direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
+				auto& index_array = normal_element->GetIndexArray();
+				std::for_each(normal_indexes.begin(), normal_indexes.end(),
+					[&index_array](const uint32_t& idx) { index_array.Add(idx); });
 			}
 
-			auto& index_array = tangents_ptr->GetIndexArray();
-			std::for_each(tangents_idxs.begin(), tangents_idxs.end(),
-				[&index_array](const uint32_t& idx) { index_array.Add(idx); });
-		}
+			if (!tangents_idxs.empty() && !p_Context.batch_mode)
+			{
+				// get tangents
+				auto tangents_ptr = shape->CreateElementTangent();
+				tangents_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+				tangents_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
-		auto success = morph_channel->AddTargetShape(shape);
-		success = blend_shape_ptr->AddBlendShapeChannel(morph_channel);
+				auto& direct_array = tangents_ptr->GetDirectArray();
+				std::for_each(modelIterator.getNormalLighting().begin(), modelIterator.getNormalLighting().end(),
+					[&direct_array](const Geometry::Vector4& elem)
+					{
+						direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
+					});
+
+				for (auto& morph_tangent : morph.get_tangents())
+				{
+					uint32_t idx = morph_tangent.first;
+					auto& offset = morph_tangent.second;
+					auto& base = modelIterator.getNormalLighting().at(idx);
+					direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
+				}
+
+				auto& index_array = tangents_ptr->GetIndexArray();
+				std::for_each(tangents_idxs.begin(), tangents_idxs.end(),
+					[&index_array](const uint32_t& idx) { index_array.Add(idx); });
+			}
+
+			auto success = morph_channel->AddTargetShape(shape);
+			success = blend_shape_ptr->AddBlendShapeChannel(morph_channel);
+		}
 	}
-	mesh_node_ptr->GetGeometry()->AddDeformer(blend_shape_ptr);
 	
+	mesh_node_ptr->GetGeometry()->AddDeformer(blend_shape_ptr);
+	std::vector<std::shared_ptr<Animation>> animationList;
+
+	// First sort out the animation objects first
+	for (auto baseObjectiterator : p_Context.object_list)
+	{
+		if (baseObjectiterator.second->get_object_name().find("ans") != std::string::npos)
+		{
+			std::shared_ptr<Animation> inputObject = std::dynamic_pointer_cast<Animation>(baseObjectiterator.second);
+			animationList.push_back(inputObject);
+		}
+	}
+
+	QuatExpand::UncompressQuaternion decompressValues;
+	decompressValues.install();
+
+	// Next loop through the entire animation list
+	for (auto animationObject : animationList)
+	{
+		if (animationObject)
+		{
+			std::string stackName = animationObject->get_object_name();
+			std::string firstErase = "appearance/animation/";
+			std::string secondErase = ".ans";
+			//fbxsdk::FbxPose* lPose = fbxsdk::FbxPose::Create(scene_ptr, "Rest Pose");
+			//lPose->SetIsBindPose(false);
+
+			size_t pos = stackName.find(firstErase);
+			if (pos != std::string::npos)
+				stackName.erase(pos, firstErase.length());
+
+			size_t pos2 = stackName.find(secondErase);
+			if (pos2 != std::string::npos)
+				stackName.erase(pos2, secondErase.length());
+
+			FbxString animationStackName = FbxString(stackName.c_str());
+			fbxsdk::FbxAnimStack* animationStack = fbxsdk::FbxAnimStack::Create(scene_ptr, animationStackName);
+
+			FbxAnimLayer* animationLayer = FbxAnimLayer::Create(scene_ptr, "Base Layer");
+			animationStack->AddMember(animationLayer);
+
+			FbxGlobalSettings& sceneGlobaleSettings = scene_ptr->GetGlobalSettings();
+			double currentFrameRate = FbxTime::GetFrameRate(sceneGlobaleSettings.GetTimeMode());
+			if (animationObject->get_info().FPS != currentFrameRate)
+			{
+				FbxTime::EMode computeTimeMode = FbxTime::ConvertFrameRateToTimeMode(animationObject->get_info().FPS);
+				FbxTime::SetGlobalTimeMode(computeTimeMode, computeTimeMode == FbxTime::eCustom ? animationObject->get_info().FPS : 0.0);
+				sceneGlobaleSettings.SetTimeMode(computeTimeMode);
+				if (computeTimeMode == FbxTime::eCustom)
+				{
+					sceneGlobaleSettings.SetCustomFrameRate(animationObject->get_info().FPS);
+				}
+			}
+
+			FbxTime exportedStartTime, exportedStopTime;
+			exportedStartTime.SetSecondDouble(0.0f);
+			exportedStopTime.SetSecondDouble((double)animationObject->get_info().frame_count / animationObject->get_info().FPS);
+
+			FbxTimeSpan exportedTimeSpan;
+			exportedTimeSpan.Set(exportedStartTime, exportedStopTime);
+			animationStack->SetLocalTimeSpan(exportedTimeSpan);
+
+			for (auto boneIterator : animationObject->get_bones())
+			{
+				std::vector<FbxNode*> treeBranch;
+				treeBranch.push_back(mesh_node_ptr->GetChild(0));// The first node to start with is the child of the root node
+				std::string boneName = boneIterator.name;// debug
+				std::vector<std::string> nameVector;// debug
+
+				for (int i = 0; i < treeBranch.size(); i++)// Loop through the branches of the tree
+				{
+					std::string treeBranchName = treeBranch.at(i)->GetName();// Grab the name of the current element Also for debugging
+					nameVector.push_back(treeBranchName);// Debug purposes
+					if (treeBranch.at(i)->GetName() == boneIterator.name)// Found a match between the selected 
+					{
+						Skeleton::Bone skeletonBone = Skeleton::Bone("test");
+						for (auto boneInfoIterator : BoneInfoList)
+						{
+							if (boneInfoIterator.name == boneIterator.name)
+							{
+								skeletonBone = boneInfoIterator;
+								break;
+							}
+						}
+						// For easy access placing pointers to the bones
+						FbxNode* rootSkeleton = mesh_node_ptr;
+						FbxNode* boneToUse = treeBranch.at(i);
+						fbxsdk::FbxAMatrix& globalNode = boneToUse->EvaluateLocalTransform();
+						// The bone iteratator will have all the animation info for the specific bone
+						fbxsdk::FbxAnimCurve* Curves[9];
+
+						Curves[0] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+						Curves[1] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+						Curves[2] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+
+						Curves[3] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+						Curves[4] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+						Curves[5] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+
+						Curves[6] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+						Curves[7] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+						Curves[8] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+
+
+						for (fbxsdk::FbxAnimCurve* Curve : Curves)
+						{
+							Curve->KeyModifyBegin();
+						}
+
+						for (int frameCounter = 0; frameCounter < animationObject->get_info().frame_count + 1; frameCounter++)
+						{
+							// For each frame, we need to build the translation vector and the rotation vector
+							FbxVector4 TranslationVector;
+							FbxVector4 RotationVector;
+
+							if (boneIterator.hasXAnimatedTranslation)
+							{
+
+								std::vector<float> translationValues = animationObject->getCHNLValues().at(boneIterator.x_translation_channel_index);
+
+								if (translationValues.size() != animationObject->get_info().frame_count + 1)
+								{
+									std::cout << "Mis-match size";
+								}
+
+								float translationValue = translationValues.at(frameCounter);
+								if (translationValue > -1000.0)
+								{
+									TranslationVector.mData[0] = translationValue;
+								}
+								else
+								{
+									TranslationVector.mData[0] = -1000.0;
+								}
+							}
+							else
+							{
+								float translationValue = animationObject->getStaticTranslationValues().at(boneIterator.x_translation_channel_index);
+								TranslationVector.mData[0] = translationValue;
+							}
+
+							if (boneIterator.hasYAnimatedTranslation)
+							{
+								std::vector<float> translationValues = animationObject->getCHNLValues().at(boneIterator.y_translation_channel_index);
+
+								if (translationValues.size() != animationObject->get_info().frame_count + 1)
+								{
+									std::cout << "Mis-match size";
+								}
+
+								float translationValue = translationValues.at(frameCounter);
+								if (translationValue > -1000.0)
+								{
+									TranslationVector.mData[1] = translationValue;
+								}
+								else
+								{
+									//Need to do something here....
+									//cout << "Frame Skipped";
+									TranslationVector.mData[1] = -1000.0;
+								}
+							}
+							else
+							{
+								float translationValue = animationObject->getStaticTranslationValues().at(boneIterator.y_translation_channel_index);
+								TranslationVector.mData[1] = translationValue;
+							}
+
+							if (boneIterator.hasZAnimatedTranslation)
+							{
+								std::vector<float> translationValues = animationObject->getCHNLValues().at(boneIterator.z_translation_channel_index);
+
+								if (translationValues.size() != animationObject->get_info().frame_count + 1)
+								{
+									std::cout << "Mis-match size";
+								}
+
+								float translationValue = translationValues.at(frameCounter);
+								if (translationValue > -1000.0)
+								{
+									TranslationVector.mData[2] = translationValue;
+								}
+								else
+								{
+									//Need to do something here....
+									//cout << "Frame Skipped";
+									TranslationVector.mData[2] = -1000.0;
+								}
+							}
+							else
+							{
+								float translationValue = animationObject->getStaticTranslationValues().at(boneIterator.z_translation_channel_index);
+								TranslationVector.mData[2] = translationValue;
+							}
+
+							bool isStaticRotation = false;
+							if (boneIterator.has_rotations)
+							{
+								std::vector<uint32_t> compressedValues = animationObject->getQCHNValues().at(boneIterator.rotation_channel_index);
+								std::vector<uint8_t> FormatValues;
+
+								if (compressedValues.size() - 1 != animationObject->get_info().frame_count + 1)
+								{
+									std::cout << "Mis-match size";
+								}
+
+								uint32_t formatValue = compressedValues.at(0);
+								uint32_t compressedValue = compressedValues.at(frameCounter + 1);
+
+								FormatValues.push_back((formatValue & (((1 << 8) - 1) << 16)) >> 16);
+								FormatValues.push_back((formatValue & (((1 << 8) - 1) << 8)) >> 8);
+								FormatValues.push_back((formatValue & (((1 << 8) - 1))));
+
+								if (compressedValue != 100)
+								{
+									Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(compressedValue, FormatValues[0], FormatValues[1], FormatValues[2]);
+
+									EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone);
+
+									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+								}
+								else
+								{
+									// DO something else here
+									//cout << "Frame Skipped";
+									RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+								}
+							}
+							else
+							{
+								uint32_t staticValue = animationObject->getStaticRotationValues().at(boneIterator.rotation_channel_index);
+								std::vector<uint8_t> formatValues = animationObject->getStaticROTFormats().at(boneIterator.rotation_channel_index);
+
+								Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(staticValue, formatValues[0], formatValues[1], formatValues[2]);
+
+								EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
+
+								RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+								isStaticRotation = true;
+							}
+							FbxVector4 ScalingVector(1.0, 1.0, 1.0);
+
+							FbxVector4 Vectors[3] = { TranslationVector, RotationVector, ScalingVector };
+
+
+
+							double timeValue = (double)frameCounter * ((double)1.0 / (double)animationObject->get_info().FPS);
+							FbxVector4 finalVector[3] = { globalNode.GetT() + TranslationVector , RotationVector, ScalingVector };
+
+							for (int curveIndex = 0; curveIndex < 2; curveIndex++)
+							{
+								for (int coordinateIndex = 0; coordinateIndex < 3; coordinateIndex++)
+								{
+									if (Vectors[curveIndex][coordinateIndex] != -1000.0)// If the coordinate value is -1000 then this means we need to skip it since it is not a key frame
+									{
+										int offsetCurveIndex = (curveIndex * 3) + coordinateIndex;
+										FbxTime setTime;
+										setTime.SetSecondDouble(timeValue);
+										uint32_t keyIndex = Curves[offsetCurveIndex]->KeyAdd(setTime);
+										Curves[offsetCurveIndex]->KeySet(keyIndex, setTime, finalVector[curveIndex][coordinateIndex], frameCounter == animationObject->get_info().frame_count ? FbxAnimCurveDef::eInterpolationConstant : FbxAnimCurveDef::eInterpolationCubic);
+										if (frameCounter == animationObject->get_info().frame_count)
+										{
+											Curves[offsetCurveIndex]->KeySetConstantMode(keyIndex, FbxAnimCurveDef::eConstantStandard);
+										}
+									}
+									else
+									{
+										//cout << "Frame Skipped" << endl;
+									}
+								}
+							}
+						}
+
+						for (fbxsdk::FbxAnimCurve* Curve : Curves)
+						{
+							Curve->KeyModifyEnd();
+						}
+					}
+					else
+					{
+						// If not found, then we will add the children to the treeBranch vector so that we can 
+						// check the children also
+						if (treeBranch.at(i)->GetChildCount() > 0)
+						{
+							for (int ii = 0; ii < treeBranch.at(i)->GetChildCount(); ii++)
+							{
+								treeBranch.push_back(treeBranch.at(i)->GetChild(ii));
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	exporter_ptr->Export(scene_ptr);
+	// cleanup
+	fbx_manager_ptr->Destroy();
 }
+
+SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::Vector4 DecompressedQuaterion, Skeleton::Bone BoneReference, bool isStatic)
+{
+	const double pi = 3.14159265358979323846;
+	double rotationFactor = 180.0 / pi;
+	//double rotationFactor = 1.0;
+	FbxQuaternion bind_rot_quat{ BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a };
+	FbxQuaternion AnimationQuat = FbxQuaternion(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
+
+	Geometry::Vector4 Quat;
+
+	FbxQuaternion pre_rot_quat{ BoneReference.pre_rot_quaternion.x, BoneReference.pre_rot_quaternion.y, BoneReference.pre_rot_quaternion.z, BoneReference.pre_rot_quaternion.a };
+	FbxQuaternion post_rot_quat{ BoneReference.post_rot_quaternion.x, BoneReference.post_rot_quaternion.y, BoneReference.post_rot_quaternion.z, BoneReference.post_rot_quaternion.a };
+
+	auto full_rot = post_rot_quat * (AnimationQuat * bind_rot_quat) * pre_rot_quat;
+	Quat = Geometry::Vector4(full_rot.mData[0], full_rot.mData[1], full_rot.mData[2], full_rot.mData[3]);
+
+	EulerAngles angles;
+
+	// roll (x-axis rotation)
+	double sinr_cosp = 2.0 * (Quat.a * Quat.x + Quat.y * Quat.z);
+	double cosr_cosp = Quat.a * Quat.a - Quat.x * Quat.x - Quat.y * Quat.y + Quat.z * Quat.z;
+	angles.roll = std::atan2(sinr_cosp, cosr_cosp);
+
+	// pitch (y-axis rotation)
+	double sinp = 2.0 * (Quat.a * Quat.y - Quat.z * Quat.x);
+	if (std::abs(sinp) >= 1)
+		angles.pitch = std::copysign(pi / 2.0, sinp); // use 90 degrees if out of range
+	else
+		angles.pitch = std::asin(sinp);
+
+	// yaw (z-axis rotation)
+	double siny_cosp = 2.0 * (Quat.a * Quat.z + Quat.x * Quat.y);
+	double cosy_cosp = Quat.a * Quat.a + Quat.x * Quat.x - Quat.y * Quat.y - Quat.z * Quat.z;
+	angles.yaw = std::atan2(siny_cosp, cosy_cosp);
+
+	// roll (x-axis rotation)
+/*	double sinr_cosp = 2.0 * (Quat.a * Quat.x + Quat.y * Quat.z);
+	double cosr_cosp = 1 - 2 * (Quat.x * Quat.x + Quat.y * Quat.y);
+	angles.roll = std::atan2(sinr_cosp, cosr_cosp);
+
+	// pitch (y-axis rotation)
+	double sinp = 2 * (Quat.a * Quat.y - Quat.z * Quat.x);
+	if (std::abs(sinp) >= 1)
+		angles.pitch = std::copysign(pi / 2.0, sinp); // use 90 degrees if out of range
+	else
+		angles.pitch = std::asin(sinp);
+
+	// yaw (z-axis rotation)
+	double siny_cosp = 2.0 * (Quat.a * Quat.z + Quat.x * Quat.y);
+	double cosy_cosp = 1 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z);
+	angles.yaw = std::atan2(siny_cosp, cosy_cosp);*/
+
+	angles.roll *= rotationFactor;
+	angles.pitch *= rotationFactor;
+	angles.yaw *= rotationFactor;
+
+	return angles;
+}
+
 
 std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr)
 {
@@ -680,7 +1175,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 
 	for (uint32_t boneCounter = 0; boneCounter < boneCount; boneCounter++)
 	{
-		Skeleton::Bone& bone = getBone(boneCount, 0);
+		Skeleton::Bone& bone = getBone(boneCounter, 0);
 
 		FbxNode* node_ptr = FbxNode::Create(scene_ptr, bone.name.c_str());
 		FbxSkeleton* skeleton_ptr = FbxSkeleton::Create(scene_ptr, bone.name.c_str());
