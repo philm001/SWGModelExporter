@@ -107,10 +107,6 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray)
 					a++;
 				}
 
-				if (ext == "mgn")
-				{
-					std::cout << "Here";
-				}
 				std::set<std::string> references_objects = object->get_referenced_objects();
 				std::queue<std::string>& referenceArray = p_queueArray;
 				Context& referenceContext = p_Context;
@@ -288,7 +284,7 @@ void SWGMainObject::resolve_dependencies(const Context& context)
 
 		while (it != p_Context.opened_by.end())
 		{
-			openedByName = it->second;
+			openedByName = it->second;// Note: Stops on lmg nd not Sat
 			it = p_Context.opened_by.find(openedByName);
 		}
 		// I want to edit the shaders that are inside the data structure.
@@ -676,7 +672,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 				{
 					//item.second->set_current_lod(m_lod_level);
 					// Might need to check for duplicates here
-					for (auto boneIterator : item.second->getBonesatLOD(0))
+					for (auto& boneIterator : item.second->getBonesatLOD(0))
 					{
 						bool foundBone = false;
 						if (m_bones.size() == m_lod_level)
@@ -804,7 +800,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	std::vector<std::shared_ptr<Animation>> animationList;
 
 	// First sort out the animation objects first
-	for (auto baseObjectiterator : p_Context.object_list)
+	for (auto& baseObjectiterator : p_Context.object_list)
 	{
 		if (baseObjectiterator.second->get_object_name().find("ans") != std::string::npos)
 		{
@@ -817,7 +813,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	decompressValues.install();
 
 	// Next loop through the entire animation list
-	for (auto animationObject : animationList)
+	for (auto& animationObject : animationList)
 	{
 		if (animationObject)
 		{
@@ -862,7 +858,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 			exportedTimeSpan.Set(exportedStartTime, exportedStopTime);
 			animationStack->SetLocalTimeSpan(exportedTimeSpan);
 
-			for (auto boneIterator : animationObject->get_bones())
+			for (auto& boneIterator : animationObject->get_bones())
 			{
 				std::vector<FbxNode*> treeBranch;
 				treeBranch.push_back(mesh_node_ptr->GetChild(0));// The first node to start with is the child of the root node
@@ -876,7 +872,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 					if (treeBranch.at(i)->GetName() == boneIterator.name)// Found a match between the selected 
 					{
 						Skeleton::Bone skeletonBone = Skeleton::Bone("test");
-						for (auto boneInfoIterator : BoneInfoList)
+						for (auto& boneInfoIterator : BoneInfoList)
 						{
 							if (boneInfoIterator.name == boneIterator.name)
 							{
@@ -1044,8 +1040,6 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 
 							FbxVector4 Vectors[3] = { TranslationVector, RotationVector, ScalingVector };
 
-
-
 							double timeValue = (double)frameCounter * ((double)1.0 / (double)animationObject->get_info().FPS);
 							FbxVector4 finalVector[3] = { globalNode.GetT() + TranslationVector , RotationVector, ScalingVector };
 
@@ -1185,6 +1179,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 		else
 			skeleton_ptr->SetSkeletonType(FbxSkeleton::eLimbNode);
 
+		node_ptr->SetNodeAttribute(skeleton_ptr);
 		FbxQuaternion pre_rot_quat{ bone.pre_rot_quaternion.x, bone.pre_rot_quaternion.y, bone.pre_rot_quaternion.z, bone.pre_rot_quaternion.a };
 		FbxQuaternion post_rot_quat{ bone.post_rot_quaternion.x, bone.post_rot_quaternion.y, bone.post_rot_quaternion.z, bone.post_rot_quaternion.a };
 		FbxQuaternion bind_rot_quat{ bone.bind_pose_rotation.x, bone.bind_pose_rotation.y, bone.bind_pose_rotation.z, bone.bind_pose_rotation.a };
@@ -1231,19 +1226,25 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 
 	// create clusters
 	// create vertex index arrays for clusters
-	const auto& vertices = SourceMesh.get_vertices();
 	std::map<std::string, std::vector<std::pair<uint32_t, float>>> cluster_vertices;
-	const auto& mesh_joint_names = SourceMesh.get_joint_names();
-	for (uint32_t vertex_num = 0; vertex_num < vertices.size(); ++vertex_num)
+
+	for (auto& modelIterator : p_CompleteModels.at(0))
 	{
-		const auto& vertex = vertices[vertex_num];
-		for (const auto& weight : vertex.get_weights())
+		const auto& vertices = modelIterator.get_vertices();
+		const auto& mesh_joint_names = modelIterator.get_joint_names();
+		for (uint32_t vertex_num = 0; vertex_num < vertices.size(); ++vertex_num)
 		{
-			auto joint_name = mesh_joint_names[weight.first];
-			boost::to_lower(joint_name);
-			cluster_vertices[joint_name].emplace_back(vertex_num, weight.second);
+			const auto& vertex = vertices[vertex_num];
+			for (const auto& weight : vertex.get_weights())
+			{
+				auto joint_name = mesh_joint_names[weight.first];
+				boost::to_lower(joint_name);
+				cluster_vertices[joint_name].emplace_back(vertex_num, weight.second);
+			}
 		}
 	}
+	
+	
 
 	for (uint32_t bone_num = 0; bone_num < boneCount; ++bone_num)
 	{

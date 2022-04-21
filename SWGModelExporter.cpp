@@ -54,8 +54,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		//po::store(po::parse_command_line(argc, argv, flags), vm);
 		swg_path = "C:\\Users\\Phillip\\Documents\\swg\\SWGEmu";
 		//object_name = "acklay_cbt_attack_add.ans";
-		//object_name = "ackbar.sat";
-		object_name = "acklay.sat";
+		object_name = "ackbar.sat";
+		//object_name = "acklay.sat";
 
 		//object_name = "batch:ans";
 		output_pathname = "C:\\Users\\Phillip\\Desktop\\SIEtest\\extraction";
@@ -140,7 +140,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		queue<std::string> frontValue = objects_to_process.front();
 		shared_ptr<Parser_selector> parser = make_shared<Parser_selector>();
 
-		//if (frontValue.size() == 1)
+	/*	if (frontValue.size() == 1)
 		{
 			objects_to_process.pop();
 			while (frontValue.empty() == false)
@@ -212,7 +212,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 			
 		}
-		/*else if (frontValue.size() > 1)
+		else if (frontValue.size() > 1)*/
 		{
 			queue<std::string> frontValue = objects_to_process.front();
 			objects_to_process.pop();
@@ -222,7 +222,8 @@ int _tmain(int argc, _TCHAR* argv[])
 			SWGObject.beginParsingProcess(frontValue);
 			SWGObject.resolve_dependencies(context);
 			SWGObject.StoreObject(output_pathname);
-		}*/
+			// reset everything here????
+		}
 	}
 
 	std::cout << "Resolve dependencies..." << endl;
