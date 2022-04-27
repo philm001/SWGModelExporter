@@ -702,8 +702,6 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 
 	// build morph targets
 	// prepare base vector
-	
-
 	FbxBlendShape* blend_shape_ptr = FbxBlendShape::Create(scene_ptr, "BlendShapes");
 
 	for (auto& modelIterator : p_CompleteModels.at(0))
@@ -813,8 +811,9 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	decompressValues.install();
 
 	// Next loop through the entire animation list
-	for (auto& animationObject : animationList)
+	for (int i = 0; i < 1; i++)// This method is esy for debugging
 	{
+		auto animationObject = animationList.at(i);
 		if (animationObject)
 		{
 			std::string stackName = animationObject->get_object_name();
@@ -862,24 +861,30 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 			{
 				std::vector<FbxNode*> treeBranch;
 				treeBranch.push_back(mesh_node_ptr->GetChild(0));// The first node to start with is the child of the root node
-				std::string boneName = boneIterator.name;// debug
-				std::vector<std::string> nameVector;// debug
+				std::string boneName = boneIterator.name;
 
 				for (int i = 0; i < treeBranch.size(); i++)// Loop through the branches of the tree
 				{
 					std::string treeBranchName = treeBranch.at(i)->GetName();// Grab the name of the current element Also for debugging
-					nameVector.push_back(treeBranchName);// Debug purposes
-					if (treeBranch.at(i)->GetName() == boneIterator.name)// Found a match between the selected 
+
+					boost::to_lower(treeBranchName);
+					boost::to_lower(boneName);
+
+					if (treeBranchName == boneName)// Found a match between the selected 
 					{
 						Skeleton::Bone skeletonBone = Skeleton::Bone("test");
 						for (auto& boneInfoIterator : BoneInfoList)
 						{
-							if (boneInfoIterator.name == boneIterator.name)
+							std::string searchBoneName = boneInfoIterator.name;
+							boost::to_lower(searchBoneName);
+
+							if (searchBoneName == boneName)
 							{
 								skeletonBone = boneInfoIterator;
 								break;
 							}
 						}
+
 						// For easy access placing pointers to the bones
 						FbxNode* rootSkeleton = mesh_node_ptr;
 						FbxNode* boneToUse = treeBranch.at(i);
@@ -1098,53 +1103,53 @@ SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::
 {
 	const double pi = 3.14159265358979323846;
 	double rotationFactor = 180.0 / pi;
-	//double rotationFactor = 1.0;
-	FbxQuaternion bind_rot_quat{ BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a };
-	FbxQuaternion AnimationQuat = FbxQuaternion(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
 
 	Geometry::Vector4 Quat;
+	EulerAngles angles;
 
+	FbxQuaternion AnimationQuat = FbxQuaternion(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
+	FbxQuaternion bind_rot_quat{ BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a };
 	FbxQuaternion pre_rot_quat{ BoneReference.pre_rot_quaternion.x, BoneReference.pre_rot_quaternion.y, BoneReference.pre_rot_quaternion.z, BoneReference.pre_rot_quaternion.a };
 	FbxQuaternion post_rot_quat{ BoneReference.post_rot_quaternion.x, BoneReference.post_rot_quaternion.y, BoneReference.post_rot_quaternion.z, BoneReference.post_rot_quaternion.a };
 
 	auto full_rot = post_rot_quat * (AnimationQuat * bind_rot_quat) * pre_rot_quat;
 	Quat = Geometry::Vector4(full_rot.mData[0], full_rot.mData[1], full_rot.mData[2], full_rot.mData[3]);
 
-	EulerAngles angles;
+	double test = Quat.x * Quat.z - Quat.y * Quat.a;
+	double sqx = Quat.x * Quat.x;
+	double sqy = Quat.y * Quat.y;
+	double sqz = Quat.z * Quat.z;
+	double sqa = Quat.a * Quat.a;
+	double unit = sqx + sqy + sqz + sqa;
 
-	// roll (x-axis rotation)
-	double sinr_cosp = 2.0 * (Quat.a * Quat.x + Quat.y * Quat.z);
-	double cosr_cosp = Quat.a * Quat.a - Quat.x * Quat.x - Quat.y * Quat.y + Quat.z * Quat.z;
-	angles.roll = std::atan2(sinr_cosp, cosr_cosp);
-
-	// pitch (y-axis rotation)
-	double sinp = 2.0 * (Quat.a * Quat.y - Quat.z * Quat.x);
-	if (std::abs(sinp) >= 1)
-		angles.pitch = std::copysign(pi / 2.0, sinp); // use 90 degrees if out of range
+	angles.yaw = std::atan2(2.0 * (Quat.x * Quat.y + Quat.z * Quat.a), sqx - sqy - sqz + sqa); // heading
+	angles.pitch = std::asin(-2.0 * test / unit); // attitude
+	angles.roll = std::atan2(2.0 * (Quat.y * Quat.z + Quat.x * Quat.a), -sqx - sqy + sqz + sqa); // bank
+	
+	/*double test = Quat.x * Quat.y + Quat.z * Quat.a;
+	if (test < 0.499)
+	{
+		angles.yaw = 2.0 * std::atan2(Quat.x, Quat.a);
+		angles.pitch = pi / 2.0;
+		angles.roll = 0;
+	}
+	else if (test < -0.499)
+	{
+		angles.yaw = -2.0 * std::atan2(Quat.x, Quat.a);
+		angles.pitch = -pi / 2.0;
+		angles.roll = 0;
+	}
 	else
-		angles.pitch = std::asin(sinp);
+	{
+		double sqx = Quat.x * Quat.x;
+		double sqy = Quat.y * Quat.y;
+		double sqz = Quat.z * Quat.z;
 
-	// yaw (z-axis rotation)
-	double siny_cosp = 2.0 * (Quat.a * Quat.z + Quat.x * Quat.y);
-	double cosy_cosp = Quat.a * Quat.a + Quat.x * Quat.x - Quat.y * Quat.y - Quat.z * Quat.z;
-	angles.yaw = std::atan2(siny_cosp, cosy_cosp);
+		angles.yaw = std::atan2(2.0 * Quat.y * Quat.a - 2.0 * Quat.x * Quat.z, 1.0 - 2.0 * sqy - 2.0 * sqz);
+		angles.pitch = std::asin(2.0 * test);
+		angles.roll = std::atan2(2.0 * Quat.x * Quat.a - 2.0 * Quat.y * Quat.z, 1.0 - 2.0 * sqx - 2.0 * sqz);
+	}*/
 
-	// roll (x-axis rotation)
-/*	double sinr_cosp = 2.0 * (Quat.a * Quat.x + Quat.y * Quat.z);
-	double cosr_cosp = 1 - 2 * (Quat.x * Quat.x + Quat.y * Quat.y);
-	angles.roll = std::atan2(sinr_cosp, cosr_cosp);
-
-	// pitch (y-axis rotation)
-	double sinp = 2 * (Quat.a * Quat.y - Quat.z * Quat.x);
-	if (std::abs(sinp) >= 1)
-		angles.pitch = std::copysign(pi / 2.0, sinp); // use 90 degrees if out of range
-	else
-		angles.pitch = std::asin(sinp);
-
-	// yaw (z-axis rotation)
-	double siny_cosp = 2.0 * (Quat.a * Quat.z + Quat.x * Quat.y);
-	double cosy_cosp = 1 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z);
-	angles.yaw = std::atan2(siny_cosp, cosy_cosp);*/
 
 	angles.roll *= rotationFactor;
 	angles.pitch *= rotationFactor;

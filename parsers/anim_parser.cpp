@@ -42,6 +42,7 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 		Animation::Bone_info bone;
 
 		bone.name = buffer.read_stringz();
+
 		bone.has_rotations = buffer.read_uint8() == 1;
 		bone.rotation_channel_index = buffer.read_uint16();
 		bone.translation_mask = buffer.read_uint8();
