@@ -148,8 +148,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Scene.fbx" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="libfbxsdk.dll" />
