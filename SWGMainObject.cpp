@@ -416,27 +416,30 @@ void SWGMainObject::resolve_dependencies(const Context& context)
 
 void SWGMainObject::store(const std::string& path, const Context& context)
 {
+
+	// extract object name and make full path name
 	boost::filesystem::path obj_name(p_CompleteModels.at(0).at(0).get_object_name());
 	boost::filesystem::path target_path(path);
 	target_path /= obj_name.filename();
 
 	target_path.replace_extension("fbx");
-	auto directory = target_path.parent_path();
 
+	// check directory existance
+	auto directory = target_path.parent_path();
 	if (!boost::filesystem::exists(directory))
 		boost::filesystem::create_directories(directory);
 
 	if (boost::filesystem::exists(target_path))
 		boost::filesystem::remove(target_path);
 
+	// get lod level (by _lX end of file name). If there is no such pattern - lod level will be zero.
 	int lodLevel = p_CompleteModels.at(0).at(0).getLodLevel();
-
 	obj_name = obj_name.filename();
 	obj_name.replace_extension();
 	std::string name = obj_name.string();
 	std::string mainObjectName = p_CompleteModels.at(0).at(0).get_object_name();
 
-
+	// init FBX manager
 	FbxManager* fbx_manager_ptr = FbxManager::Create();
 	if (fbx_manager_ptr == nullptr)
 		return;
@@ -469,23 +472,26 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	mesh_node_ptr->SetNodeAttribute(mesh_ptr);
 	scene_ptr->GetRootNode()->AddChild(mesh_node_ptr);
 
-	uint32_t verticesNum = 0;
+	// prepare vertices
+	uint32_t vertices_num = 0;
 	uint32_t normalsNum = 0;
+	uint32_t counter = 0;
 
-	for (auto& modelIterator : p_CompleteModels.at(0))
+	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
 	{
-		verticesNum += modelIterator.get_vertices().size();
-		normalsNum += modelIterator.getNormals().size();
+		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+		vertices_num += static_cast<uint32_t>(modelIterator.get_vertices().size());
+		normalsNum += static_cast<uint32_t>(modelIterator.getNormals().size());
 	}
 
-	mesh_ptr->SetControlPointCount(verticesNum);
+	mesh_ptr->SetControlPointCount(vertices_num);
 	auto mesh_vertices = mesh_ptr->GetControlPoints();
 
-	uint32_t counter = 0;
-	uint32_t otherCounter = 0;
 
-	for (auto& modelIterator : p_CompleteModels.at(0))
+	//for (auto& modelIterator : p_CompleteModels.at(0))
+	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
 	{
+		auto& modelIterator = p_CompleteModels.at(0).at(cc);
 		for (uint32_t vertexCounter = 0; vertexCounter < modelIterator.get_vertices().size(); vertexCounter++)
 		{
 			const auto& pt = modelIterator.get_vertices()[vertexCounter].get_position();
@@ -493,7 +499,12 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 		}
 		counter += modelIterator.get_vertices().size();
 	}
-	
+
+	/*for (uint32_t vertex_idx = 0; vertex_idx < vertices_num; ++vertex_idx)
+	{
+		const auto& pt = p_CompleteModels.at(0).at(0).get_vertices()[vertex_idx].get_position();
+		mesh_vertices[vertex_idx] = FbxVector4(pt.x, pt.y, pt.z);
+	}*/
 
 	// add material layer
 	auto material_layer = mesh_ptr->CreateElementMaterial();
@@ -507,9 +518,10 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	std::vector<uint32_t> uv_indexes;
 	counter = 0;
 
-	for (auto& modelIterator : p_CompleteModels.at(0))
+	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
 	{
-		for (uint32_t shader_idx = 0; shader_idx < modelIterator.getShaders().size(); shader_idx++)
+		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+		for (uint32_t shader_idx = 0; shader_idx < modelIterator.getShaders().size(); ++shader_idx)
 		{
 			auto& shader = modelIterator.getShaders().at(shader_idx);
 			if (shader.get_definition())
@@ -585,7 +597,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 						if (!tangents.empty())
 						{
 							auto remapped_tangent = tangents[tri.points[i]];
-							tangents.emplace_back(remapped_tangent);
+							tangents_idxs.emplace_back(remapped_tangent);
 						}
 						uv_indexes.emplace_back(idx_offset + tri.points[i]);
 					}
@@ -593,10 +605,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 				}
 			}
 		}
-
-		counter += modelIterator.getShaders().size();
 	}
-
 	// add UVs
 	FbxGeometryElementUV* uv_ptr = mesh_ptr->CreateElementUV("UVSet1");
 	uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
@@ -606,12 +615,10 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 		{
 			uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
 		});
-
 	std::for_each(uv_indexes.begin(), uv_indexes.end(), [&uv_ptr](const uint32_t idx)
 		{
 			uv_ptr->GetIndexArray().Add(idx);
 		});
-
 
 	// add normals
 	if (!normal_indexes.empty())
@@ -626,10 +633,10 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 			std::for_each(modelIterator.getNormals().begin(), modelIterator.getNormals().end(),
 				[&direct_array](const Geometry::Vector3& elem)
 				{
-					direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
+					direct_array.Add(FbxVector4(elem.x, elem.y, elem.z)); // TODO: Check this
 				});
 		}
-		
+
 		auto& index_array = normals_ptr->GetIndexArray();
 		std::for_each(normal_indexes.begin(), normal_indexes.end(),
 			[&index_array](const uint32_t& idx) { index_array.Add(idx); });
@@ -648,10 +655,10 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 			std::for_each(modelIterator.getNormalLighting().begin(), modelIterator.getNormalLighting().end(),
 				[&direct_array](const Geometry::Vector4& elem)
 				{
-					direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
+					direct_array.Add(FbxVector4(elem.x, elem.y, elem.z)); // TODO: Check this
 				});
 		}
-		
+
 		auto& index_array = normals_ptr->GetIndexArray();
 		std::for_each(tangents_idxs.begin(), tangents_idxs.end(),
 			[&index_array](const uint32_t& idx) { index_array.Add(idx); });
@@ -659,9 +666,10 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 
 	mesh_ptr->BuildMeshEdgeArray();
 	std::vector<Skeleton::Bone> BoneInfoList;
-
-	for (auto& modelIterator : p_CompleteModels.at(0))
+	// build skeletons
+	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
 	{
+		auto& modelIterator = p_CompleteModels.at(0).at(cc);
 
 		uint32_t m_lod_level = modelIterator.getLodLevel();
 
@@ -690,7 +698,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 							}
 						}
 
-						if(!foundBone)
+						if (!foundBone)
 							m_bones.at(m_lod_level).push_back(boneIterator);
 					}
 
@@ -700,12 +708,15 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 
 	BoneInfoList = generateSkeletonInScene(scene_ptr, mesh_node_ptr);
 
+
+
 	// build morph targets
 	// prepare base vector
 	FbxBlendShape* blend_shape_ptr = FbxBlendShape::Create(scene_ptr, "BlendShapes");
-
-	for (auto& modelIterator : p_CompleteModels.at(0))
+	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
 	{
+		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+
 		auto total_vertices = modelIterator.get_vertices().size();
 		for (const auto& morph : modelIterator.getMorphs())
 		{
@@ -733,7 +744,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 				shape_vertices[idx].Set(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
 			}
 
-			if (!normal_indexes.empty() && !context.batch_mode)
+			if (!normal_indexes.empty() && !p_Context.batch_mode)
 			{
 				// get normals
 				auto normal_element = shape->CreateElementNormal();
@@ -793,12 +804,13 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 			success = blend_shape_ptr->AddBlendShapeChannel(morph_channel);
 		}
 	}
-	
 	mesh_node_ptr->GetGeometry()->AddDeformer(blend_shape_ptr);
+
+	// Build Animations (Note: Not sure if this is the best place to put them. But should be after the skeletons
 	std::vector<std::shared_ptr<Animation>> animationList;
 
 	// First sort out the animation objects first
-	for (auto& baseObjectiterator : p_Context.object_list)
+	for (auto baseObjectiterator : p_Context.object_list)
 	{
 		if (baseObjectiterator.second->get_object_name().find("ans") != std::string::npos)
 		{
@@ -811,6 +823,8 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	decompressValues.install();
 
 	// Next loop through the entire animation list
+	//for (auto animationObject : animationList)
+	//{
 	for (int i = 0; i < 1; i++)// This method is esy for debugging
 	{
 		auto animationObject = animationList.at(i);
@@ -819,8 +833,6 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 			std::string stackName = animationObject->get_object_name();
 			std::string firstErase = "appearance/animation/";
 			std::string secondErase = ".ans";
-			//fbxsdk::FbxPose* lPose = fbxsdk::FbxPose::Create(scene_ptr, "Rest Pose");
-			//lPose->SetIsBindPose(false);
 
 			size_t pos = stackName.find(firstErase);
 			if (pos != std::string::npos)
@@ -1094,6 +1106,8 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 		}
 	}
 
+	FbxSystemUnit::cm.ConvertScene(scene_ptr);
+
 	exporter_ptr->Export(scene_ptr);
 	// cleanup
 	fbx_manager_ptr->Destroy();
@@ -1232,21 +1246,29 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 	// create clusters
 	// create vertex index arrays for clusters
 	std::map<std::string, std::vector<std::pair<uint32_t, float>>> cluster_vertices;
-
-	for (auto& modelIterator : p_CompleteModels.at(0))
+	uint32_t counter = 0;
+	
+	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
 	{
+		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+
 		const auto& vertices = modelIterator.get_vertices();
 		const auto& mesh_joint_names = modelIterator.get_joint_names();
+		uint32_t sizeValue = vertices.size();
+
 		for (uint32_t vertex_num = 0; vertex_num < vertices.size(); ++vertex_num)
 		{
+			uint32_t finalVertexNum = vertex_num + counter;
 			const auto& vertex = vertices[vertex_num];
 			for (const auto& weight : vertex.get_weights())
 			{
 				auto joint_name = mesh_joint_names[weight.first];
 				boost::to_lower(joint_name);
-				cluster_vertices[joint_name].emplace_back(vertex_num, weight.second);
+				cluster_vertices[joint_name].emplace_back(finalVertexNum, weight.second);
 			}
 		}
+
+		counter += modelIterator.get_vertices().size();
 	}
 	
 	
