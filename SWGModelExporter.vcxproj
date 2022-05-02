@@ -104,7 +104,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;FBXSDK_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\Libs\boost;D:\Libs\zlib\include;C:\Program Files\Autodesk\FBX\FBX SDK\2020.0.1\include;E:\Projects\DirectXTex\DirectXTex;$(ProjectDir);C:\Users\Phillip\source\repos\SWGModelExporter-master\Boost\;C:\Users\Phillip\source\repos\SWGModelExporter-master\zlib;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Libs\boost;D:\Libs\zlib\include;C:\Program Files\Autodesk\FBX\FBX SDK\2020.0.1\include;E:\Projects\DirectXTex\DirectXTex;$(ProjectDir);$(SolutionDir)Boost\;C:\Users\Phillip\source\repos\SWGModelExporter-master\zlib;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex;$(SolutionDir)..\DirectXTex\DirectXTex;$(SolutionDir)zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -113,7 +113,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Libs\zlib\lib.x64;D:\Libs\boost\lib\x64\lib;C:\Program Files\Autodesk\FBX\FBX SDK\2020.0.1\lib\vs2017\x64\debug;C:\Users\Phillip\source\repos\SWGModelExporter-master\lib\Debug;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Libs\zlib\lib.x64;D:\Libs\boost\lib\x64\lib;C:\Program Files\Autodesk\FBX\FBX SDK\2020.0.1\lib\vs2017\x64\debug;C:\Users\Phillip\source\repos\SWGModelExporter-master\lib\Debug;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Debug;$(SolutionDir)..\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Debug;$(SolutionDir)lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>DirectXTex.lib;zdll.lib;libfbxsdk-mt.lib;wininet.lib;libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
