@@ -480,6 +480,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
 	{
 		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+		auto temp = static_cast<uint32_t>(modelIterator.get_vertices().size());
 		vertices_num += static_cast<uint32_t>(modelIterator.get_vertices().size());
 		normalsNum += static_cast<uint32_t>(modelIterator.getNormals().size());
 	}
@@ -500,12 +501,6 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 		counter += modelIterator.get_vertices().size();
 	}
 
-	/*for (uint32_t vertex_idx = 0; vertex_idx < vertices_num; ++vertex_idx)
-	{
-		const auto& pt = p_CompleteModels.at(0).at(0).get_vertices()[vertex_idx].get_position();
-		mesh_vertices[vertex_idx] = FbxVector4(pt.x, pt.y, pt.z);
-	}*/
-
 	// add material layer
 	auto material_layer = mesh_ptr->CreateElementMaterial();
 	material_layer->SetMappingMode(FbxLayerElement::eByPolygon);
@@ -517,10 +512,11 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	std::vector<Graphics::Tex_coord> uvs;
 	std::vector<uint32_t> uv_indexes;
 	counter = 0;
-
+	uint32_t normalCounter = 0;
 	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
 	{
 		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+		uint32_t shaderCounter = 0;
 		for (uint32_t shader_idx = 0; shader_idx < modelIterator.getShaders().size(); ++shader_idx)
 		{
 			auto& shader = modelIterator.getShaders().at(shader_idx);
@@ -585,13 +581,13 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 				for (uint32_t tri_idx = 0; tri_idx < triangles.size(); ++tri_idx)
 				{
 					auto& tri = triangles[tri_idx];
-					mesh_ptr->BeginPolygon(shader_idx, -1, shader_idx, false);
+					mesh_ptr->BeginPolygon(shader_idx + shaderCounter, -1, shader_idx + shaderCounter, false);
 					for (size_t i = 0; i < 3; ++i)
 					{
-						auto remapped_pos_idx = positions[tri.points[i]];
+						auto remapped_pos_idx = positions[tri.points[i]] + counter;
 						mesh_ptr->AddPolygon(remapped_pos_idx);
 
-						auto remapped_normal_idx = normals[tri.points[i]];
+						auto remapped_normal_idx = normals[tri.points[i]] + normalCounter;
 						normal_indexes.emplace_back(remapped_normal_idx);
 
 						if (!tangents.empty())
@@ -605,7 +601,11 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 				}
 			}
 		}
+		shaderCounter += modelIterator.getShaders().size();
+		counter += static_cast<uint32_t>(modelIterator.get_vertices().size());
+		normalCounter += static_cast<uint32_t>(modelIterator.getNormals().size());
 	}
+	counter = 0;
 	// add UVs
 	FbxGeometryElementUV* uv_ptr = mesh_ptr->CreateElementUV("UVSet1");
 	uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
