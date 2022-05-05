@@ -1239,7 +1239,9 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 
 	// build bind pose
 	auto mesh_attr = reinterpret_cast<FbxGeometry*>(parent_ptr->GetNodeAttribute());
-	auto skin = FbxSkin::Create(scene_ptr, parent_ptr->GetName());
+	FbxSkin *skin = FbxSkin::Create(scene_ptr, parent_ptr->GetName());
+	skin->SetSkinningType(FbxSkin::EType::eLinear);
+
 	auto xmatr = parent_ptr->EvaluateGlobalTransform();
 	FbxAMatrix link_transform;
 
@@ -1278,7 +1280,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 		Skeleton::Bone& bone = getBone(bone_num, 0);
 		auto cluster = FbxCluster::Create(scene_ptr, bone.name.c_str());
 		cluster->SetLink(nodes[bone_num]);
-		cluster->SetLinkMode(FbxCluster::eAdditive);
+		cluster->SetLinkMode(FbxCluster::eNormalize);
 
 		auto bone_name = bone.name;
 		boost::to_lower(bone_name);
