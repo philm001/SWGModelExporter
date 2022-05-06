@@ -28,7 +28,7 @@ void Parser_selector::section_begin(const string& name, uint8_t* data_ptr, size_
 			m_selected_parser = make_shared<skt_parser>();
 		else if (name == "CSHDFORM" || name == "SSHTFORM")
 			m_selected_parser = make_shared<sht_parser>();
-		else if (name == "CKATFORM")
+		else if (name == "CKATFORM" || name == "KFATFORM")
 			m_selected_parser = make_shared<anim_parser>();
 		else if (name == "LATTFORM")
 			m_selected_parser = make_shared<latt_parser>();

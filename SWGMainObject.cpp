@@ -22,6 +22,10 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray)
 			continue;
 
 		std::cout << "Processing : " << assetName << std::endl;
+		if (assetName == "appearance/animation/all_b_entertained.ans")
+		{
+			std::cout << "Asset found" << std::endl;
+		}
 		// do not try find object on this step
 		std::vector<uint8_t> buffer;
 		
@@ -825,7 +829,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	// Next loop through the entire animation list
 	//for (auto animationObject : animationList)
 	//{
-	for (int i = 0; i < 1; i++)// This method is esy for debugging
+	for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
 	{
 		auto animationObject = animationList.at(i);
 		if (animationObject)

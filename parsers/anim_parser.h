@@ -23,4 +23,5 @@ public:
 private:
 	std::shared_ptr<Animation> m_animation;
 	uint16_t p_boneCounter = 0;
+	bool p_isKFATFORM = false;
 };

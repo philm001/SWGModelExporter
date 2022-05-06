@@ -321,9 +321,13 @@ public:
 	std::vector<Bone_info>& get_bones() { return m_animated_bones; } // This is the XFIN
 
 	std::vector< std::vector<uint32_t>>& getQCHNValues() { return m_QCHNValues; }// This is where the AROT is stored
+	std::vector<std::vector<std::vector<float>>>& getKFATQCHNValues() { return m_KFATQCHValues; }
+
 	std::vector<std::vector<float>>& getCHNLValues() { return m_CHNLValues; } // This is where the ATRN is stored
 
 	std::vector<uint32_t>& getStaticRotationValues() { return m_staticRotationValues; } // This is where the SROT is stored
+	std::vector<float>& getStaticKFATRotationValues() { return m_staticKFATRotationValues; }
+
 	std::vector<std::vector<uint8_t>>& getStaticROTFormats() { return m_staticFormatValues; }
 
 	std::vector<float>& getStaticTranslationValues() { return m_staticTranslationValues; } // This is where the ATRN is stored
@@ -336,9 +340,13 @@ private:
 	std::vector<Bone_info> m_animated_bones;
 
 	std::vector< std::vector<uint32_t>> m_QCHNValues;
+	std::vector<std::vector<std::vector<float>>> m_KFATQCHValues;
+
 	std::vector< std::vector<float>> m_CHNLValues;
 
 	std::vector<uint32_t> m_staticRotationValues;
+	std::vector<float> m_staticKFATRotationValues;
+
 	std::vector<std::vector<uint8_t>> m_staticFormatValues;
 
 	std::vector<float> m_staticTranslationValues;

@@ -12,7 +12,9 @@ void anim_parser::section_begin(const string& name, uint8_t* data_ptr, size_t da
 	}
 	if (name == "KFATFORM" || name == "KFAT")
 	{
-		std::cout << "Found uncompress";
+		//std::cout << "Found uncompress";
+		p_isKFATFORM = true;
+		m_animation = make_shared<Animation>();
 	}
 
 }
@@ -24,7 +26,7 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 
 	base_buffer buffer(data_ptr, data_size);
 
-	if (name == "0001INFO")
+	if (name == "0001INFO" || name == "0003INFO")
 	{
 		Animation::Info info;
 		info.FPS = buffer.read_float();
@@ -65,79 +67,131 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 	}
 	else if (name == "AROTQCHN" || name == "QCHN")
 	{
-		auto key_count = buffer.read_uint16();
-		auto x_format = buffer.read_uint8();
-		auto y_format = buffer.read_uint8();
-		auto z_format = buffer.read_uint8();
-
-		std::vector<uint8_t> vec{ x_format, y_format, z_format };
-		uint32_t valueFormats = uint32_t(x_format) << 16;
-		valueFormats |= uint32_t(y_format) << 8;
-		valueFormats |= uint32_t(z_format);
-
-		uint8_t Xprime = (valueFormats & (((1 << 8) - 1) << 16)) >> 16;
-		uint8_t Yprime = (valueFormats & (((1 << 8) - 1) << 8)) >> 8;
-		uint8_t Zprime = (valueFormats & (((1 << 8) - 1)));
-
-		std::vector<uint32_t> frameRotations;
-		//m_animation->getFormatValues().push_back(vec);
-		frameRotations.push_back(valueFormats);
-		
-		auto loopCounter = key_count;
-		for (uint16_t count = 0; count < loopCounter; count++)
+		if (p_isKFATFORM)
 		{
-			auto frame_num = buffer.read_uint16();// This may need to get passed to the exporter
-			while (frame_num != count)
+			auto key_count = buffer.read_uint32();
+			std::vector<std::vector<float>> frameRotations;
+			auto loopCounter = key_count;
+
+			for (uint16_t frameCount = 0; frameCount < loopCounter; frameCount++)
 			{
-				frameRotations.push_back(100);
-				//m_animation->getFormatValues().push_back(vec); // Redundent but need to keep the arrays in sync with each other
-				count++;
-				loopCounter++;
+				auto frameNumber = buffer.read_uint32();
+				while (frameNumber != frameCount)
+				{
+					std::vector<float> temp;
+					temp.push_back(-100);
+					frameRotations.push_back(temp);
+					frameCount++;
+					loopCounter++;
+				}
+
+				float quatX = buffer.read_float();
+				float quatY = buffer.read_float();
+				float quatZ = buffer.read_float();
+				float quatA = buffer.read_float();
+
+				std::vector<float> temp;
+
+				temp.push_back(quatX);
+				temp.push_back(quatY);
+				temp.push_back(quatZ);
+				temp.push_back(quatA);
+
+				frameRotations.push_back(temp);
 			}
+			m_animation->getKFATQCHNValues().push_back(frameRotations);
+		}
+		else
+		{
+			auto key_count = buffer.read_uint16();
+			auto x_format = buffer.read_uint8();
+			auto y_format = buffer.read_uint8();
+			auto z_format = buffer.read_uint8();
 
-			auto floatRead = buffer.read_uint32();
+			// Compress the format values into a single 16 bit data type and transport this along with the animation data
+			uint32_t valueFormats = uint32_t(x_format) << 16;
+			valueFormats |= uint32_t(y_format) << 8;
+			valueFormats |= uint32_t(z_format);
 
-			//m_animation->getFormatValues().push_back(vec); // Redundent but need to keep the arrays in sync with each other
-			frameRotations.push_back(floatRead);
-		} 
-		m_animation->getQCHNValues().push_back(frameRotations);
-		int k = 0;
-		k++;
+			std::vector<uint32_t> frameRotations;
+			frameRotations.push_back(valueFormats);
+
+			auto loopCounter = key_count;
+			for (uint16_t count = 0; count < loopCounter; count++)
+			{
+				auto frame_num = buffer.read_uint16();// This may need to get passed to the exporter
+				while (frame_num != count)
+				{
+					frameRotations.push_back(100);
+					count++;
+					loopCounter++;
+				}
+
+				auto floatRead = buffer.read_uint32();
+				frameRotations.push_back(floatRead);
+			}
+			m_animation->getQCHNValues().push_back(frameRotations);
+		}
 	}
 	else if (name == "SROT" || name == "AROTSROT")
 	{
-		uint16_t dataCounterSize = data_size / 7;
-		for (int i = 0; i < dataCounterSize; i++)
+		if (p_isKFATFORM)
 		{
-			auto xFormat = buffer.read_uint8();
-			auto yFormat = buffer.read_uint8();
-			auto zFormat = buffer.read_uint8();
-
-			uint32_t value = buffer.read_uint32();
-
-			std::vector<uint8_t> formats = { xFormat, yFormat, zFormat };
-			
-			m_animation->getStaticROTFormats().push_back(formats);
-			m_animation->getStaticRotationValues().push_back(value);
+			uint16_t dataCounterSize = data_size / 4;
+			for (int i = 0; i < dataCounterSize; i++)
+			{
+				float value = buffer.read_float();
+				m_animation->getStaticKFATRotationValues().push_back(value);
+			}
 		}
+		else
+		{
+			uint16_t dataCounterSize = data_size / 7;
+			for (int i = 0; i < dataCounterSize; i++)
+			{
+				auto xFormat = buffer.read_uint8();
+				auto yFormat = buffer.read_uint8();
+				auto zFormat = buffer.read_uint8();
+
+				uint32_t value = buffer.read_uint32();
+
+				std::vector<uint8_t> formats = { xFormat, yFormat, zFormat };
+
+				m_animation->getStaticROTFormats().push_back(formats);
+				m_animation->getStaticRotationValues().push_back(value);
+			}
+		}
+		
 	}
 	else if (name == "ATRNCHNL" || name == "CHNL")
 	{
-		auto key_count = buffer.read_uint16();// This is general frame count
+		uint32_t key_count = 0;// This is general frame count
+
+		if (p_isKFATFORM)
+			key_count = buffer.read_uint32();
+		else
+			key_count = (uint32_t)buffer.read_uint16();
+
 		std::vector<float> frameTranslations;
 		auto loopCounter = key_count;
 		auto counter = 0;
 
-		// This is not compressed quats becuase you only need to know the direction of the transform since only 1 component will be animated at a time
 		while (buffer.get_position() < buffer.get_size())
 		{
-			auto frame_num = buffer.read_uint16();
+			uint32_t frame_num = 0;
+
+			if(p_isKFATFORM)
+				frame_num = buffer.read_uint32();
+			else
+				frame_num = (uint32_t)buffer.read_uint16();
+
 			while (counter != frame_num)
 			{
 				frameTranslations.push_back(-1000.0);// If the frame is out of snyc then insert a false frame to let the exporter know to skip this one
 				counter++;
 			}
-			auto translationValue = buffer.read_float();
+
+			float translationValue = buffer.read_float();
 			frameTranslations.push_back(translationValue);
 			counter++;
 		}
