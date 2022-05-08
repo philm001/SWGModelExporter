@@ -15,6 +15,7 @@ void anim_parser::section_begin(const string& name, uint8_t* data_ptr, size_t da
 		//std::cout << "Found uncompress";
 		p_isKFATFORM = true;
 		m_animation = make_shared<Animation>();
+		m_animation->setUnCompressed();
 	}
 
 }
@@ -31,11 +32,31 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 		Animation::Info info;
 		info.FPS = buffer.read_float();
 		info.frame_count = buffer.read_uint16();
-		info.transform_count = buffer.read_uint16();
-		info.rotation_channel_count = buffer.read_uint16();
-		info.static_rotation_count = buffer.read_uint16();
-		info.translation_channel_count = buffer.read_uint16();
-		info.static_translation_count = buffer.read_uint16();
+
+		if (p_isKFATFORM)
+			info.transform_count = buffer.read_uint32();
+		else
+			info.transform_count = buffer.read_uint16();
+
+		if(p_isKFATFORM)
+			info.rotation_channel_count = buffer.read_uint32();
+		else
+			info.rotation_channel_count = buffer.read_uint16();
+
+		if (p_isKFATFORM)
+			info.static_rotation_count = buffer.read_uint32();
+		else
+			info.static_rotation_count = buffer.read_uint16();
+
+		if (p_isKFATFORM)
+			info.translation_channel_count = buffer.read_uint32();
+		else
+			info.translation_channel_count = buffer.read_uint16();
+
+		if (p_isKFATFORM)
+			info.static_translation_count = buffer.read_uint32();
+		else
+			info.static_translation_count = buffer.read_uint16();
 
 		m_animation->set_info(info);
 	}
@@ -46,8 +67,16 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 		bone.name = buffer.read_stringz();
 
 		bone.has_rotations = buffer.read_uint8() == 1;
-		bone.rotation_channel_index = buffer.read_uint16();
-		bone.translation_mask = buffer.read_uint8();
+
+		if (p_isKFATFORM)
+			bone.rotation_channel_index = buffer.read_uint32();
+		else
+			bone.rotation_channel_index = buffer.read_uint16();
+
+		if (p_isKFATFORM)
+			bone.translation_mask = buffer.read_uint32();
+		else
+			bone.translation_mask = buffer.read_uint8();
 
 		// Need to check if the X, Y, Z coordinates are to be animated on translated
 		bone.hasZAnimatedTranslation = bone.translation_mask & 0x20;
@@ -59,9 +88,20 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 		bone.hasYAnimatedRotatation = bone.translation_mask & 0x02;
 		bone.hasXAnimatedRotatation = bone.translation_mask & 0x01;
 
-		bone.x_translation_channel_index = buffer.read_uint16();
-		bone.y_translation_channel_index = buffer.read_uint16();
-		bone.z_translation_channel_index = buffer.read_uint16();
+		if (p_isKFATFORM)
+			bone.x_translation_channel_index = buffer.read_uint32();
+		else
+			bone.x_translation_channel_index = buffer.read_uint16();
+
+		if (p_isKFATFORM)
+			bone.y_translation_channel_index = buffer.read_uint32();
+		else
+			bone.y_translation_channel_index = buffer.read_uint16();
+
+		if (p_isKFATFORM)
+			bone.z_translation_channel_index = buffer.read_uint32();
+		else
+			bone.z_translation_channel_index = buffer.read_uint16();
 
 		m_animation->get_bones().push_back(bone);
 	}
@@ -79,24 +119,24 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 				while (frameNumber != frameCount)
 				{
 					std::vector<float> temp;
-					temp.push_back(-100);
+					temp.push_back(100);
 					frameRotations.push_back(temp);
 					frameCount++;
 					loopCounter++;
 				}
 
+				float quatA = buffer.read_float();
 				float quatX = buffer.read_float();
 				float quatY = buffer.read_float();
 				float quatZ = buffer.read_float();
-				float quatA = buffer.read_float();
 
 				std::vector<float> temp;
 
+				temp.push_back(quatA);
 				temp.push_back(quatX);
 				temp.push_back(quatY);
 				temp.push_back(quatZ);
-				temp.push_back(quatA);
-
+				
 				frameRotations.push_back(temp);
 			}
 			m_animation->getKFATQCHNValues().push_back(frameRotations);
@@ -137,11 +177,23 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 	{
 		if (p_isKFATFORM)
 		{
-			uint16_t dataCounterSize = data_size / 4;
+			uint16_t dataCounterSize = data_size / 16;
+			
 			for (int i = 0; i < dataCounterSize; i++)
 			{
-				float value = buffer.read_float();
-				m_animation->getStaticKFATRotationValues().push_back(value);
+				std::vector<float> ROTValues;
+
+				float WValue = buffer.read_float();
+				float XValue = buffer.read_float();
+				float YValue = buffer.read_float();
+				float ZValue = buffer.read_float();
+				
+				ROTValues.push_back(WValue);
+				ROTValues.push_back(XValue);
+				ROTValues.push_back(YValue);
+				ROTValues.push_back(ZValue);
+				
+				m_animation->getStaticKFATRotationValues().push_back(ROTValues);
 			}
 		}
 		else

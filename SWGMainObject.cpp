@@ -832,8 +832,10 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
 	{
 		auto animationObject = animationList.at(i);
+		
 		if (animationObject)
 		{
+			
 			std::string stackName = animationObject->get_object_name();
 			std::string firstErase = "appearance/animation/";
 			std::string secondErase = ".ans";
@@ -931,7 +933,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 							// For each frame, we need to build the translation vector and the rotation vector
 							FbxVector4 TranslationVector;
 							FbxVector4 RotationVector;
-
+// -------------------------------------- Translation Extraction -------------------------------------
 							if (boneIterator.hasXAnimatedTranslation)
 							{
 
@@ -1012,51 +1014,86 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 								TranslationVector.mData[2] = translationValue;
 							}
 
-							bool isStaticRotation = false;
+// --------------------------------------------------- Rotation extraction --------------------------------------
+
 							if (boneIterator.has_rotations)
 							{
-								std::vector<uint32_t> compressedValues = animationObject->getQCHNValues().at(boneIterator.rotation_channel_index);
-								std::vector<uint8_t> FormatValues;
+								EulerAngles result;
 
-								if (compressedValues.size() - 1 != animationObject->get_info().frame_count + 1)
+								if (!animationObject->checkIsUnCompressed())
 								{
-									std::cout << "Mis-match size";
+									// Compressed format
+									std::vector<uint32_t> compressedValues = animationObject->getQCHNValues().at(boneIterator.rotation_channel_index);
+									std::vector<uint8_t> FormatValues;
+
+									if (compressedValues.size() - 1 != animationObject->get_info().frame_count + 1)
+									{
+										std::cout << "Mis-match size";
+									}
+
+									uint32_t formatValue = compressedValues.at(0);
+									uint32_t compressedValue = compressedValues.at(frameCounter + 1);
+
+									FormatValues.push_back((formatValue & (((1 << 8) - 1) << 16)) >> 16);
+									FormatValues.push_back((formatValue & (((1 << 8) - 1) << 8)) >> 8);
+									FormatValues.push_back((formatValue & (((1 << 8) - 1))));
+
+									if (compressedValue != 100)
+									{
+										Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(compressedValue, FormatValues[0], FormatValues[1], FormatValues[2]);
+										result = ConvertCombineCompressQuat(Quat, skeletonBone);
+										RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+									}
+									else
+									{
+										RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+									}
 								}
-
-								uint32_t formatValue = compressedValues.at(0);
-								uint32_t compressedValue = compressedValues.at(frameCounter + 1);
-
-								FormatValues.push_back((formatValue & (((1 << 8) - 1) << 16)) >> 16);
-								FormatValues.push_back((formatValue & (((1 << 8) - 1) << 8)) >> 8);
-								FormatValues.push_back((formatValue & (((1 << 8) - 1))));
-
-								if (compressedValue != 100)
+								else
 								{
-									Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(compressedValue, FormatValues[0], FormatValues[1], FormatValues[2]);
+									// uncompressed format
+									auto uncompressedValues = animationObject->getKFATQCHNValues().at(boneIterator.rotation_channel_index);
+									std::vector<float> QuatValues = uncompressedValues.at(frameCounter);
+									if (QuatValues.at(0) != 100)
+									{
+										Geometry::Vector4 Quat = { QuatValues.at(1), QuatValues.at(2), QuatValues.at(3), QuatValues.at(0) };
+										result = ConvertCombineCompressQuat(Quat, skeletonBone);
+										RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+									}
+									else
+									{
+										RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+									}
+									
+								}
+								
+							}
+							else
+							{
+								if (!animationObject->checkIsUnCompressed())
+								{
+									// compressed format
+									uint32_t staticValue = animationObject->getStaticRotationValues().at(boneIterator.rotation_channel_index);
+									std::vector<uint8_t> formatValues = animationObject->getStaticROTFormats().at(boneIterator.rotation_channel_index);
 
-									EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone);
+									Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(staticValue, formatValues[0], formatValues[1], formatValues[2]);
+
+									EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
 
 									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
 								}
 								else
 								{
-									// DO something else here
-									//cout << "Frame Skipped";
-									RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+									std::vector<float> uncompressedValues = animationObject->getStaticKFATRotationValues().at(boneIterator.rotation_channel_index);
+									Geometry::Vector4 Quat = { uncompressedValues.at(1), uncompressedValues.at(2), uncompressedValues.at(3), uncompressedValues.at(0) };
+									EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
+									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
 								}
+								
 							}
-							else
-							{
-								uint32_t staticValue = animationObject->getStaticRotationValues().at(boneIterator.rotation_channel_index);
-								std::vector<uint8_t> formatValues = animationObject->getStaticROTFormats().at(boneIterator.rotation_channel_index);
 
-								Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(staticValue, formatValues[0], formatValues[1], formatValues[2]);
+		// ---------------------------------- Matrix setup ---------------------------------
 
-								EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
-
-								RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
-								isStaticRotation = true;
-							}
 							FbxVector4 ScalingVector(1.0, 1.0, 1.0);
 
 							FbxVector4 Vectors[3] = { TranslationVector, RotationVector, ScalingVector };

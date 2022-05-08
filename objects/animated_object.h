@@ -313,6 +313,8 @@ public:
 	virtual void set_object_name(const std::string& obj_name) override;
 	virtual std::string get_object_name() const override;
 	bool hasFPS() { return m_info.FPS != 0; }
+	bool checkIsUnCompressed() { return p_isUncompressed; }
+	void setUnCompressed() { p_isUncompressed = true; }
 
 	// getters/setters
 	void set_info(const Info& info) { m_info = info; }
@@ -326,7 +328,7 @@ public:
 	std::vector<std::vector<float>>& getCHNLValues() { return m_CHNLValues; } // This is where the ATRN is stored
 
 	std::vector<uint32_t>& getStaticRotationValues() { return m_staticRotationValues; } // This is where the SROT is stored
-	std::vector<float>& getStaticKFATRotationValues() { return m_staticKFATRotationValues; }
+	std::vector<std::vector<float>>& getStaticKFATRotationValues() { return m_staticKFATRotationValues; }
 
 	std::vector<std::vector<uint8_t>>& getStaticROTFormats() { return m_staticFormatValues; }
 
@@ -345,7 +347,7 @@ private:
 	std::vector< std::vector<float>> m_CHNLValues;
 
 	std::vector<uint32_t> m_staticRotationValues;
-	std::vector<float> m_staticKFATRotationValues;
+	std::vector<std::vector<float>> m_staticKFATRotationValues;
 
 	std::vector<std::vector<uint8_t>> m_staticFormatValues;
 
@@ -354,6 +356,7 @@ private:
 	std::vector<std::vector<uint8_t>> CoordinateFormatValue;
 	
 	std::map<std::vector<uint8_t>, uint32_t> m_staticRotateValues;
+	bool p_isUncompressed = false;
 };
 
 class Animated_mesh : public Base_object
