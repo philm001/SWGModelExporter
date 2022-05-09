@@ -53,10 +53,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		po::variables_map vm;
 		//po::store(po::parse_command_line(argc, argv, flags), vm);
 		swg_path = "C:\\swg\\SWGEmu";
-		//object_name = "acklay_cbt_attack_add.ans";
 		//object_name = "ackbar.sat";
 		//object_name = "acklay.sat";
-		object_name = "stormtrooper.sat";
+		//object_name = "stormtrooper.sat";
+		object_name = "bark_mite.sat";
 
 		//object_name = "batch:ans";
 		output_pathname = "C:\\extraction";

@@ -22,7 +22,7 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray)
 			continue;
 
 		std::cout << "Processing : " << assetName << std::endl;
-		if (assetName == "appearance/animation/all_b_entertained.ans")
+		if (assetName == "appearance/mesh/bark_mite_l0.mgn")
 		{
 			std::cout << "Asset found" << std::endl;
 		}

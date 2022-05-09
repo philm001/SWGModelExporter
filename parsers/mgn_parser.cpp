@@ -43,7 +43,7 @@ void mgn_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_s
 
 	base_buffer buffer(data_ptr, data_size);
 
-	if (name == "0004INFO" && m_section_received[skmg])
+	if ((name == "0004INFO" || name == "0003INFO") && m_section_received[skmg])
 	{
 		read_mesh_info_(buffer);
 	}
