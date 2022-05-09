@@ -142,146 +142,170 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray)
 }
 
 
-void SWGMainObject::CombineMeshProcess(std::shared_ptr<Animated_mesh> mainMesh, std::shared_ptr<Animated_mesh> secondaryMesh)
-{
-	std::shared_ptr<Animated_mesh> first = mainMesh;
-	std::shared_ptr<Animated_mesh> second = secondaryMesh;
-
-	std::vector<std::string> jointsToAdd;
-	std::vector<Animated_mesh::Vertex>	verticiesToAdd;
-	std::vector<Geometry::Vector3> normalsToAdd;
-	std::vector<Geometry::Vector4> lightingNormalsToAdd;
-	std::vector<Animated_mesh::Shader_appliance> shaderToAdd;
-
-	for (auto jointIterator : secondaryMesh->get_joint_names())
-	{
-		bool jointFound = false;
-		for (auto firstJointInterator : mainMesh->get_joint_names())
-		{
-			if (jointIterator == firstJointInterator)
-			{
-				jointFound = true;
-				break;
-			}
-		}
-
-		if (!jointFound)
-		{
-			jointsToAdd.push_back(jointIterator);
-		}
-	}
-
-	for (auto addJoint : jointsToAdd)
-	{
-		mainMesh->add_joint_name(addJoint);
-	}
-
-	for (auto secondVertexIterator : secondaryMesh->get_vertices())
-	{
-		bool vertexFound = false;
-		for (auto firstVertexInterator : mainMesh->get_vertices())
-		{
-			if (secondVertexIterator.isEqual(firstVertexInterator))
-			{
-				vertexFound = true;
-				break;
-			}
-		}
-
-		if (!vertexFound)
-		{
-			verticiesToAdd.push_back(secondVertexIterator);
-		}
-	}
-
-	for (auto vertexAdd : verticiesToAdd)
-	{
-		mainMesh->addVertex(vertexAdd);
-	}
-
-
-	for (auto secondNormals : secondaryMesh->getNormals())
-	{
-		bool normalFound = false;
-		for (auto firstNormalInterator : mainMesh->getNormals())
-		{
-			if (secondNormals == firstNormalInterator)
-			{
-				normalFound = true;
-				break;
-			}
-		}
-
-		if (!normalFound)
-		{
-			normalsToAdd.push_back(secondNormals);
-		}
-	}
-
-	for (auto normalAdd : normalsToAdd)
-	{
-		mainMesh->add_normal(normalAdd);
-	}
-
-	for (auto lightingNormals : secondaryMesh->getNormalLighting())
-	{
-		bool normalFound = false;
-		for (auto firstNormalInterator : mainMesh->getNormalLighting())
-		{
-			if (lightingNormals == firstNormalInterator)
-			{
-				normalFound = true;
-				break;
-			}
-		}
-
-		if (!normalFound)
-		{
-			lightingNormalsToAdd.push_back(lightingNormals);
-		}
-	}
-
-	for (auto normalAdd : lightingNormalsToAdd)
-	{
-		mainMesh->add_lighting_normal(normalAdd);
-	}
-
-	for (auto secondaryShaders : secondaryMesh->getShaders())
-	{
-		bool shadersFound = false;
-		for (auto firstShader : mainMesh->getShaders())
-		{
-			if (firstShader.get_name() == secondaryShaders.get_name())
-			{
-				shadersFound = true;
-				break;
-			}
-		}
-
-		if (!shadersFound)
-		{
-			shaderToAdd.push_back(secondaryShaders);
-		}
-	}
-
-	for (auto shadersAdd : shaderToAdd)
-	{
-		mainMesh->addShader(shadersAdd);
-	}
-
-	int a = 0;
-	a++;
-}
-
-
-void SWGMainObject::resolve_dependencies(const Context& context)
+void SWGMainObject::resolveDependecies()
 {
 	// p_CompleteModels is the "master" vector that stores the data
-	// This code is suppose to be iteratering through this data structure and making
-	// modifications to what is inside of it
+// This code is suppose to be iteratering through this data structure and making
+// modifications to what is inside of it
 	std::shared_ptr< std::vector<Animated_mesh>> modelPointer = std::make_shared< std::vector<Animated_mesh>>(p_CompleteModels.at(0));
+	std::vector<std::vector<Animated_mesh>>& ModelCopy = p_CompleteModels;
+	Context& referenceContext = p_Context;
 
-	for (auto& modelIterator : p_CompleteModels.at(0))
+	std::for_each(p_Context.object_list.begin(), p_Context.object_list.end(),
+		[&referenceContext, &ModelCopy](const std::pair<std::string, std::shared_ptr<Base_object>>& item)
+		{
+			if (item.first.find("mgn") != std::string::npos)
+			{
+				for (auto& listIterator : ModelCopy)
+				{
+					if (listIterator.at(0).get_object_name() == item.first)
+					{
+						for (auto& modelIterator : ModelCopy.at(0))
+						{
+							auto it = referenceContext.opened_by.find(modelIterator.get_object_name());
+							std::string openedByName;
+
+							while (it != referenceContext.opened_by.end())
+							{
+								openedByName = it->second;// Note: Stops on lmg nd not Sat
+								it = referenceContext.opened_by.find(openedByName);
+							}
+
+							// I want to edit the shaders that are inside the data structure.
+							// There are multiple shaders for each model. So we also need to iterate through them
+							auto shaderPointer = modelIterator.ShaderPointer();// Just getting the pointer that is pointing to the vector containing the shaders used
+
+							for (auto& shaderIterator : modelIterator.getShaders())
+							{
+								auto obj_it = referenceContext.object_list.find(shaderIterator.get_name());
+								if (obj_it != referenceContext.object_list.end())
+								{
+									if (std::dynamic_pointer_cast<Shader>(obj_it->second))
+									{
+										// Once checks are passed, we need to set the shader definition.
+										// This is a where everything gets tricky.
+										// Function takes in a shared pointer and sets
+										// that equal to the definition object stored within the shader
+										// However, when viewing from the scope of the p_CompleteModels,
+										// the definition object is still empty
+										shaderIterator.set_definition(std::dynamic_pointer_cast<Shader>(obj_it->second));
+									}
+								}
+							}
+
+
+							auto bad_shaders = std::any_of(modelIterator.getShaders().begin(), modelIterator.getShaders().end(),
+								[](const Animated_mesh::Shader_appliance& shader) { return shader.get_definition() == nullptr; });
+
+							if (bad_shaders)
+							{
+								std::vector<uint8_t> counters(modelIterator.get_vertices().size(), 0);
+								for (auto& shader : modelIterator.getShaders())
+								{
+									for (auto& vert_idx : shader.get_pos_indexes())
+									{
+										if (vert_idx >= counters.size())
+											break;
+										counters[vert_idx]++;
+									}
+
+
+									if (shader.get_definition() == nullptr)
+									{
+										for (auto& vert_idx : shader.get_pos_indexes())
+										{
+											if (vert_idx >= counters.size())
+												break;
+											counters[vert_idx]--;
+										}
+									}
+								}
+
+								auto safe_clear = is_partitioned(counters.begin(), counters.end(),
+									[](uint8_t val) { return val > 0; });
+
+								if (safe_clear)
+								{
+									// we can do safe clear of trouble shader, if not - oops
+									auto beg = find_if(counters.begin(), counters.end(),
+										[](uint8_t val) { return val == 0; });
+									auto idx = distance(counters.begin(), beg);
+									std::vector<Animated_mesh::Vertex> vertexMesh = modelIterator.get_vertices();
+
+									vertexMesh.erase(vertexMesh.begin() + idx, vertexMesh.end());
+
+									for (size_t idx = 0; idx < modelIterator.get_vertices().size(); ++idx)
+									{
+										if (modelIterator.getShaders().at(idx).get_definition() == nullptr)
+										{
+											modelIterator.getShaders().erase(modelIterator.getShaders().begin() + idx);
+											break;
+										}
+									}
+								}
+							}
+
+							auto mesh_description = std::dynamic_pointer_cast<Animated_object_descriptor>(referenceContext.object_list.find(openedByName)->second);
+
+							// get skeletons
+							size_t skel_idx = 0;
+							for (auto it_skel = modelIterator.getSkeletonNames().begin(); it_skel != modelIterator.getSkeletonNames().end(); ++it_skel, ++skel_idx)
+							{
+								auto skel_name = *it_skel;
+								// check name against name in description
+								if (mesh_description)
+								{
+									auto descr_skel_name = mesh_description->get_skeleton_name(skel_idx);
+									if (!boost::iequals(skel_name, descr_skel_name))
+										skel_name = descr_skel_name;
+								}
+								auto obj_it = referenceContext.object_list.find(skel_name);
+								if (obj_it != referenceContext.object_list.end() && std::dynamic_pointer_cast<Skeleton>(obj_it->second))
+									modelIterator.getSkeleton().emplace_back(skel_name, std::dynamic_pointer_cast<Skeleton>(obj_it->second)->clone());
+							}
+
+							if (!openedByName.empty() && modelIterator.getSkeleton().size() > 1 && mesh_description)
+							{
+								// check if we opened through SAT and have multiple skeleton definitions
+								//  then we have unite them to one, so we need SAT to get join information from it's skeleton info;
+								auto skel_count = mesh_description->get_skeletons_count();
+								std::shared_ptr<Skeleton> root_skeleton;
+								for (uint32_t skel_idx = 0; skel_idx < skel_count; ++skel_idx)
+								{
+									auto skel_name = mesh_description->get_skeleton_name(skel_idx);
+									auto point_name = mesh_description->get_skeleton_attach_point(skel_idx);
+
+									auto this_it = std::find_if(modelIterator.getSkeleton().begin(), modelIterator.getSkeleton().end(),
+										[&skel_name](const std::pair<std::string, std::shared_ptr<Skeleton>>& info)
+										{
+											return (boost::iequals(skel_name, info.first));
+										});
+
+									if (point_name.empty() && this_it != modelIterator.getSkeleton().end())
+										// mark this skeleton as root
+										root_skeleton = this_it->second;
+									else if (this_it != modelIterator.getSkeleton().end())
+									{
+										// attach skeleton to root
+										root_skeleton->join_skeleton_to_point(point_name, this_it->second);
+										// remove it from used list
+										modelIterator.getSkeleton().erase(this_it);
+									}
+								}
+							}
+						}
+
+
+					}
+				}
+			}
+			else
+			{
+				item.second->resolve_dependencies(referenceContext);
+			}
+		});
+
+	/*for (auto& modelIterator : p_CompleteModels.at(0))
 	{
 		auto it = p_Context.opened_by.find(modelIterator.get_object_name());
 		std::string openedByName;
@@ -294,7 +318,7 @@ void SWGMainObject::resolve_dependencies(const Context& context)
 		// I want to edit the shaders that are inside the data structure.
 		// There are multiple shaders for each model. So we also need to iterate through them
 		auto shaderPointer = modelIterator.ShaderPointer();// Just getting the pointer that is pointing to the vector containing the shaders used
-		
+
 		for(auto& shaderIterator : modelIterator.getShaders())
 		{
 			auto obj_it = p_Context.object_list.find(shaderIterator.get_name());
@@ -312,7 +336,7 @@ void SWGMainObject::resolve_dependencies(const Context& context)
 				}
 			}
 		}
-	
+
 
 		auto bad_shaders = std::any_of(modelIterator.getShaders().begin(), modelIterator.getShaders().end(),
 			[](const Animated_mesh::Shader_appliance& shader) { return shader.get_definition() == nullptr; });
@@ -353,7 +377,7 @@ void SWGMainObject::resolve_dependencies(const Context& context)
 				std::vector<Animated_mesh::Vertex> vertexMesh = modelIterator.get_vertices();
 
 				vertexMesh.erase(vertexMesh.begin() + idx, vertexMesh.end());
-				
+
 				for (size_t idx = 0; idx < modelIterator.get_vertices().size(); ++idx)
 				{
 					if (modelIterator.getShaders().at(idx).get_definition() == nullptr)
@@ -413,16 +437,13 @@ void SWGMainObject::resolve_dependencies(const Context& context)
 				}
 			}
 		}
-	}
+	}*/
 }
 
-
-
-void SWGMainObject::store(const std::string& path, const Context& context)
+void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>& mesh)
 {
-
 	// extract object name and make full path name
-	boost::filesystem::path obj_name(p_CompleteModels.at(0).at(0).get_object_name());
+	boost::filesystem::path obj_name(mesh.at(0).get_object_name());
 	boost::filesystem::path target_path(path);
 	target_path /= obj_name.filename();
 
@@ -437,11 +458,11 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 		boost::filesystem::remove(target_path);
 
 	// get lod level (by _lX end of file name). If there is no such pattern - lod level will be zero.
-	int lodLevel = p_CompleteModels.at(0).at(0).getLodLevel();
+	int lodLevel = mesh.at(0).getLodLevel();
 	obj_name = obj_name.filename();
 	obj_name.replace_extension();
 	std::string name = obj_name.string();
-	std::string mainObjectName = p_CompleteModels.at(0).at(0).get_object_name();
+	std::string mainObjectName = mesh.at(0).get_object_name();
 
 	// init FBX manager
 	FbxManager* fbx_manager_ptr = FbxManager::Create();
@@ -481,9 +502,9 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	uint32_t normalsNum = 0;
 	uint32_t counter = 0;
 
-	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
+	for (int cc = 0; cc < mesh.size(); cc++)
 	{
-		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+		auto& modelIterator = mesh.at(cc);
 		auto temp = static_cast<uint32_t>(modelIterator.get_vertices().size());
 		vertices_num += static_cast<uint32_t>(modelIterator.get_vertices().size());
 		normalsNum += static_cast<uint32_t>(modelIterator.getNormals().size());
@@ -494,9 +515,9 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 
 
 	//for (auto& modelIterator : p_CompleteModels.at(0))
-	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
+	for (int cc = 0; cc < mesh.size(); cc++)
 	{
-		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+		auto& modelIterator = mesh.at(cc);
 		for (uint32_t vertexCounter = 0; vertexCounter < modelIterator.get_vertices().size(); vertexCounter++)
 		{
 			const auto& pt = modelIterator.get_vertices()[vertexCounter].get_position();
@@ -517,9 +538,9 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	std::vector<uint32_t> uv_indexes;
 	counter = 0;
 	uint32_t normalCounter = 0;
-	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
+	for (int cc = 0; cc < mesh.size(); cc++)
 	{
-		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+		auto& modelIterator = mesh.at(cc);
 		uint32_t shaderCounter = 0;
 		for (uint32_t shader_idx = 0; shader_idx < modelIterator.getShaders().size(); ++shader_idx)
 		{
@@ -632,7 +653,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 		normals_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 		auto& direct_array = normals_ptr->GetDirectArray();
 
-		for (auto& modelIterator : p_CompleteModels.at(0))
+		for (auto& modelIterator : mesh)
 		{
 			std::for_each(modelIterator.getNormals().begin(), modelIterator.getNormals().end(),
 				[&direct_array](const Geometry::Vector3& elem)
@@ -654,7 +675,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 		normals_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 		auto& direct_array = normals_ptr->GetDirectArray();
 
-		for (auto& modelIterator : p_CompleteModels.at(0))
+		for (auto& modelIterator : mesh)
 		{
 			std::for_each(modelIterator.getNormalLighting().begin(), modelIterator.getNormalLighting().end(),
 				[&direct_array](const Geometry::Vector4& elem)
@@ -671,9 +692,9 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	mesh_ptr->BuildMeshEdgeArray();
 	std::vector<Skeleton::Bone> BoneInfoList;
 	// build skeletons
-	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
+	for (int cc = 0; cc < mesh.size(); cc++)
 	{
-		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+		auto& modelIterator = mesh.at(cc);
 
 		uint32_t m_lod_level = modelIterator.getLodLevel();
 
@@ -710,16 +731,14 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 			});
 	}
 
-	BoneInfoList = generateSkeletonInScene(scene_ptr, mesh_node_ptr);
-
-
+	BoneInfoList = generateSkeletonInScene(scene_ptr, mesh_node_ptr, mesh);
 
 	// build morph targets
 	// prepare base vector
 	FbxBlendShape* blend_shape_ptr = FbxBlendShape::Create(scene_ptr, "BlendShapes");
-	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
+	for (int cc = 0; cc < mesh.size(); cc++)
 	{
-		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+		auto& modelIterator = mesh.at(cc);
 
 		auto total_vertices = modelIterator.get_vertices().size();
 		for (const auto& morph : modelIterator.getMorphs())
@@ -832,10 +851,10 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
 	{
 		auto animationObject = animationList.at(i);
-		
+
 		if (animationObject)
 		{
-			
+
 			std::string stackName = animationObject->get_object_name();
 			std::string firstErase = "appearance/animation/";
 			std::string secondErase = ".ans";
@@ -933,7 +952,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 							// For each frame, we need to build the translation vector and the rotation vector
 							FbxVector4 TranslationVector;
 							FbxVector4 RotationVector;
-// -------------------------------------- Translation Extraction -------------------------------------
+							// -------------------------------------- Translation Extraction -------------------------------------
 							if (boneIterator.hasXAnimatedTranslation)
 							{
 
@@ -1014,7 +1033,7 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 								TranslationVector.mData[2] = translationValue;
 							}
 
-// --------------------------------------------------- Rotation extraction --------------------------------------
+							// --------------------------------------------------- Rotation extraction --------------------------------------
 
 							if (boneIterator.has_rotations)
 							{
@@ -1064,9 +1083,9 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 									{
 										RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
 									}
-									
+
 								}
-								
+
 							}
 							else
 							{
@@ -1089,10 +1108,10 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 									EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
 									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
 								}
-								
+
 							}
 
-		// ---------------------------------- Matrix setup ---------------------------------
+							// ---------------------------------- Matrix setup ---------------------------------
 
 							FbxVector4 ScalingVector(1.0, 1.0, 1.0);
 
@@ -1154,6 +1173,42 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 	fbx_manager_ptr->Destroy();
 }
 
+
+void SWGMainObject::storeObject(const std::string& path)
+{
+	std::vector<std::vector<Animated_mesh>>& ModelCopy = p_CompleteModels;
+	Context& referenceContext = p_Context;
+
+	std::for_each(p_Context.object_list.begin(), p_Context.object_list.end(),
+		[&referenceContext, &ModelCopy, &path, this](const std::pair<std::string, std::shared_ptr<Base_object>>& item)
+		{
+			std::cout << "Object : " << item.first;
+			if (item.first.find("mgn") != std::string::npos)
+			{
+				for (auto& listIterator : ModelCopy)
+				{
+					if (listIterator.at(0).get_object_name() == item.first)
+					{
+						storeMGN(path, listIterator); // The logic here needs edited to include the other LOD
+					}
+				}
+				
+			}
+			else
+			{
+				item.second->store(path, referenceContext);
+			}
+
+			std::cout << " done." << std::endl;
+		});
+	
+}
+
+
+
+
+
+
 SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::Vector4 DecompressedQuaterion, Skeleton::Bone BoneReference, bool isStatic)
 {
 	const double pi = 3.14159265358979323846;
@@ -1214,7 +1269,7 @@ SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::
 }
 
 
-std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr)
+std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr, std::vector<Animated_mesh>& mesh)
 {
 	assert(parent_ptr != nullptr && scene_ptr != nullptr);
 	std::vector<Skeleton::Bone> boneListing;
@@ -1291,9 +1346,9 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 	std::map<std::string, std::vector<std::pair<uint32_t, float>>> cluster_vertices;
 	uint32_t counter = 0;
 	
-	for (int cc = 0; cc < p_CompleteModels.at(0).size(); cc++)
+	for (int cc = 0; cc < mesh.size(); cc++)
 	{
-		auto& modelIterator = p_CompleteModels.at(0).at(cc);
+		auto& modelIterator = mesh.at(cc);
 
 		const auto& vertices = modelIterator.get_vertices();
 		const auto& mesh_joint_names = modelIterator.get_joint_names();
@@ -1357,4 +1412,17 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 	}
 	scene_ptr->AddPose(pose_ptr);
 	return boneListing;
+}
+
+void SWGMainObject::resolve_dependencies(const Context& context)
+{
+	std::cout << "Using the wrong resolve dependency function for this class. Use the other one" << std::endl;
+}
+
+
+
+void SWGMainObject::store(const std::string& path, const Context& context)
+{
+
+	std::cout << "Using the wrong resolve store object function for this class. Use the other one" << std::endl;
 }

@@ -54,10 +54,8 @@ private:
 
 	EulerAngles ConvertCombineCompressQuat(Geometry::Vector4 DecompressedQuaterion, Skeleton::Bone BoneReference, bool isStatic = false);
 
-	void CombineMeshProcess(std::shared_ptr<Animated_mesh> mainMesh, std::shared_ptr<Animated_mesh> secondaryMesh);
-
 	// ------ Section that works on the bones -----
-	std::vector<Skeleton::Bone> generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr);
+	std::vector<Skeleton::Bone> generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr, std::vector<Animated_mesh>& mesh);
 	uint32_t get_bones_count(int LODLevel) { return m_bones.at(LODLevel).size(); }
 	Skeleton::Bone& getBone(uint32_t index, int LODLevel) { return m_bones.at(LODLevel).at(index); }
 public:
@@ -74,10 +72,18 @@ public:
 	}
 
 	virtual bool is_object_correct() const override { return true; } // For now
-	virtual void store(const std::string& path, const Context& context) override;
+	
 	virtual std::set<std::string> get_referenced_objects() const override { return p_emptySet; }
-	virtual void resolve_dependencies(const Context& context) override;
 	virtual void set_object_name(const std::string& obj_name) override { p_ObjectName = obj_name; }// object will have no name??
 	virtual std::string get_object_name() const override { return p_ObjectName; }
+	void resolveDependecies();
+	void storeObject(const std::string& path);
+	void storeMGN(const std::string& path, std::vector<Animated_mesh>& mesh);
+
+	// Do not use these functions, they are only here to satisfy the virtual functions
+	virtual void resolve_dependencies(const Context& context) override;
+	virtual void store(const std::string& path, const Context& context) override;
+
+	
 };
 

@@ -221,8 +221,8 @@ int _tmain(int argc, _TCHAR* argv[])
 			SWGObject.SetLibrary(library);
 
 			SWGObject.beginParsingProcess(frontValue);
-			SWGObject.resolve_dependencies(context);
-			SWGObject.StoreObject(output_pathname);
+			SWGObject.resolveDependecies();
+			SWGObject.storeObject(output_pathname);
 			// reset everything here????
 		}
 	}
