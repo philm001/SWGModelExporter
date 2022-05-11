@@ -90,6 +90,12 @@
     <ClInclude Include="SWGMainObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="apt_parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -144,6 +150,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SWGMainObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="apt_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesh_file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

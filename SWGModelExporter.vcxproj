@@ -165,10 +165,12 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="apt_parser.h" />
     <ClInclude Include="base_buffer.h" />
     <ClInclude Include="defines.h" />
     <ClInclude Include="IFF_file.h" />
     <ClInclude Include="latt_parser.h" />
+    <ClInclude Include="mesh_file.h" />
     <ClInclude Include="objects\animated_object.h" />
     <ClInclude Include="objects\base_object.h" />
     <ClInclude Include="objects\geometry_common.h" />
@@ -189,9 +191,11 @@
     <ClInclude Include="UncompressQuaternion.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="apt_parser.cpp" />
     <ClCompile Include="base_buffer.cpp" />
     <ClCompile Include="IFF_file.cpp" />
     <ClCompile Include="latt_parser.cpp" />
+    <ClCompile Include="mesh_file.cpp" />
     <ClCompile Include="objects\animated_object.cpp" />
     <ClCompile Include="objects\static_object.cpp" />
     <ClCompile Include="parsers\anim_parser.cpp" />

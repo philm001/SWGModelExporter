@@ -56,7 +56,11 @@ int _tmain(int argc, _TCHAR* argv[])
 		//object_name = "ackbar.sat";
 		//object_name = "acklay.sat";
 		//object_name = "stormtrooper.sat";
-		object_name = "bark_mite.sat";
+	//	object_name = "bark_mite.sat";
+		//object_name = "ig88.sat";
+		//object_name = "krayt_dragon.sat";
+		object_name = "asteroid_acid_large_s01.apt";
+		//object_name = "asteroid_acid_large_s01_l0.msh";
 
 		//object_name = "batch:ans";
 		output_pathname = "C:\\extraction";
@@ -227,7 +231,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 	}
 
-	std::cout << "Resolve dependencies..." << endl;
+/*	std::cout << "Resolve dependencies..." << endl;
 	std::for_each(context.object_list.begin(), context.object_list.end(),
 		[&context](const pair<string, shared_ptr<Base_object>>& item)
 		{
@@ -250,7 +254,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			{
 				std::cout << "Does not support saving directly" << endl;
 			}
-		});
+		});*/
 
 	CoUninitialize();
 	return 0;

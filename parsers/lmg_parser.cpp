@@ -3,6 +3,8 @@
 
 using namespace std;
 
+// LOD Skeleton template
+
 void lmg_parser::section_begin(const string& name, uint8_t* data_ptr, size_t data_size, uint32_t depth)
 {
   if (name == "MLODFORM")
