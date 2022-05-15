@@ -68,6 +68,11 @@ public:
 		m_triangleVertices.push_back(vec3);
 	}
 
+	void AddIndex(uint32_t index)
+	{
+		m_indexList.push_back(index);
+	}
+
 	// overrides
 	virtual bool is_object_correct() const override { return true; }
 	virtual void store(const std::string& path, const Context& context) override { };
@@ -92,6 +97,7 @@ private:
 	std::vector<std::vector<float>> m_centerPoints;
 	std::vector<float> m_sphereRadius;
 	std::vector<std::vector<float>> m_triangleVertices;
+	std::vector<uint32_t> m_indexList;
 };
 
 

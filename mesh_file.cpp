@@ -83,6 +83,7 @@ void LODParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t da
 	}
 	else if (name == "0000VERT")
 	{
+		// Triangle vetexs
 		while (!buffer.end_of_buffer())
 		{
 			std::vector<float> triPoints;
@@ -94,13 +95,18 @@ void LODParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t da
 			triPoints.push_back(x); // confirm the order
 			triPoints.push_back(y);
 			triPoints.push_back(z);
-
+			                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
 			m_object->AddVertex(triPoints);
 		}
 	}
 	else if (name == "INDX")
 	{
-
+		// Triangles INdicies?
+		while (!buffer.end_of_buffer())
+		{
+			uint32_t readValue = buffer.read_uint32();
+			m_object->AddIndex(readValue);
+		}
 	}
 }
 
