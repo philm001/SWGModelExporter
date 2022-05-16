@@ -36,7 +36,7 @@ private:
 };
 
 
-class LODObject : public Base_object
+class LODObject : public Base_object // This object contains mesh object
 {
 public:
 	LODObject() { }
@@ -115,7 +115,7 @@ private:
 };
 
 
-class meshObject : public Base_object
+class meshObject : public Base_object // This object contains shader data
 {
 public:
 	meshObject() { }
@@ -124,11 +124,36 @@ public:
 	virtual bool is_object_correct() const override { return true; }
 	virtual void store(const std::string& path, const Context& context) override { };
 
+	void setShaderName(std::string shaderName)
+	{
+		m_shaderName = shaderName;
+	}
+
+	void setCenter(std::vector<float> centerPoint)
+	{
+		m_centerPoint = centerPoint;
+	}
+
+	void setRadiusPoint(float radisuPoint)
+	{
+		m_radius = radisuPoint;
+	}
+
+	void setMaxPoint(std::vector<float> point)
+	{
+		m_maxPoint = point;
+	}
+
+	void setMinPoint(std::vector<float> point)
+	{
+		m_minPoint = point;
+	}
+
 	virtual std::set<std::string> get_referenced_objects() const override
 	{
 		std::set<std::string> names;
 
-		names.insert(m_LODName.begin(), m_LODName.end());
+		names.insert(m_shaderName);
 
 		return move(names);
 	};
@@ -139,6 +164,12 @@ public:
 private:
 	std::string m_name;
 	std::vector<std::string> m_LODName;
+	std::string m_shaderName;
+	std::vector<float> m_maxPoint;
+	std::vector<float> m_minPoint;
+
+	std::vector<float> m_centerPoint;
+	float m_radius = 0;
 };
 
 class meshParser : public IFF_visitor

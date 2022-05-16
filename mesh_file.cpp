@@ -127,6 +127,58 @@ void meshParser::section_begin(const std::string& name, uint8_t* data_ptr, size_
 void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t data_size)
 {
 	base_buffer buffer(data_ptr, data_size);
+	if (name == "0001SPHR")
+	{
+		float centerX = buffer.read_float();
+		float centerY = buffer.read_float();
+		float centerZ = buffer.read_float();
+
+		float cRadius = buffer.read_float();
+
+		std::vector<float> center{ centerX, centerY, centerZ };
+
+		m_object->setRadiusPoint(cRadius);
+		m_object->setCenter(center);
+	}
+	else if (name == "BOX ")
+	{
+		std::vector<float> maxValue;
+		std::vector<float> minValue;
+
+		maxValue.push_back(buffer.read_float());// X
+		maxValue.push_back(buffer.read_float());// Y
+		maxValue.push_back(buffer.read_float());// Z
+
+		minValue.push_back(buffer.read_float());// X
+		minValue.push_back(buffer.read_float());// Y
+		minValue.push_back(buffer.read_float());// Z
+
+		m_object->setMaxPoint(maxValue);
+		m_object->setMinPoint(minValue);
+	}
+	else if (name == "0001NAME")
+	{
+		std::string Shader = buffer.read_stringz();
+		m_object->setShaderName(Shader);
+	}
+	else if (name == "0003DATA")
+	{
+		// Triangle vetexs
+		while (!buffer.end_of_buffer())
+		{
+			std::vector<float> triPoints;
+
+			float x = buffer.read_float();
+			float y = buffer.read_float();
+			float z = buffer.read_float();
+
+			triPoints.push_back(x); // confirm the order
+			triPoints.push_back(y);
+			triPoints.push_back(z);
+
+			m_object->AddVertex(triPoints);
+		}
+	}
 }
 
 bool meshParser::is_object_parsed() const
