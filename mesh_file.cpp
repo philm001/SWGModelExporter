@@ -161,23 +161,83 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		std::string Shader = buffer.read_stringz();
 		m_object->setShaderName(Shader);
 	}
-	else if (name == "0003DATA")
+	else if (name == "0001INFO")
+	{
+		uint32_t flags = buffer.read_uint32();
+		m_object->setFlags(flags);
+	}
+	else if (name == "DATA")
 	{
 		// Triangle vetexs
 		while (!buffer.end_of_buffer())
 		{
-			std::vector<float> triPoints;
+			if (m_object->hasPosition())
+			{
+				std::vector<float> triPoints;
 
-			float x = buffer.read_float();
-			float y = buffer.read_float();
-			float z = buffer.read_float();
+				float x = buffer.read_float();
+				float y = buffer.read_float();
+				float z = buffer.read_float();
 
-			triPoints.push_back(x); // confirm the order
-			triPoints.push_back(y);
-			triPoints.push_back(z);
+				triPoints.push_back(x); // Order is correct
+				triPoints.push_back(y);
+				triPoints.push_back(z);
 
-			m_object->AddVertex(triPoints);
+				m_object->AddVertex(triPoints);
+			}
+			
+			if (m_object->isTransformed())
+			{
+				float transformFloat = buffer.read_float();
+			}
+				
+			if (m_object->hasNormals())
+			{
+				std::vector<float> parsedNormal;
+
+				float xNormal = buffer.read_float();
+				float yNormal = buffer.read_float();
+				float zNormal = buffer.read_float();
+
+				parsedNormal.push_back(xNormal);
+				parsedNormal.push_back(yNormal);
+				parsedNormal.push_back(zNormal);
+
+				m_object->addNormal(parsedNormal);
+			}
+			
+			if (m_object->hasPointSize())
+			{
+				float pointSize = buffer.read_float();
+			}
+				
+
+			if (m_object->hasColor0())
+			{
+				uint32_t color0 = buffer.read_uint32();
+			}
+			
+			if (m_object->hasColor1())
+			{
+				uint32_t color1 = buffer.read_uint32();
+			}
+			
+			std::vector<std::vector<float>> textureCoordinatePrime;
+
+			for (int i = 0; i < m_object->GetNumTextureCoordinateSets(); i++)
+			{
+				std::vector<float> textureCoordinateSemiPrime;
+				for (int j = 0; j < m_object->getCoordinateSet(i); j++)
+				{
+					textureCoordinateSemiPrime.push_back(buffer.read_float());
+				}
+				textureCoordinatePrime.push_back(textureCoordinateSemiPrime);
+			}
 		}
+	}
+	else if (name == "INDX")
+	{
+
 	}
 }
 
