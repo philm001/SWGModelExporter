@@ -168,10 +168,13 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		{
 			uint32_t flags = buffer.read_uint32();
 			m_object->setFlags(flags);
+			FirstInfoHit = true;
 		}
 		else
 		{
 			uint32_t primitiveType = buffer.read_uint32();
+
+			m_object->SetPrimitiveType((ShaderPrimitiveType)primitiveType);
 
 			bool hasIndicies = buffer.read_uint8();
 			bool hasSortedIndicies = buffer.read_uint8();

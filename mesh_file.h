@@ -1,6 +1,7 @@
 #pragma once
 #include "objects/base_object.h"
 #include "IFF_file.h"
+#include "PrimitiveType.h"
 
 
 class LODFileList : public Base_object
@@ -214,6 +215,16 @@ public:
 		m_Normals.push_back(normal);
 	}
 
+	void SetPrimitiveType(ShaderPrimitiveType type)
+	{
+		m_primitiveType = type;
+	}
+
+	ShaderPrimitiveType getPrimitiveType()
+	{
+		return m_primitiveType;
+	}
+
 	virtual void resolve_dependencies(const Context&) override { }
 	virtual void set_object_name(const std::string& name) override { m_name = name; }
 	virtual std::string get_object_name() const override { return m_name; }
@@ -231,6 +242,8 @@ private:
 	std::vector<std::vector<float>> m_Normals;
 
 	uint32_t m_flags;
+
+	ShaderPrimitiveType m_primitiveType;
 };
 
 class meshParser : public IFF_visitor
