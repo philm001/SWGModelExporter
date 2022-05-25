@@ -163,8 +163,20 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 	}
 	else if (name == "0001INFO")
 	{
-		uint32_t flags = buffer.read_uint32();
-		m_object->setFlags(flags);
+		static bool FirstInfoHit = false;
+		if (!FirstInfoHit)
+		{
+			uint32_t flags = buffer.read_uint32();
+			m_object->setFlags(flags);
+		}
+		else
+		{
+			uint32_t primitiveType = buffer.read_uint32();
+
+			bool hasIndicies = buffer.read_uint8();
+			bool hasSortedIndicies = buffer.read_uint8();
+		}
+		
 	}
 	else if (name == "DATA")
 	{
@@ -236,6 +248,10 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		}
 	}
 	else if (name == "INDX")
+	{
+
+	}
+	else if (name == "SIDX")
 	{
 
 	}
