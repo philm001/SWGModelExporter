@@ -252,11 +252,21 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 	}
 	else if (name == "INDX")
 	{
+		uint32_t indexCount = buffer.read_uint32();
 
+		while (!buffer.end_of_buffer())
+		{
+			uint16_t indexValue = buffer.read_uint16();
+			m_object->getIndexArray().push_back(indexValue);
+		}
 	}
 	else if (name == "SIDX")
 	{
+		uint32_t indexCount = buffer.read_uint32();
+		while (!buffer.end_of_buffer())
+		{
 
+		}
 	}
 }
 

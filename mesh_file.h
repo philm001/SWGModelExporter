@@ -225,6 +225,31 @@ public:
 		return m_primitiveType;
 	}
 
+	void setIndiciesState(bool state)
+	{
+		m_hasIndicies = state;
+	}
+
+	bool getIndiciesState()
+	{
+		return m_hasIndicies;
+	}
+
+	void setIndiciesSortedState(bool state)
+	{
+		m_sortedIndicies = state;
+	}
+
+	bool getSortIndiciesState()
+	{
+		return m_sortedIndicies;
+	}
+
+	std::vector<uint16_t>& getIndexArray()
+	{
+		return m_indexArray;
+	}
+
 	virtual void resolve_dependencies(const Context&) override { }
 	virtual void set_object_name(const std::string& name) override { m_name = name; }
 	virtual std::string get_object_name() const override { return m_name; }
@@ -235,6 +260,8 @@ private:
 	std::vector<float> m_maxPoint;
 	std::vector<float> m_minPoint;
 
+	std::vector<uint16_t> m_indexArray;
+
 	std::vector<float> m_centerPoint;
 	float m_radius = 0;
 
@@ -244,6 +271,9 @@ private:
 	uint32_t m_flags;
 
 	ShaderPrimitiveType m_primitiveType;
+
+	bool m_hasIndicies = false;
+	bool m_sortedIndicies = false;
 };
 
 class meshParser : public IFF_visitor
