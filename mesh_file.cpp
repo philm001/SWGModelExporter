@@ -183,6 +183,15 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 	}
 	else if (name == "DATA")
 	{
+		bool skipDot2 = false;
+		int numberOfTextureCoordinateSets = m_object->GetNumTextureCoordinateSets();
+		if (numberOfTextureCoordinateSets > 0 && m_object->getCoordinateSet(numberOfTextureCoordinateSets - 1) == 4)
+		{
+			numberOfTextureCoordinateSets--;
+			m_object->SetTextreCoordinateDim(numberOfTextureCoordinateSets, 1);
+			m_object->SetNumberOfTextureCoordinateSets(numberOfTextureCoordinateSets);
+			skipDot2 = true;
+		}
 		// Triangle vetexs
 		while (!buffer.end_of_buffer())
 		{
@@ -194,7 +203,7 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				float y = buffer.read_float();
 				float z = buffer.read_float();
 
-				triPoints.push_back(x); // Order is correct
+				triPoints.push_back(x);
 				triPoints.push_back(y);
 				triPoints.push_back(z);
 
@@ -248,6 +257,14 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				}
 				textureCoordinatePrime.push_back(textureCoordinateSemiPrime);
 			}
+
+			if (skipDot2)
+			{
+				buffer.read_float();
+				buffer.read_float();
+				buffer.read_float();
+				buffer.read_float();
+			}
 		}
 	}
 	else if (name == "INDX")
@@ -265,7 +282,16 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		uint32_t indexCount = buffer.read_uint32();
 		while (!buffer.end_of_buffer())
 		{
+			// Read direction of buffer
+			std::vector<float> Coordinate{ buffer.read_float(), buffer.read_float(), buffer.read_float() };
+			// Read in index value
+			uint32_t indexValue = buffer.read_uint32();
 
+			SortedIndex AdditionalIndex;
+			AdditionalIndex.CoordinateDirection = Coordinate;
+			AdditionalIndex.IndexValue = indexValue;
+
+			m_object->GetSortedIndex().push_back(AdditionalIndex);
 		}
 	}
 }
@@ -273,4 +299,10 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 bool meshParser::is_object_parsed() const
 {
 	return true;
+}
+
+
+void meshObject::store(const std::string& path, const Context& context)
+{
+
 }

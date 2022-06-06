@@ -3,6 +3,11 @@
 #include "IFF_file.h"
 #include "PrimitiveType.h"
 
+struct SortedIndex
+{
+	std::vector<float> CoordinateDirection;
+	uint32_t IndexValue;
+};
 
 class LODFileList : public Base_object
 {
@@ -123,17 +128,11 @@ public:
 
 	// overrides
 	virtual bool is_object_correct() const override { return true; }
-	virtual void store(const std::string& path, const Context& context) override { };
+	virtual void store(const std::string& path, const Context& context) override;
 
-	void setShaderName(std::string shaderName)
-	{
-		m_shaderName = shaderName;
-	}
+	void setShaderName(std::string shaderName) { m_shaderName = shaderName; }
 
-	void setCenter(std::vector<float> centerPoint)
-	{
-		m_centerPoint = centerPoint;
-	}
+	void setCenter(std::vector<float> centerPoint) { m_centerPoint = centerPoint; }
 
 	void setRadiusPoint(float radisuPoint)
 	{
@@ -250,6 +249,22 @@ public:
 		return m_indexArray;
 	}
 
+	void SetTextreCoordinateDim(int textureCoordinateSet, int dim)
+	{
+		const unsigned int shift = static_cast<unsigned int>(12 + (textureCoordinateSet * 2));
+		m_flags = (m_flags & ~(static_cast<unsigned int>(0b0011) << shift)) | (static_cast<uint32_t>(dim - 1) << shift);
+	}
+
+	void SetNumberOfTextureCoordinateSets(int numberofTextures)
+	{
+		m_flags = (m_flags & ~(0b1111 << 8)) | (static_cast<uint32_t>(numberofTextures) << 8);
+	}
+
+	std::vector<SortedIndex>& GetSortedIndex()
+	{
+		return m_SortedIndiciesVector;
+	}
+
 	virtual void resolve_dependencies(const Context&) override { }
 	virtual void set_object_name(const std::string& name) override { m_name = name; }
 	virtual std::string get_object_name() const override { return m_name; }
@@ -267,6 +282,8 @@ private:
 
 	std::vector<std::vector<float>> m_triangleVertices;
 	std::vector<std::vector<float>> m_Normals;
+
+	std::vector<SortedIndex> m_SortedIndiciesVector;
 
 	uint32_t m_flags;
 
