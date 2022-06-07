@@ -7,6 +7,7 @@ struct SortedIndex
 {
 	std::vector<float> CoordinateDirection;
 	uint32_t IndexValue;
+	std::vector<uint16_t> Indicie;
 };
 
 class LODFileList : public Base_object

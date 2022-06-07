@@ -285,11 +285,17 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			// Read direction of buffer
 			std::vector<float> Coordinate{ buffer.read_float(), buffer.read_float(), buffer.read_float() };
 			// Read in index value
-			uint32_t indexValue = buffer.read_uint32();
+			uint32_t indexValue = buffer.read_uint32();// Confirm this is the correct order
 
 			SortedIndex AdditionalIndex;
 			AdditionalIndex.CoordinateDirection = Coordinate;
 			AdditionalIndex.IndexValue = indexValue;
+
+			// After reading index value will need to read through for indice values
+			for (int i = 0; i < indexValue; i++)
+			{
+				AdditionalIndex.Indicie.push_back(buffer.read_uint16());
+			}
 
 			m_object->GetSortedIndex().push_back(AdditionalIndex);
 		}
