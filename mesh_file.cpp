@@ -310,5 +310,200 @@ bool meshParser::is_object_parsed() const
 
 void meshObject::store(const std::string& path, const Context& context)
 {
+	boost::filesystem::path obj_name(m_name);
+	boost::filesystem::path target_path(path);
+	target_path /= obj_name.filename();
+	target_path.replace_extension("fbx");
 
+	// init FBX manager
+	FbxManager* fbx_manager_ptr = FbxManager::Create();
+	if (fbx_manager_ptr == nullptr)
+		return;
+
+	FbxIOSettings* ios_ptr = FbxIOSettings::Create(fbx_manager_ptr, IOSROOT);
+	ios_ptr->SetIntProp(EXP_FBX_EXPORT_FILE_VERSION, FBX_FILE_VERSION_7400);
+	fbx_manager_ptr->SetIOSettings(ios_ptr);
+
+	FbxExporter* exporter_ptr = FbxExporter::Create(fbx_manager_ptr, "");
+	if (!exporter_ptr)
+		return;
+
+	exporter_ptr->SetFileExportVersion(FBX_2014_00_COMPATIBLE);
+	bool result = exporter_ptr->Initialize(target_path.string().c_str(), -1, fbx_manager_ptr->GetIOSettings());
+	if (!result)
+	{
+		auto status = exporter_ptr->GetStatus();
+		cout << "FBX error: " << status.GetErrorString() << endl;
+		return;
+	}
+	FbxScene* scene_ptr = FbxScene::Create(fbx_manager_ptr, m_object_name.c_str());
+	if (!scene_ptr)
+		return;
+
+	scene_ptr->GetGlobalSettings().SetSystemUnit(FbxSystemUnit::m);
+	auto scale_factor = scene_ptr->GetGlobalSettings().GetSystemUnit().GetScaleFactor();
+	FbxNode* mesh_node_ptr = FbxNode::Create(scene_ptr, "mesh_node"); //skeleton root?
+	FbxMesh* mesh_ptr = FbxMesh::Create(scene_ptr, "mesh");
+
+	mesh_node_ptr->SetNodeAttribute(mesh_ptr);
+	scene_ptr->GetRootNode()->AddChild(mesh_node_ptr);
+
+	// prepare vertices
+	uint32_t vertices_num = static_cast<uint32_t>(m_vertices.size());
+	uint32_t normals_num = static_cast<uint32_t>(m_normals.size());
+	mesh_ptr->SetControlPointCount(vertices_num);
+	auto mesh_vertices = mesh_ptr->GetControlPoints();
+
+	for (uint32_t vertex_idx = 0; vertex_idx < vertices_num; ++vertex_idx)
+	{
+		const auto& pt = m_vertices[vertex_idx].get_position();
+		mesh_vertices[vertex_idx] = FbxVector4(pt.x, pt.y, pt.z);
+	}
+
+	// add material layer
+	auto material_layer = mesh_ptr->CreateElementMaterial();
+	material_layer->SetMappingMode(FbxLayerElement::eByPolygon);
+	material_layer->SetReferenceMode(FbxLayerElement::eIndexToDirect);
+
+	// process polygons
+	vector<uint32_t> normal_indexes;
+	vector<uint32_t> tangents_idxs;
+	vector<Graphics::Tex_coord> uvs;
+	vector<uint32_t> uv_indexes;
+
+	for (uint32_t shader_idx = 0; shader_idx < m_shaders.size(); ++shader_idx)
+	{
+		auto& shader = m_shaders[shader_idx];
+		if (shader.get_definition())
+		{
+			auto material_ptr = FbxSurfacePhong::Create(scene_ptr, shader.get_name().c_str());
+			material_ptr->ShadingModel.Set("Phong");
+
+			auto& material = shader.get_definition()->material();
+			auto& textures = shader.get_definition()->textures();
+
+			// create material for this shader
+			material_ptr->Ambient.Set(FbxDouble3(material.ambient.r, material.ambient.g, material.ambient.g));
+			material_ptr->Diffuse.Set(FbxDouble3(material.diffuse.r, material.diffuse.g, material.diffuse.g));
+			material_ptr->Emissive.Set(FbxDouble3(material.emissive.r, material.emissive.g, material.emissive.g));
+			material_ptr->Specular.Set(FbxDouble3(material.specular.r, material.specular.g, material.specular.g));
+
+			// add texture definitions
+			for (auto& texture_def : textures)
+			{
+				FbxFileTexture* texture = FbxFileTexture::Create(scene_ptr, texture_def.tex_file_name.c_str());
+				boost::filesystem::path tex_path(path);
+				tex_path /= texture_def.tex_file_name;
+				tex_path.replace_extension("tga");
+
+				texture->SetFileName(tex_path.string().c_str());
+				texture->SetTextureUse(FbxTexture::eStandard);
+				texture->SetMaterialUse(FbxFileTexture::eModelMaterial);
+				texture->SetMappingType(FbxTexture::eUV);
+				texture->SetWrapMode(FbxTexture::eRepeat, FbxTexture::eRepeat);
+				texture->SetTranslation(0.0, 0.0);
+				texture->SetScale(1.0, 1.0);
+				texture->SetTranslation(0.0, 0.0);
+				switch (texture_def.texture_type)
+				{
+				case Shader::texture_type::main:
+					material_ptr->Diffuse.ConnectSrcObject(texture);
+					break;
+				case Shader::texture_type::normal:
+					material_ptr->Bump.ConnectSrcObject(texture);
+					break;
+				case Shader::texture_type::specular:
+					material_ptr->Specular.ConnectSrcObject(texture);
+					break;
+				}
+			}
+
+			mesh_ptr->GetNode()->AddMaterial(material_ptr);
+
+			// get geometry element
+			auto& triangles = shader.get_triangles();
+			auto& positions = shader.get_pos_indexes();
+			auto& normals = shader.get_normal_indexes();
+			auto& tangents = shader.get_light_indexes();
+
+			auto idx_offset = static_cast<uint32_t>(uvs.size());
+			copy(shader.get_texels().begin(), shader.get_texels().end(), back_inserter(uvs));
+
+			normal_indexes.reserve(normal_indexes.size() + normals.size());
+			tangents_idxs.reserve(tangents_idxs.size() + tangents.size());
+
+			for (uint32_t tri_idx = 0; tri_idx < triangles.size(); ++tri_idx)
+			{
+				auto& tri = triangles[tri_idx];
+				mesh_ptr->BeginPolygon(shader_idx, -1, shader_idx, false);
+				for (size_t i = 0; i < 3; ++i)
+				{
+					auto remapped_pos_idx = positions[tri.points[i]];
+					mesh_ptr->AddPolygon(remapped_pos_idx);
+
+					auto remapped_normal_idx = normals[tri.points[i]];
+					normal_indexes.emplace_back(remapped_normal_idx);
+
+					if (!tangents.empty())
+					{
+						auto remapped_tangent = tangents[tri.points[i]];
+						tangents_idxs.emplace_back(remapped_tangent);
+					}
+					uv_indexes.emplace_back(idx_offset + tri.points[i]);
+				}
+				mesh_ptr->EndPolygon();
+			}
+		}
+	}
+	// add UVs
+	FbxGeometryElementUV* uv_ptr = mesh_ptr->CreateElementUV("UVSet1");
+	uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+	uv_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+
+	std::for_each(uvs.begin(), uvs.end(), [&uv_ptr](const Graphics::Tex_coord& coord)
+		{
+			uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
+		});
+	std::for_each(uv_indexes.begin(), uv_indexes.end(), [&uv_ptr](const uint32_t idx)
+		{
+			uv_ptr->GetIndexArray().Add(idx);
+		});
+
+	// add normals
+	if (!normal_indexes.empty())
+	{
+		FbxGeometryElementNormal* normals_ptr = mesh_ptr->CreateElementNormal();
+		normals_ptr->SetMappingMode(FbxGeometryElementNormal::eByPolygonVertex);
+		normals_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+		auto& direct_array = normals_ptr->GetDirectArray();
+		std::for_each(m_normals.begin(), m_normals.end(),
+			[&direct_array](const Geometry::Vector3& elem)
+			{
+				direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
+			});
+
+		auto& index_array = normals_ptr->GetIndexArray();
+		std::for_each(normal_indexes.begin(), normal_indexes.end(),
+			[&index_array](const uint32_t& idx) { index_array.Add(idx); });
+	}
+
+	// add tangents
+	if (!tangents_idxs.empty())
+	{
+		FbxGeometryElementTangent* normals_ptr = mesh_ptr->CreateElementTangent();
+		normals_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+		normals_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+		auto& direct_array = normals_ptr->GetDirectArray();
+		std::for_each(m_lighting_normals.begin(), m_lighting_normals.end(),
+			[&direct_array](const Geometry::Vector4& elem)
+			{
+				direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
+			});
+
+		auto& index_array = normals_ptr->GetIndexArray();
+		std::for_each(tangents_idxs.begin(), tangents_idxs.end(),
+			[&index_array](const uint32_t& idx) { index_array.Add(idx); });
+	}
+
+	mesh_ptr->BuildMeshEdgeArray();
 }
