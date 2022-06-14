@@ -333,10 +333,10 @@ void meshObject::store(const std::string& path, const Context& context)
 	if (!result)
 	{
 		auto status = exporter_ptr->GetStatus();
-		cout << "FBX error: " << status.GetErrorString() << endl;
+		std::cout << "FBX error: " << status.GetErrorString() << std::endl;
 		return;
 	}
-	FbxScene* scene_ptr = FbxScene::Create(fbx_manager_ptr, m_object_name.c_str());
+	FbxScene* scene_ptr = FbxScene::Create(fbx_manager_ptr, m_name.c_str());
 	if (!scene_ptr)
 		return;
 
@@ -349,15 +349,15 @@ void meshObject::store(const std::string& path, const Context& context)
 	scene_ptr->GetRootNode()->AddChild(mesh_node_ptr);
 
 	// prepare vertices
-	uint32_t vertices_num = static_cast<uint32_t>(m_vertices.size());
-	uint32_t normals_num = static_cast<uint32_t>(m_normals.size());
+	uint32_t vertices_num = static_cast<uint32_t>(m_triangleVertices.size());
+	uint32_t normals_num = static_cast<uint32_t>(m_Normals.size());
 	mesh_ptr->SetControlPointCount(vertices_num);
 	auto mesh_vertices = mesh_ptr->GetControlPoints();
 
 	for (uint32_t vertex_idx = 0; vertex_idx < vertices_num; ++vertex_idx)
 	{
-		const auto& pt = m_vertices[vertex_idx].get_position();
-		mesh_vertices[vertex_idx] = FbxVector4(pt.x, pt.y, pt.z);
+		const auto& pt = m_triangleVertices.at(vertex_idx);
+		mesh_vertices[vertex_idx] = FbxVector4(pt.at(0), pt.at(1), pt.at(2));
 	}
 
 	// add material layer
@@ -366,10 +366,10 @@ void meshObject::store(const std::string& path, const Context& context)
 	material_layer->SetReferenceMode(FbxLayerElement::eIndexToDirect);
 
 	// process polygons
-	vector<uint32_t> normal_indexes;
-	vector<uint32_t> tangents_idxs;
-	vector<Graphics::Tex_coord> uvs;
-	vector<uint32_t> uv_indexes;
+	std::vector<uint32_t> normal_indexes;
+	std::vector<uint32_t> tangents_idxs;
+	std::vector<Graphics::Tex_coord> uvs;
+	std::vector<uint32_t> uv_indexes;
 
 	for (uint32_t shader_idx = 0; shader_idx < m_shaders.size(); ++shader_idx)
 	{

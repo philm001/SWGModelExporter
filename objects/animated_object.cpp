@@ -122,23 +122,6 @@ Animated_mesh::EulerAngles Animated_mesh::ConvertCombineCompressQuat(Geometry::V
 	double cosy_cosp = Quat.a * Quat.a + Quat.x * Quat.x - Quat.y * Quat.y - Quat.z * Quat.z;
 	angles.yaw = std::atan2(siny_cosp, cosy_cosp);
 
-	// roll (x-axis rotation)
-/*	double sinr_cosp = 2.0 * (Quat.a * Quat.x + Quat.y * Quat.z);
-	double cosr_cosp = 1 - 2 * (Quat.x * Quat.x + Quat.y * Quat.y);
-	angles.roll = std::atan2(sinr_cosp, cosr_cosp);
-
-	// pitch (y-axis rotation)
-	double sinp = 2 * (Quat.a * Quat.y - Quat.z * Quat.x);
-	if (std::abs(sinp) >= 1)
-		angles.pitch = std::copysign(pi / 2.0, sinp); // use 90 degrees if out of range
-	else
-		angles.pitch = std::asin(sinp);
-
-	// yaw (z-axis rotation)
-	double siny_cosp = 2.0 * (Quat.a * Quat.z + Quat.x * Quat.y);
-	double cosy_cosp = 1 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z);
-	angles.yaw = std::atan2(siny_cosp, cosy_cosp);*/
-
 	angles.roll *= rotationFactor;
 	angles.pitch *= rotationFactor;
 	angles.yaw *= rotationFactor;
