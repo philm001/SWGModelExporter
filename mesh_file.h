@@ -2,6 +2,7 @@
 #include "objects/base_object.h"
 #include "IFF_file.h"
 #include "PrimitiveType.h"
+#include "objects/geometry_common.h"
 
 struct SortedIndex
 {
@@ -119,6 +120,36 @@ public:
 
 private:
 	std::shared_ptr<LODObject> m_object;
+};
+
+
+
+class Shader_appliance
+{
+public:
+	Shader_appliance(const std::string& name) : m_name(name) { }
+	const std::string& get_name() const { return m_name; }
+	std::vector<uint32_t>& get_pos_indexes() { return m_position_indexes; }
+	std::vector<uint32_t>& get_normal_indexes() { return m_normal_indexes; }
+	std::vector<uint32_t>& get_light_indexes() { return m_light_indexes; }
+	std::vector<Graphics::Tex_coord>& get_texels() { return m_texels; }
+	std::vector<Graphics::Triangle_indexed>& get_triangles() { return m_triangles; }
+	std::vector<std::pair<uint32_t, uint32_t>>& get_primivites() { return m_primitives; }
+	void set_definition(const std::shared_ptr<Shader> shader_def) { m_shader_definition = shader_def; }
+	const std::shared_ptr<Shader>& get_definition() const { return m_shader_definition; }
+
+	void add_primitive();
+	void close_primitive() { m_primitives.back().second = static_cast<uint32_t>(m_primitives.size()); }
+private:
+	std::string m_name;
+	std::vector<uint32_t> m_position_indexes;
+	std::vector<uint32_t> m_normal_indexes;
+	std::vector<uint32_t> m_light_indexes;
+	std::vector<Graphics::Tex_coord> m_texels;
+	std::vector<Graphics::Triangle_indexed> m_triangles;
+	std::vector<std::pair<uint32_t, uint32_t>> m_primitives;
+	std::shared_ptr<Shader> m_shader_definition;
+
 };
 
 
