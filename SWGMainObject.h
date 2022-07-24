@@ -9,6 +9,8 @@
 #include "UncompressQuaternion.h"
 #include "objects/animated_object.h"
 
+#define COORDINATE_SYSTEM FbxAxisSystem::Max
+
 
 enum class ParseSelector
 {
@@ -78,6 +80,7 @@ public:
 	virtual std::string get_object_name() const override { return p_ObjectName; }
 	void resolveDependecies();
 	void storeObject(const std::string& path);
+
 	void storeMGN(const std::string& path, std::vector<Animated_mesh>& mesh);
 
 	// Do not use these functions, they are only here to satisfy the virtual functions

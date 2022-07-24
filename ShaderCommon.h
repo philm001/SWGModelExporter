@@ -5,7 +5,7 @@
 #include "vector"
 #include <memory>
 #include <set>
-
+/*
 class Shader : public Base_object
 {
 public:
@@ -124,4 +124,4 @@ private:
 	std::vector<std::pair<uint32_t, uint32_t>> m_primitives;
 	std::shared_ptr<Shader> m_shader_definition;
 
-};
+};*/

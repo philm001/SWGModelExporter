@@ -247,10 +247,11 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			}
 			
 			std::vector<std::vector<float>> textureCoordinatePrime;
-
+			int testValue = m_object->GetNumTextureCoordinateSets();
 			for (int i = 0; i < m_object->GetNumTextureCoordinateSets(); i++)
 			{
 				std::vector<float> textureCoordinateSemiPrime;
+				int testValue2 = m_object->getCoordinateSet(i);
 				for (int j = 0; j < m_object->getCoordinateSet(i); j++)
 				{
 					textureCoordinateSemiPrime.push_back(buffer.read_float());
@@ -310,7 +311,7 @@ bool meshParser::is_object_parsed() const
 
 void meshObject::store(const std::string& path, const Context& context)
 {
-	boost::filesystem::path obj_name(m_name);
+/*	boost::filesystem::path obj_name(m_name);
 	boost::filesystem::path target_path(path);
 	target_path /= obj_name.filename();
 	target_path.replace_extension("fbx");
@@ -505,5 +506,5 @@ void meshObject::store(const std::string& path, const Context& context)
 			[&index_array](const uint32_t& idx) { index_array.Add(idx); });
 	}
 
-	mesh_ptr->BuildMeshEdgeArray();
+	mesh_ptr->BuildMeshEdgeArray();*/
 }

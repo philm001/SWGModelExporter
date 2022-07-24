@@ -339,7 +339,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 		return;
 
 	FbxIOSettings* ios_ptr = FbxIOSettings::Create(fbx_manager_ptr, IOSROOT);
-	ios_ptr->SetIntProp(EXP_FBX_EXPORT_FILE_VERSION, FBX_FILE_VERSION_7400);
+	ios_ptr->SetIntProp(EXP_FBX_EXPORT_FILE_VERSION, FBX_FILE_VERSION_7700);
 	fbx_manager_ptr->SetIOSettings(ios_ptr);
 
 	FbxExporter* exporter_ptr = FbxExporter::Create(fbx_manager_ptr, "");
@@ -713,10 +713,12 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 
 	QuatExpand::UncompressQuaternion decompressValues;
 	decompressValues.install();
+	
 
+	//FbxAxisSystem max; // we desire to convert the scene from Y-Up to Z-Up
+	//max.ConvertScene(scene_ptr);
+	FbxAxisSystem::MayaZUp.ConvertScene(scene_ptr);
 	// Next loop through the entire animation list
-	//for (auto animationObject : animationList)
-	//{
 	for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
 	{
 		auto animationObject = animationList.at(i);
@@ -1034,8 +1036,6 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 			}
 		}
 	}
-
-	FbxSystemUnit::cm.ConvertScene(scene_ptr);
 
 	exporter_ptr->Export(scene_ptr);
 	// cleanup

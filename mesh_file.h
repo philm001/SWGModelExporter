@@ -123,7 +123,7 @@ private:
 };
 
 
-
+/*
 class Shader_appliance
 {
 public:
@@ -150,7 +150,7 @@ private:
 	std::vector<std::pair<uint32_t, uint32_t>> m_primitives;
 	std::shared_ptr<Shader> m_shader_definition;
 
-};
+};*/
 
 
 class meshObject : public Base_object // This object contains shader data

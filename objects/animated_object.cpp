@@ -91,36 +91,53 @@ Animated_mesh::EulerAngles Animated_mesh::ConvertCombineCompressQuat(Geometry::V
 {
 	const double pi = 3.14159265358979323846;
 	double rotationFactor = 180.0 / pi;
-	//double rotationFactor = 1.0;
-	FbxQuaternion bind_rot_quat{ BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a };
-	FbxQuaternion AnimationQuat = FbxQuaternion(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
 
 	Geometry::Vector4 Quat;
+	EulerAngles angles;
 
+	FbxQuaternion AnimationQuat = FbxQuaternion(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
+	FbxQuaternion bind_rot_quat{ BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a };
 	FbxQuaternion pre_rot_quat{ BoneReference.pre_rot_quaternion.x, BoneReference.pre_rot_quaternion.y, BoneReference.pre_rot_quaternion.z, BoneReference.pre_rot_quaternion.a };
 	FbxQuaternion post_rot_quat{ BoneReference.post_rot_quaternion.x, BoneReference.post_rot_quaternion.y, BoneReference.post_rot_quaternion.z, BoneReference.post_rot_quaternion.a };
 
 	auto full_rot = post_rot_quat * (AnimationQuat * bind_rot_quat) * pre_rot_quat;
 	Quat = Geometry::Vector4(full_rot.mData[0], full_rot.mData[1], full_rot.mData[2], full_rot.mData[3]);
 
-	EulerAngles angles;
+	double test = Quat.x * Quat.z - Quat.y * Quat.a;
+	double sqx = Quat.x * Quat.x;
+	double sqy = Quat.y * Quat.y;
+	double sqz = Quat.z * Quat.z;
+	double sqa = Quat.a * Quat.a;
+	double unit = sqx + sqy + sqz + sqa;
 
-	// roll (x-axis rotation)
-	double sinr_cosp = 2.0 * (Quat.a * Quat.x + Quat.y * Quat.z);
-	double cosr_cosp = Quat.a * Quat.a - Quat.x * Quat.x - Quat.y * Quat.y + Quat.z * Quat.z;
-	angles.roll = std::atan2(sinr_cosp, cosr_cosp);
+	angles.yaw = std::atan2(2.0 * (Quat.x * Quat.y + Quat.z * Quat.a), sqx - sqy - sqz + sqa); // heading
+	angles.pitch = std::asin(-2.0 * test / unit); // attitude
+	angles.roll = std::atan2(2.0 * (Quat.y * Quat.z + Quat.x * Quat.a), -sqx - sqy + sqz + sqa); // bank
 
-	// pitch (y-axis rotation)
-	double sinp = 2.0 * (Quat.a * Quat.y - Quat.z * Quat.x);
-	if (std::abs(sinp) >= 1)
-		angles.pitch = std::copysign(pi / 2.0, sinp); // use 90 degrees if out of range
+	/*double test = Quat.x * Quat.y + Quat.z * Quat.a;
+	if (test < 0.499)
+	{
+		angles.yaw = 2.0 * std::atan2(Quat.x, Quat.a);
+		angles.pitch = pi / 2.0;
+		angles.roll = 0;
+	}
+	else if (test < -0.499)
+	{
+		angles.yaw = -2.0 * std::atan2(Quat.x, Quat.a);
+		angles.pitch = -pi / 2.0;
+		angles.roll = 0;
+	}
 	else
-		angles.pitch = std::asin(sinp);
+	{
+		double sqx = Quat.x * Quat.x;
+		double sqy = Quat.y * Quat.y;
+		double sqz = Quat.z * Quat.z;
 
-	// yaw (z-axis rotation)
-	double siny_cosp = 2.0 * (Quat.a * Quat.z + Quat.x * Quat.y);
-	double cosy_cosp = Quat.a * Quat.a + Quat.x * Quat.x - Quat.y * Quat.y - Quat.z * Quat.z;
-	angles.yaw = std::atan2(siny_cosp, cosy_cosp);
+		angles.yaw = std::atan2(2.0 * Quat.y * Quat.a - 2.0 * Quat.x * Quat.z, 1.0 - 2.0 * sqy - 2.0 * sqz);
+		angles.pitch = std::asin(2.0 * test);
+		angles.roll = std::atan2(2.0 * Quat.x * Quat.a - 2.0 * Quat.y * Quat.z, 1.0 - 2.0 * sqx - 2.0 * sqz);
+	}*/
+
 
 	angles.roll *= rotationFactor;
 	angles.pitch *= rotationFactor;
@@ -132,9 +149,10 @@ Animated_mesh::EulerAngles Animated_mesh::ConvertCombineCompressQuat(Geometry::V
 void Animated_mesh::store(const std::string& path, const Context& context)
 {
 	// extract object name and make full path name
-	fs::path obj_name(m_object_name);
-	fs::path target_path(path);
+	boost::filesystem::path obj_name(m_object_name);
+	boost::filesystem::path target_path(path);
 	target_path /= obj_name.filename();
+
 	target_path.replace_extension("fbx");
 
 	// check directory existance
@@ -142,14 +160,14 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 	if (!boost::filesystem::exists(directory))
 		boost::filesystem::create_directories(directory);
 
-	if (fs::exists(target_path))
-		fs::remove(target_path);
+	if (boost::filesystem::exists(target_path))
+		boost::filesystem::remove(target_path);
 
 	// get lod level (by _lX end of file name). If there is no such pattern - lod level will be zero.
-	m_lod_level = 0;
+	int lodLevel =0;
 	obj_name = obj_name.filename();
 	obj_name.replace_extension();
-	string name = obj_name.string();
+	std::string name = obj_name.string();
 	char last_char = name.back();
 	if (isdigit(last_char))
 		m_lod_level = (last_char - '0');
@@ -160,7 +178,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 		return;
 
 	FbxIOSettings* ios_ptr = FbxIOSettings::Create(fbx_manager_ptr, IOSROOT);
-	ios_ptr->SetIntProp(EXP_FBX_EXPORT_FILE_VERSION, FBX_FILE_VERSION_7400);
+	ios_ptr->SetIntProp(EXP_FBX_EXPORT_FILE_VERSION, FBX_FILE_VERSION_7700);
 	fbx_manager_ptr->SetIOSettings(ios_ptr);
 
 	FbxExporter* exporter_ptr = FbxExporter::Create(fbx_manager_ptr, "");
@@ -172,7 +190,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 	if (!result)
 	{
 		auto status = exporter_ptr->GetStatus();
-		cout << "FBX error: " << status.GetErrorString() << endl;
+		std::cout << "FBX error: " << status.GetErrorString() << std::endl;
 		return;
 	}
 	FbxScene* scene_ptr = FbxScene::Create(fbx_manager_ptr, m_object_name.c_str());
@@ -205,95 +223,100 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 	material_layer->SetReferenceMode(FbxLayerElement::eIndexToDirect);
 
 	// process polygons
-	vector<uint32_t> normal_indexes;
-	vector<uint32_t> tangents_idxs;
-	vector<Graphics::Tex_coord> uvs;
-	vector<uint32_t> uv_indexes;
+	std::vector<uint32_t> normal_indexes;
+	std::vector<uint32_t> tangents_idxs;
+	std::vector<Graphics::Tex_coord> uvs;
+	std::vector<uint32_t> uv_indexes;
 
-	for (uint32_t shader_idx = 0; shader_idx < m_shaders.size(); ++shader_idx)
+	uint32_t normalCounter = 0;
+	//for (int cc = 0; cc < mesh.size(); cc++)
 	{
-		auto& shader = m_shaders[shader_idx];
-		if (shader.get_definition())
+		for (uint32_t shader_idx = 0; shader_idx < m_shaders.size(); ++shader_idx)
 		{
-			auto material_ptr = FbxSurfacePhong::Create(scene_ptr, shader.get_name().c_str());
-			material_ptr->ShadingModel.Set("Phong");
-
-			auto& material = shader.get_definition()->material();
-			auto& textures = shader.get_definition()->textures();
-
-			// create material for this shader
-			material_ptr->Ambient.Set(FbxDouble3(material.ambient.r, material.ambient.g, material.ambient.g));
-			material_ptr->Diffuse.Set(FbxDouble3(material.diffuse.r, material.diffuse.g, material.diffuse.g));
-			material_ptr->Emissive.Set(FbxDouble3(material.emissive.r, material.emissive.g, material.emissive.g));
-			material_ptr->Specular.Set(FbxDouble3(material.specular.r, material.specular.g, material.specular.g));
-
-			// add texture definitions
-			for (auto& texture_def : textures)
+			auto& shader = m_shaders.at(shader_idx);
+			if (shader.get_definition())
 			{
-				FbxFileTexture* texture = FbxFileTexture::Create(scene_ptr, texture_def.tex_file_name.c_str());
-				boost::filesystem::path tex_path(path);
-				tex_path /= texture_def.tex_file_name;
-				tex_path.replace_extension("tga");
+				auto material_ptr = FbxSurfacePhong::Create(scene_ptr, shader.get_name().c_str());
+				material_ptr->ShadingModel.Set("Phong");
 
-				texture->SetFileName(tex_path.string().c_str());
-				texture->SetTextureUse(FbxTexture::eStandard);
-				texture->SetMaterialUse(FbxFileTexture::eModelMaterial);
-				texture->SetMappingType(FbxTexture::eUV);
-				texture->SetWrapMode(FbxTexture::eRepeat, FbxTexture::eRepeat);
-				texture->SetTranslation(0.0, 0.0);
-				texture->SetScale(1.0, 1.0);
-				texture->SetTranslation(0.0, 0.0);
-				switch (texture_def.texture_type)
+				auto& material = shader.get_definition()->material();
+				auto& textures = shader.get_definition()->textures();
+
+				// create material for this shader
+				material_ptr->Ambient.Set(FbxDouble3(material.ambient.r, material.ambient.g, material.ambient.g));
+				material_ptr->Diffuse.Set(FbxDouble3(material.diffuse.r, material.diffuse.g, material.diffuse.g));
+				material_ptr->Emissive.Set(FbxDouble3(material.emissive.r, material.emissive.g, material.emissive.g));
+				material_ptr->Specular.Set(FbxDouble3(material.specular.r, material.specular.g, material.specular.g));
+
+				// add texture definitions
+				for (auto& texture_def : textures)
 				{
-				case Shader::texture_type::main:
-					material_ptr->Diffuse.ConnectSrcObject(texture);
-					break;
-				case Shader::texture_type::normal:
-					material_ptr->Bump.ConnectSrcObject(texture);
-					break;
-				case Shader::texture_type::specular:
-					material_ptr->Specular.ConnectSrcObject(texture);
-					break;
-				}
-			}
+					FbxFileTexture* texture = FbxFileTexture::Create(scene_ptr, texture_def.tex_file_name.c_str());
+					boost::filesystem::path tex_path(path);
+					tex_path /= texture_def.tex_file_name;
+					tex_path.replace_extension("tga");
 
-			mesh_ptr->GetNode()->AddMaterial(material_ptr);
-
-			// get geometry element
-			auto& triangles = shader.get_triangles();
-			auto& positions = shader.get_pos_indexes();
-			auto& normals = shader.get_normal_indexes();
-			auto& tangents = shader.get_light_indexes();
-
-			auto idx_offset = static_cast<uint32_t>(uvs.size());
-			copy(shader.get_texels().begin(), shader.get_texels().end(), back_inserter(uvs));
-
-			normal_indexes.reserve(normal_indexes.size() + normals.size());
-			tangents_idxs.reserve(tangents_idxs.size() + tangents.size());
-
-			for (uint32_t tri_idx = 0; tri_idx < triangles.size(); ++tri_idx)
-			{
-				auto& tri = triangles[tri_idx];
-				mesh_ptr->BeginPolygon(shader_idx, -1, shader_idx, false);
-				for (size_t i = 0; i < 3; ++i)
-				{
-					auto remapped_pos_idx = positions[tri.points[i]];
-					mesh_ptr->AddPolygon(remapped_pos_idx);
-
-					auto remapped_normal_idx = normals[tri.points[i]];
-					normal_indexes.emplace_back(remapped_normal_idx);
-
-					if (!tangents.empty())
+					texture->SetFileName(tex_path.string().c_str());
+					texture->SetTextureUse(FbxTexture::eStandard);
+					texture->SetMaterialUse(FbxFileTexture::eModelMaterial);
+					texture->SetMappingType(FbxTexture::eUV);
+					texture->SetWrapMode(FbxTexture::eRepeat, FbxTexture::eRepeat);
+					texture->SetTranslation(0.0, 0.0);
+					texture->SetScale(1.0, 1.0);
+					texture->SetTranslation(0.0, 0.0);
+					switch (texture_def.texture_type)
 					{
-						auto remapped_tangent = tangents[tri.points[i]];
-						tangents_idxs.emplace_back(remapped_tangent);
+					case Shader::texture_type::main:
+						material_ptr->Diffuse.ConnectSrcObject(texture);
+						break;
+					case Shader::texture_type::normal:
+						material_ptr->Bump.ConnectSrcObject(texture);
+						break;
+					case Shader::texture_type::specular:
+						material_ptr->Specular.ConnectSrcObject(texture);
+						break;
 					}
-					uv_indexes.emplace_back(idx_offset + tri.points[i]);
 				}
-				mesh_ptr->EndPolygon();
+
+				mesh_ptr->GetNode()->AddMaterial(material_ptr);
+
+				// get geometry element
+				auto& triangles = shader.get_triangles();
+				auto& positions = shader.get_pos_indexes();
+				auto& normals = shader.get_normal_indexes();
+				auto& tangents = shader.get_light_indexes();
+
+				auto idx_offset = static_cast<uint32_t>(uvs.size());
+				copy(shader.get_texels().begin(), shader.get_texels().end(), back_inserter(uvs));
+
+				normal_indexes.reserve(normal_indexes.size() + normals.size());
+				tangents_idxs.reserve(tangents_idxs.size() + tangents.size());
+
+				for (uint32_t tri_idx = 0; tri_idx < triangles.size(); ++tri_idx)
+				{
+					auto& tri = triangles[tri_idx];
+					mesh_ptr->BeginPolygon(shader_idx, -1, shader_idx, false);
+					for (size_t i = 0; i < 3; ++i)
+					{
+						auto remapped_pos_idx = positions[tri.points[i]];
+						mesh_ptr->AddPolygon(remapped_pos_idx);
+
+						auto remapped_normal_idx = normals[tri.points[i]] + normalCounter;
+						normal_indexes.emplace_back(remapped_normal_idx);
+
+						if (!tangents.empty())
+						{
+							auto remapped_tangent = tangents[tri.points[i]];
+							tangents_idxs.emplace_back(remapped_tangent);
+						}
+						uv_indexes.emplace_back(idx_offset + tri.points[i]);
+					}
+					mesh_ptr->EndPolygon();
+				}
 			}
 		}
 	}
+
 	// add UVs
 	FbxGeometryElementUV* uv_ptr = mesh_ptr->CreateElementUV("UVSet1");
 	uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
@@ -357,101 +380,103 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 			}
 		});
 
-	
-
 	// build morph targets
 	// prepare base vector
-	auto total_vertices = m_vertices.size();
-
 	FbxBlendShape* blend_shape_ptr = FbxBlendShape::Create(scene_ptr, "BlendShapes");
-	for (const auto& morph : m_morphs)
+	//for (int cc = 0; cc < mesh.size(); cc++)
 	{
-		FbxBlendShapeChannel* morph_channel = FbxBlendShapeChannel::Create(scene_ptr, morph.get_name().c_str());
-		FbxShape* shape = FbxShape::Create(scene_ptr, morph_channel->GetName());
 
-		shape->InitControlPoints(static_cast<int>(total_vertices));
-		auto shape_vertices = shape->GetControlPoints();
-
-		// copy base vertices to shape vertices
-		for (size_t idx = 0; idx < total_vertices; ++idx)
+		auto total_vertices = m_vertices.size();
+		for (const auto& morph : m_morphs)
 		{
-			auto& pos = m_vertices[idx].get_position();
-			shape_vertices[idx].Set(pos.x, pos.y, pos.z);
-		}
+			FbxBlendShapeChannel* morph_channel = FbxBlendShapeChannel::Create(scene_ptr, morph.get_name().c_str());
+			FbxShape* shape = FbxShape::Create(scene_ptr, morph_channel->GetName());
 
-		// apply morph
-		for (auto& morph_pt : morph.get_positions())
-		{
-			size_t idx = morph_pt.first;
-			auto& offset = morph_pt.second;
-			if (idx >= total_vertices)
-				continue;
-			auto& pos = m_vertices[idx].get_position();
-			shape_vertices[idx].Set(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
-		}
+			shape->InitControlPoints(static_cast<int>(total_vertices));
+			auto shape_vertices = shape->GetControlPoints();
 
-		if (!normal_indexes.empty() && !context.batch_mode)
-		{
-			// get normals
-			auto normal_element = shape->CreateElementNormal();
-			normal_element->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
-			normal_element->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
-
-			auto& direct_array = normal_element->GetDirectArray();
-			// set a base normals 
-			std::for_each(m_normals.begin(), m_normals.end(),
-				[&direct_array](const Geometry::Vector3& elem)
-				{
-					direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
-				});
-
-			for (auto& morph_normal : morph.get_normals())
+			// copy base vertices to shape vertices
+			for (size_t idx = 0; idx < total_vertices; ++idx)
 			{
-				uint32_t idx = morph_normal.first;
-				auto& offset = morph_normal.second;
-				auto& base = m_normals[idx];
-				direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
+				auto& pos = m_vertices[idx].get_position();
+				shape_vertices[idx].Set(pos.x, pos.y, pos.z);
 			}
 
-			auto& index_array = normal_element->GetIndexArray();
-			std::for_each(normal_indexes.begin(), normal_indexes.end(),
-				[&index_array](const uint32_t& idx) { index_array.Add(idx); });
-		}
-
-		if (!tangents_idxs.empty() && !context.batch_mode)
-		{
-			// get tangents
-			auto tangents_ptr = shape->CreateElementTangent();
-			tangents_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
-			tangents_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
-
-			auto& direct_array = tangents_ptr->GetDirectArray();
-			std::for_each(m_lighting_normals.begin(), m_lighting_normals.end(),
-				[&direct_array](const Geometry::Vector4& elem)
-				{
-					direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
-				});
-
-			for (auto& morph_tangent : morph.get_tangents())
+			// apply morph
+			for (auto& morph_pt : morph.get_positions())
 			{
-				uint32_t idx = morph_tangent.first;
-				auto& offset = morph_tangent.second;
-				auto& base = m_lighting_normals[idx];
-				direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
+				size_t idx = morph_pt.first;
+				auto& offset = morph_pt.second;
+				if (idx >= total_vertices)
+					continue;
+				auto& pos = m_vertices[idx].get_position();
+				shape_vertices[idx].Set(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
 			}
 
-			auto& index_array = tangents_ptr->GetIndexArray();
-			std::for_each(tangents_idxs.begin(), tangents_idxs.end(),
-				[&index_array](const uint32_t& idx) { index_array.Add(idx); });
-		}
+			if (!normal_indexes.empty() && !context.batch_mode)
+			{
+				// get normals
+				auto normal_element = shape->CreateElementNormal();
+				normal_element->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+				normal_element->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
-		auto success = morph_channel->AddTargetShape(shape);
-		success = blend_shape_ptr->AddBlendShapeChannel(morph_channel);
+				auto& direct_array = normal_element->GetDirectArray();
+				// set a base normals
+				std::for_each(m_normals.begin(), m_normals.end(),
+					[&direct_array](const Geometry::Vector3& elem)
+					{
+						direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
+					});
+
+
+				for (auto& morph_normal : morph.get_normals())
+				{
+					uint32_t idx = morph_normal.first;
+					auto& offset = morph_normal.second;
+					auto& base = m_normals[idx];
+					direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
+				}
+
+				auto& index_array = normal_element->GetIndexArray();
+				std::for_each(normal_indexes.begin(), normal_indexes.end(),
+					[&index_array](const uint32_t& idx) { index_array.Add(idx); });
+			}
+
+			if (!tangents_idxs.empty() && context.batch_mode)
+			{
+				// get tangents
+				auto tangents_ptr = shape->CreateElementTangent();
+				tangents_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+				tangents_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+
+				auto& direct_array = tangents_ptr->GetDirectArray();
+				std::for_each(m_lighting_normals.begin(), m_lighting_normals.end(),
+					[&direct_array](const Geometry::Vector4& elem)
+					{
+						direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
+					});
+
+				for (auto& morph_tangent : morph.get_tangents())
+				{
+					uint32_t idx = morph_tangent.first;
+					auto& offset = morph_tangent.second;
+					auto& base = m_lighting_normals.at(idx);
+					direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
+				}
+
+				auto& index_array = tangents_ptr->GetIndexArray();
+				std::for_each(tangents_idxs.begin(), tangents_idxs.end(),
+					[&index_array](const uint32_t& idx) { index_array.Add(idx); });
+			}
+
+			auto success = morph_channel->AddTargetShape(shape);
+			success = blend_shape_ptr->AddBlendShapeChannel(morph_channel);
+		}
 	}
 	mesh_node_ptr->GetGeometry()->AddDeformer(blend_shape_ptr);
 
 	// Build Animations (Note: Not sure if this is the best place to put them. But should be after the skeletons
-	std::vector<shared_ptr<Animation>> animationList;
+	std::vector<std::shared_ptr<Animation>> animationList;
 
 	// First sort out the animation objects first
 	for (auto baseObjectiterator : context.object_list)
@@ -466,16 +491,21 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 	QuatExpand::UncompressQuaternion decompressValues;
 	decompressValues.install();
 
+
+	//FbxAxisSystem max; // we desire to convert the scene from Y-Up to Z-Up
+	//max.ConvertScene(scene_ptr);
+	FbxAxisSystem::MayaZUp.ConvertScene(scene_ptr);
 	// Next loop through the entire animation list
-	for (auto animationObject : animationList)
+	for (int i = 0; i < 1 /*animationList.size()*/; i++)// This method is esy for debugging
 	{
+		auto animationObject = animationList.at(i);
+
 		if (animationObject)
 		{
+
 			std::string stackName = animationObject->get_object_name();
 			std::string firstErase = "appearance/animation/";
 			std::string secondErase = ".ans";
-			//fbxsdk::FbxPose* lPose = fbxsdk::FbxPose::Create(scene_ptr, "Rest Pose");
-			//lPose->SetIsBindPose(false);
 
 			size_t pos = stackName.find(firstErase);
 			if (pos != std::string::npos)
@@ -512,28 +542,34 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 			exportedTimeSpan.Set(exportedStartTime, exportedStopTime);
 			animationStack->SetLocalTimeSpan(exportedTimeSpan);
 
-			for (auto boneIterator : animationObject->get_bones())
+			for (auto& boneIterator : animationObject->get_bones())
 			{
 				std::vector<FbxNode*> treeBranch;
 				treeBranch.push_back(mesh_node_ptr->GetChild(0));// The first node to start with is the child of the root node
-				std::string boneName = boneIterator.name;// debug
-				std::vector<std::string> nameVector;// debug
+				std::string boneName = boneIterator.name;
 
 				for (int i = 0; i < treeBranch.size(); i++)// Loop through the branches of the tree
 				{
 					std::string treeBranchName = treeBranch.at(i)->GetName();// Grab the name of the current element Also for debugging
-					nameVector.push_back(treeBranchName);// Debug purposes
-					if (treeBranch.at(i)->GetName() == boneIterator.name)// Found a match between the selected 
+
+					boost::to_lower(treeBranchName);
+					boost::to_lower(boneName);
+
+					if (treeBranchName == boneName)// Found a match between the selected 
 					{
 						Skeleton::Bone skeletonBone = Skeleton::Bone("test");
-						for (auto boneInfoIterator : BoneInfoList)
+						for (auto& boneInfoIterator : BoneInfoList)
 						{
-							if (boneInfoIterator.name == boneIterator.name)
+							std::string searchBoneName = boneInfoIterator.name;
+							boost::to_lower(searchBoneName);
+
+							if (searchBoneName == boneName)
 							{
 								skeletonBone = boneInfoIterator;
 								break;
 							}
 						}
+
 						// For easy access placing pointers to the bones
 						FbxNode* rootSkeleton = mesh_node_ptr;
 						FbxNode* boneToUse = treeBranch.at(i);
@@ -564,7 +600,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 							// For each frame, we need to build the translation vector and the rotation vector
 							FbxVector4 TranslationVector;
 							FbxVector4 RotationVector;
-
+							// -------------------------------------- Translation Extraction -------------------------------------
 							if (boneIterator.hasXAnimatedTranslation)
 							{
 
@@ -572,7 +608,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 
 								if (translationValues.size() != animationObject->get_info().frame_count + 1)
 								{
-									cout << "Mis-match size";
+									std::cout << "Mis-match size";
 								}
 
 								float translationValue = translationValues.at(frameCounter);
@@ -597,10 +633,10 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 
 								if (translationValues.size() != animationObject->get_info().frame_count + 1)
 								{
-									cout << "Mis-match size";
+									std::cout << "Mis-match size";
 								}
 
-								float translationValue = GetTranslationAnimationValue(frameCounter, translationValues);
+								float translationValue = translationValues.at(frameCounter);
 								if (translationValue > -1000.0)
 								{
 									TranslationVector.mData[1] = translationValue;
@@ -624,10 +660,10 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 
 								if (translationValues.size() != animationObject->get_info().frame_count + 1)
 								{
-									cout << "Mis-match size";
+									std::cout << "Mis-match size";
 								}
 
-								float translationValue = GetTranslationAnimationValue(frameCounter, translationValues);
+								float translationValue = translationValues.at(frameCounter);
 								if (translationValue > -1000.0)
 								{
 									TranslationVector.mData[2] = translationValue;
@@ -645,59 +681,92 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 								TranslationVector.mData[2] = translationValue;
 							}
 
-							bool isStaticRotation = false;
+							// --------------------------------------------------- Rotation extraction --------------------------------------
+
 							if (boneIterator.has_rotations)
 							{
-								std::vector<uint32_t> compressedValues = animationObject->getQCHNValues().at(boneIterator.rotation_channel_index);
-								std::vector<uint8_t> FormatValues;
+								EulerAngles result;
 
-								if (compressedValues.size() - 1 != animationObject->get_info().frame_count + 1)
+								if (!animationObject->checkIsUnCompressed())
 								{
-									cout << "Mis-match size";
+									// Compressed format
+									std::vector<uint32_t> compressedValues = animationObject->getQCHNValues().at(boneIterator.rotation_channel_index);
+									std::vector<uint8_t> FormatValues;
+
+									if (compressedValues.size() - 1 != animationObject->get_info().frame_count + 1)
+									{
+										std::cout << "Mis-match size";
+									}
+
+									uint32_t formatValue = compressedValues.at(0);
+									uint32_t compressedValue = compressedValues.at(frameCounter + 1);
+
+									FormatValues.push_back((formatValue & (((1 << 8) - 1) << 16)) >> 16);
+									FormatValues.push_back((formatValue & (((1 << 8) - 1) << 8)) >> 8);
+									FormatValues.push_back((formatValue & (((1 << 8) - 1))));
+
+									if (compressedValue != 100)
+									{
+										Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(compressedValue, FormatValues[0], FormatValues[1], FormatValues[2]);
+										result = ConvertCombineCompressQuat(Quat, skeletonBone);
+										RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+									}
+									else
+									{
+										RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+									}
+								}
+								else
+								{
+									// uncompressed format
+									auto uncompressedValues = animationObject->getKFATQCHNValues().at(boneIterator.rotation_channel_index);
+									std::vector<float> QuatValues = uncompressedValues.at(frameCounter);
+									if (QuatValues.at(0) != 100)
+									{
+										Geometry::Vector4 Quat = { QuatValues.at(1), QuatValues.at(2), QuatValues.at(3), QuatValues.at(0) };
+										result = ConvertCombineCompressQuat(Quat, skeletonBone);
+										RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+									}
+									else
+									{
+										RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+									}
+
 								}
 
-								uint32_t formatValue = compressedValues.at(0);
-								uint32_t compressedValue = compressedValues.at(frameCounter + 1);
-
-								FormatValues.push_back((formatValue & (((1 << 8) - 1) << 16)) >> 16);
-								FormatValues.push_back((formatValue & (((1 << 8) - 1) << 8)) >> 8);
-								FormatValues.push_back((formatValue & (((1 << 8) - 1))));
-
-								if (compressedValue != 100)
+							}
+							else
+							{
+								if (!animationObject->checkIsUnCompressed())
 								{
-									Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(compressedValue, FormatValues[0], FormatValues[1], FormatValues[2]);
+									// compressed format
+									uint32_t staticValue = animationObject->getStaticRotationValues().at(boneIterator.rotation_channel_index);
+									std::vector<uint8_t> formatValues = animationObject->getStaticROTFormats().at(boneIterator.rotation_channel_index);
 
-									EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone);
+									Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(staticValue, formatValues[0], formatValues[1], formatValues[2]);
+
+									EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
 
 									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
 								}
 								else
 								{
-									// DO something else here
-									//cout << "Frame Skipped";
-									RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+									std::vector<float> uncompressedValues = animationObject->getStaticKFATRotationValues().at(boneIterator.rotation_channel_index);
+									Geometry::Vector4 Quat = { uncompressedValues.at(1), uncompressedValues.at(2), uncompressedValues.at(3), uncompressedValues.at(0) };
+									EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
+									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
 								}
+
 							}
-							else
-							{
-								uint32_t staticValue = animationObject->getStaticRotationValues().at(boneIterator.rotation_channel_index);
-								std::vector<uint8_t> formatValues = animationObject->getStaticROTFormats().at(boneIterator.rotation_channel_index);
 
-								Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(staticValue, formatValues[0], formatValues[1], formatValues[2]);
+							// ---------------------------------- Matrix setup ---------------------------------
 
-								EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
-
-								RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
-								isStaticRotation = true;
-							}
 							FbxVector4 ScalingVector(1.0, 1.0, 1.0);
 
 							FbxVector4 Vectors[3] = { TranslationVector, RotationVector, ScalingVector };
 
-
-
 							double timeValue = (double)frameCounter * ((double)1.0 / (double)animationObject->get_info().FPS);
-							FbxVector4 finalVector[3] = { globalNode.GetT() + TranslationVector , RotationVector, ScalingVector};
+							FbxVector4 finalVector[3] = { globalNode.GetT() + TranslationVector , RotationVector, ScalingVector };
 
 							for (int curveIndex = 0; curveIndex < 2; curveIndex++)
 							{
@@ -744,36 +813,6 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 			}
 		}
 	}
-
-	FbxSystemUnit::cm.ConvertScene(scene_ptr);
-	//std::vector<FbxNode*> treeBranch;
-	//treeBranch.push_back(mesh_node_ptr->GetChild(0));// The first node to start with is the child of the root node
-	//fbxsdk::FbxPose* testPose = fbxsdk::FbxPose::Create(scene_ptr, "this is a test");
-	//testPose->Add(mesh_node_ptr, mesh_node_ptr->EvaluateLocalTransform(), true);
-	//int loopCounter = 0;
-	//while(true)
-	//{
-	//	if (loopCounter > (treeBranch.size() - 1) || treeBranch.at(loopCounter)->GetName() == "root" )
-	//	{
-	//		break;
-	//	}
-	//	else
-	//	{
-	//		if (treeBranch.at(loopCounter)->GetChildCount() > 0)
-	//		{
-	//			for (int ii = 0; ii < treeBranch.at(loopCounter)->GetChildCount(); ii++)
-	//			{
-	//				treeBranch.push_back(treeBranch.at(loopCounter)->GetChild(ii));
-	//			}
-	//		}
-	//		testPose->Add(treeBranch.at(loopCounter), treeBranch.at(loopCounter)->EvaluateLocalTransform(), true);
-	//		loopCounter++;
-	//	}
-	//	
-	//}
-	//
-	//
-	//scene_ptr->AddPose(testPose);
 
 	exporter_ptr->Export(scene_ptr);
 	// cleanup
@@ -1101,7 +1140,7 @@ std::vector<Skeleton::Bone> Skeleton::generate_skeleton_in_scene(FbxScene* scene
 		auto& bone = get_bone(bone_num);
 		auto cluster = FbxCluster::Create(scene_ptr, bone.name.c_str());
 		cluster->SetLink(nodes[bone_num]);
-		cluster->SetLinkMode(FbxCluster::eAdditive);
+		cluster->SetLinkMode(FbxCluster::eNormalize);
 
 		auto bone_name = bone.name;
 		boost::to_lower(bone_name);

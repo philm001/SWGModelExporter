@@ -53,16 +53,16 @@ int _tmain(int argc, _TCHAR* argv[])
 		po::variables_map vm;
 		//po::store(po::parse_command_line(argc, argv, flags), vm);
 		swg_path = "C:\\swg\\SWGEmu";
-		//object_name = "ackbar.sat";
+		object_name = "ackbar.sat";
 		//object_name = "acklay.sat";
 		//object_name = "stormtrooper.sat";
 	//	object_name = "bark_mite.sat";
 		//object_name = "ig88.sat";
 		//object_name = "krayt_dragon.sat";
-		object_name = "asteroid_acid_large_s01.apt";
+		//object_name = "asteroid_acid_large_s01.apt";
 		//object_name = "asteroid_acid_large_s01_l0.msh";
 
-		//object_name = "batch:ans";
+		//object_name = "batch:sat";
 		output_pathname = "C:\\extraction";
 		po::notify(vm);
 	}
@@ -145,7 +145,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		queue<std::string> frontValue = objects_to_process.front();
 		shared_ptr<Parser_selector> parser = make_shared<Parser_selector>();
 
-	/*	if (frontValue.size() == 1)
+	//	if (frontValue.size() == 1)
 		{
 			objects_to_process.pop();
 			while (frontValue.empty() == false)
@@ -217,7 +217,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 			
 		}
-		else if (frontValue.size() > 1)*/
+		/*else if (frontValue.size() > 1)
 		{
 			queue<std::string> frontValue = objects_to_process.front();
 			objects_to_process.pop();
@@ -228,10 +228,10 @@ int _tmain(int argc, _TCHAR* argv[])
 			SWGObject.resolveDependecies();
 			SWGObject.storeObject(output_pathname);
 			// reset everything here????
-		}
+		}*/
 	}
 
-/*	std::cout << "Resolve dependencies..." << endl;
+	std::cout << "Resolve dependencies..." << endl;
 	std::for_each(context.object_list.begin(), context.object_list.end(),
 		[&context](const pair<string, shared_ptr<Base_object>>& item)
 		{
@@ -254,7 +254,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			{
 				std::cout << "Does not support saving directly" << endl;
 			}
-		});*/
+		});
 
 	CoUninitialize();
 	return 0;
