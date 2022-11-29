@@ -168,6 +168,9 @@
   <ItemGroup>
     <None Include="Scene.fbx" />
     <None Include="packages.config" />
+    <None Include="DirectXTex-main.zip" />
+    <None Include="boost.7z" />
+    <None Include="lib.7z" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="libfbxsdk.dll" />

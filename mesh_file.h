@@ -4,6 +4,8 @@
 #include "PrimitiveType.h"
 #include "objects/geometry_common.h"
 
+#include <fbxsdk.h>
+
 struct SortedIndex
 {
 	std::vector<float> CoordinateDirection;
