@@ -550,7 +550,10 @@ public:
 		return returnValue;
 	}
 
-	std::vector<std::pair<std::string, std::shared_ptr<Skeleton>>>& getSkeleton() { return m_used_skeletons; }
+	std::vector<std::pair<std::string, std::shared_ptr<Skeleton>>>& getSkeleton() 
+	{ 
+		return m_used_skeletons;
+	}
 
 	void add_new_morph(const std::string& name) { m_morphs.emplace_back(name); }
 	std::vector<Morph_target> getMorphs() { return m_morphs; }

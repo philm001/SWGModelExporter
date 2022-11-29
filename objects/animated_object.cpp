@@ -161,7 +161,11 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 		boost::filesystem::create_directories(directory);
 
 	if (boost::filesystem::exists(target_path))
-		boost::filesystem::remove(target_path);
+	{
+		return;// For now, skip the file if it already exists
+		// boost::filesystem::remove(target_path); // Might add an option to override in final release
+	}
+		
 
 	// get lod level (by _lX end of file name). If there is no such pattern - lod level will be zero.
 	int lodLevel =0;
@@ -413,7 +417,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 				shape_vertices[idx].Set(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
 			}
 
-			if (!normal_indexes.empty() && !context.batch_mode)
+		/*	if (!normal_indexes.empty() && !context.batch_mode)
 			{
 				// get normals
 				auto normal_element = shape->CreateElementNormal();
@@ -440,7 +444,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 				auto& index_array = normal_element->GetIndexArray();
 				std::for_each(normal_indexes.begin(), normal_indexes.end(),
 					[&index_array](const uint32_t& idx) { index_array.Add(idx); });
-			}
+			}*/
 
 			if (!tangents_idxs.empty() && context.batch_mode)
 			{
@@ -496,7 +500,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 	//max.ConvertScene(scene_ptr);
 	FbxAxisSystem::MayaZUp.ConvertScene(scene_ptr);
 	// Next loop through the entire animation list
-	for (int i = 0; i < 1 /*animationList.size()*/; i++)// This method is esy for debugging
+	for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
 	{
 		auto animationObject = animationList.at(i);
 
@@ -1140,7 +1144,7 @@ std::vector<Skeleton::Bone> Skeleton::generate_skeleton_in_scene(FbxScene* scene
 		auto& bone = get_bone(bone_num);
 		auto cluster = FbxCluster::Create(scene_ptr, bone.name.c_str());
 		cluster->SetLink(nodes[bone_num]);
-		cluster->SetLinkMode(FbxCluster::eNormalize);
+		cluster->SetLinkMode(FbxCluster::eTotalOne);
 
 		auto bone_name = bone.name;
 		boost::to_lower(bone_name);

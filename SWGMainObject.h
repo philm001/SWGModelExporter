@@ -35,7 +35,7 @@ private:
 	std::queue<std::string> p_queueArray;
 	std::string p_fullName;
 	std::shared_ptr<Tre_navigator::Tre_library> p_Library;
-	std::vector<std::vector<Animated_mesh>> p_CompleteModels;
+	std::vector<std::vector<Animated_mesh>> p_CompleteModels; // level of detail goes here
 	std::vector<std::vector<Skeleton::Bone>> m_bones;
 
 

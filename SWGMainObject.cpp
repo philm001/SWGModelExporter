@@ -14,6 +14,11 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray)
 
 		// normalize path
 		std::replace_if(assetName.begin(), assetName.end(), [](const char& value) { return value == '\\'; }, '/');
+		if (assetName.length() <= 3)
+		{
+			std::cout << "Invalid Name: " + assetName << std::endl;
+			continue;
+		}
 		std::string ext = assetName.substr(assetName.length() - 3);
 		boost::to_lower(ext);
 
@@ -309,8 +314,9 @@ void SWGMainObject::resolveDependecies()
 		});
 }
 
-void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>& mesh)
+void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh>& mesh)
 {
+	
 	// extract object name and make full path name
 	boost::filesystem::path obj_name(mesh.at(0).get_object_name());
 	boost::filesystem::path target_path(path);
@@ -323,8 +329,9 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 	if (!boost::filesystem::exists(directory))
 		boost::filesystem::create_directories(directory);
 
-	if (boost::filesystem::exists(target_path))
-		boost::filesystem::remove(target_path);
+	
+	if (target_path.string().find("l0") == std::string::npos)
+		return;
 
 	// get lod level (by _lX end of file name). If there is no such pattern - lod level will be zero.
 	int lodLevel = mesh.at(0).getLodLevel();
@@ -339,14 +346,14 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 		return;
 
 	FbxIOSettings* ios_ptr = FbxIOSettings::Create(fbx_manager_ptr, IOSROOT);
-	ios_ptr->SetIntProp(EXP_FBX_EXPORT_FILE_VERSION, FBX_FILE_VERSION_7700);
+	ios_ptr->SetIntProp(EXP_FBX_EXPORT_FILE_VERSION, FBX_DEFAULT_FILE_VERSION);
 	fbx_manager_ptr->SetIOSettings(ios_ptr);
 
 	FbxExporter* exporter_ptr = FbxExporter::Create(fbx_manager_ptr, "");
 	if (!exporter_ptr)
 		return;
 
-	exporter_ptr->SetFileExportVersion(FBX_2014_00_COMPATIBLE);
+	exporter_ptr->SetFileExportVersion(FBX_DEFAULT_FILE_COMPATIBILITY);
 	bool result = exporter_ptr->Initialize(target_path.string().c_str(), -1, fbx_manager_ptr->GetIOSettings());
 	if (!result)
 	{
@@ -564,6 +571,10 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 	for (int cc = 0; cc < mesh.size(); cc++)
 	{
 		auto& modelIterator = mesh.at(cc);
+		if (mesh.at(cc).getSkeletonNames().size() == 2)
+		{
+			std::cout << "twoskeletons found" << std::endl;
+		}
 
 		uint32_t m_lod_level = modelIterator.getLodLevel();
 
@@ -635,7 +646,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 				auto& pos = modelIterator.get_vertices().at(idx).get_position();
 				shape_vertices[idx].Set(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
 			}
-
+			// There is a bug in this section that prevents some meshes from exporting
 			if (!normal_indexes.empty() && !p_Context.batch_mode)
 			{
 				// get normals
@@ -663,6 +674,8 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 				auto& index_array = normal_element->GetIndexArray();
 				std::for_each(normal_indexes.begin(), normal_indexes.end(),
 					[&index_array](const uint32_t& idx) { index_array.Add(idx); });
+
+				std::cout << "Finished" << std::endl;
 			}
 
 			if (!tangents_idxs.empty() && !p_Context.batch_mode)
@@ -694,6 +707,8 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 
 			auto success = morph_channel->AddTargetShape(shape);
 			success = blend_shape_ptr->AddBlendShapeChannel(morph_channel);
+
+			std::cout << "Finished" << std::endl;
 		}
 	}
 	mesh_node_ptr->GetGeometry()->AddDeformer(blend_shape_ptr);
@@ -718,8 +733,54 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 	//FbxAxisSystem max; // we desire to convert the scene from Y-Up to Z-Up
 	//max.ConvertScene(scene_ptr);
 	FbxAxisSystem::MayaZUp.ConvertScene(scene_ptr);
+
+	if (target_path.string().find("bikini") != std::string::npos)
+	{
+		std::cout << "bikini Found" << std::endl;
+	}
+
+	if (boost::filesystem::exists(target_path))
+	{
+		if (target_path.string().find("armor") != std::string::npos || 
+			target_path.string().find("bikini") != std::string::npos || 
+			target_path.string().find("bustier") != std::string::npos)
+		{
+			boost::filesystem::remove(target_path);
+			if (target_path.string().find("armor_composite_s01_helmet_twk_f") == std::string::npos &&
+				target_path.string().find("armor_kashyyykian_ceremonial_leggings_wke") == std::string::npos &&
+				target_path.string().find("bikini") == std::string::npos &&
+				target_path.string().find("helmet_twk") == std::string::npos &&
+				target_path.string().find("bustier") == std::string::npos)
+			{
+				exporter_ptr->Export(scene_ptr);
+			}
+			
+		}
+		fbx_manager_ptr->Destroy();
+		return;
+		// boost::filesystem::remove(target_path); // For now, this is commented out
+	}
+	else
+	{
+		if (target_path.string().find("armor") != std::string::npos || 
+			target_path.string().find("bikini") != std::string::npos || 
+			target_path.string().find("bustier") != std::string::npos)
+		{
+			if (target_path.string().find("armor_composite_s01_helmet_twk_f") == std::string::npos &&
+				target_path.string().find("armor_kashyyykian_ceremonial_leggings_wke") == std::string::npos &&
+				target_path.string().find("bikini") == std::string::npos &&
+				target_path.string().find("helmet_twk") == std::string::npos &&
+				target_path.string().find("bustier") == std::string::npos)
+			{
+				exporter_ptr->Export(scene_ptr);
+			}
+			fbx_manager_ptr->Destroy();
+			return;
+		}
+	}
+
 	// Next loop through the entire animation list
-	for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
+	/*for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
 	{
 		auto animationObject = animationList.at(i);
 
@@ -1035,7 +1096,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 				}
 			}
 		}
-	}
+	}*/
 
 	exporter_ptr->Export(scene_ptr);
 	// cleanup
@@ -1054,12 +1115,27 @@ void SWGMainObject::storeObject(const std::string& path)
 			std::cout << "Object : " << item.first;
 			if (item.first.find("mgn") != std::string::npos)
 			{
-				for (auto& listIterator : ModelCopy)
+			//	for (auto& listIterator : ModelCopy)
 				{
-					if (listIterator.at(0).get_object_name() == item.first)
+					std::vector<Animated_mesh> listIterator = ModelCopy[0];
+					for each (Animated_mesh meshIterator in listIterator)
 					{
-						storeMGN(path, listIterator); // The logic here needs edited to include the other LOD
+						if (meshIterator.get_object_name() == item.first)
+						{
+							std::vector<Animated_mesh> tempVector;// hacky way to get this to work on single meshes
+							tempVector.push_back(meshIterator);
+							storeMGN(path, tempVector);
+						}
 					}
+				/*	if (listIterator.at(0).get_object_name() == item.first)
+					{
+						
+						for each (Animated_mesh temp in listIterator)
+						{
+							tempVector.push_back(temp);
+							storeMGN(path, tempVector);
+						}
+					} */
 				}
 				
 			}
@@ -1101,9 +1177,26 @@ SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::
 	double sqa = Quat.a * Quat.a;
 	double unit = sqx + sqy + sqz + sqa;
 
-	angles.yaw = std::atan2(2.0 * (Quat.x * Quat.y + Quat.z * Quat.a), sqx - sqy - sqz + sqa); // heading
-	angles.pitch = std::asin(-2.0 * test / unit); // attitude
-	angles.roll = std::atan2(2.0 * (Quat.y * Quat.z + Quat.x * Quat.a), -sqx - sqy + sqz + sqa); // bank
+	// roll (x-axis rotation)
+	double sinr_cosp = 2.0 * (Quat.a * Quat.x + Quat.y * Quat.z);
+	double cosr_cosp = Quat.a * Quat.a - Quat.x * Quat.x - Quat.y * Quat.y + Quat.z * Quat.z;
+	angles.roll = std::atan2(sinr_cosp, cosr_cosp);
+
+	// pitch (y-axis rotation)
+	double sinp = 2.0 * (Quat.a * Quat.y - Quat.z * Quat.x);
+	if (std::abs(sinp) >= 1)
+		angles.pitch = std::copysign(pi / 2.0, sinp); // use 90 degrees if out of range
+	else
+		angles.pitch = std::asin(sinp);
+
+	// yaw (z-axis rotation)
+	double siny_cosp = 2.0 * (Quat.a * Quat.z + Quat.x * Quat.y);
+	double cosy_cosp = Quat.a * Quat.a + Quat.x * Quat.x - Quat.y * Quat.y - Quat.z * Quat.z;
+	angles.yaw = std::atan2(siny_cosp, cosy_cosp);
+
+	//angles.yaw = std::atan2(2.0 * (Quat.x * Quat.y + Quat.z * Quat.a), sqx - sqy - sqz + sqa); // heading
+	//angles.pitch = std::asin(-2.0 * test / unit); // attitude
+	//angles.roll = std::atan2(2.0 * (Quat.y * Quat.z + Quat.x * Quat.a), -sqx - sqy + sqz + sqa); // bank
 	
 	/*double test = Quat.x * Quat.y + Quat.z * Quat.a;
 	if (test < 0.499)
@@ -1205,7 +1298,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 	// build bind pose
 	auto mesh_attr = reinterpret_cast<FbxGeometry*>(parent_ptr->GetNodeAttribute());
 	FbxSkin *skin = FbxSkin::Create(scene_ptr, parent_ptr->GetName());
-	skin->SetSkinningType(FbxSkin::EType::eLinear);
+	skin->SetSkinningType(FbxSkin::EType::eRigid);
 
 	auto xmatr = parent_ptr->EvaluateGlobalTransform();
 	FbxAMatrix link_transform;

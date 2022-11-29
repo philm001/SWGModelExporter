@@ -100,8 +100,14 @@ void skt_parser::parse_data(const std::string & name, uint8_t * data_ptr, size_t
       auto& bone = m_skeleton->get_bone(joint_num);
       Geometry::Vector3 vec;
       vec.x = buffer.read_float();
+
+
       vec.y = buffer.read_float();
+
+
       vec.z = buffer.read_float();
+
+
       bone.bind_pose_transform = vec;
       joint_num++;
     }

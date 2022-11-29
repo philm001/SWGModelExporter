@@ -17,7 +17,10 @@ public:
   uint16_t read_uint16() { return _read<uint16_t>(); }
   uint32_t read_uint32() { return _read<uint32_t>(); }
   uint64_t read_uint64() { return _read<uint64_t>(); }
-  float read_float() { return _read<float>(); }
+  float read_float() 
+  { 
+      return  _read<float>();
+  }
   double read_double() { return _read<double>(); }
   std::string read_string();
   std::string read_string(size_t max_size);
