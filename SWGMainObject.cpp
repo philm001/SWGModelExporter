@@ -116,6 +116,10 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray)
 					int a = 0;
 					a++;
 				}
+				else
+				{
+					//object->store();
+				}
 
 				std::set<std::string> references_objects = object->get_referenced_objects();
 				std::queue<std::string>& referenceArray = p_queueArray;

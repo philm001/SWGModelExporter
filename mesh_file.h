@@ -167,8 +167,8 @@ public:
 	virtual bool is_object_correct() const override { return true; }
 	virtual void store(const std::string& path, const Context& context) override;
 
-	void setNumberofVertices(uint32_t number) { m_NumberofVertices = number; }
-	uint32_t getNumberofVertices() { return m_NumberofVertices; }
+	void setNumberofMeshVertices(uint32_t number) { m_NumberofMeshVertices = number; }
+	uint32_t getNumberofMeshVertices() { return m_NumberofMeshVertices; }
 
 	void setShaderName(std::string shaderName) { m_shaderName = shaderName; }
 
@@ -210,13 +210,13 @@ public:
 
 	int GetNumTextureCoordinateSets()
 	{
-		return (m_flags >> 8) & 0xF;
+		return (m_flags >> 8) & 0x0F;
 	}
 
 	int getCoordinateSet(int textureCoordinateSet)
 	{
 		int shiftValue = 12 + (textureCoordinateSet * 2);
-		return ((m_flags >> shiftValue) & 0x3) + 1;
+		return ((m_flags >> shiftValue) & 0x03) + 1;
 	}
 
 	bool hasPosition()
@@ -332,7 +332,7 @@ private:
 	bool m_hasIndicies = false;
 	bool m_sortedIndicies = false;
 
-	uint32_t m_NumberofVertices = 0;
+	uint32_t m_NumberofMeshVertices = 0;
 };
 
 class meshParser : public IFF_visitor

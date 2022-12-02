@@ -194,18 +194,18 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		uint32_t flags = buffer.read_uint32();
 		uint32_t numVerticies = buffer.read_uint32();
 		m_object->setFlags(flags);
-		m_object->setNumberofVertices(numVerticies);
+		m_object->setNumberofMeshVertices(numVerticies);
 	}
 	else if (name == "DATA")
 	{
-		bool skipDot2 = false;
+		bool skipDot3 = false;
 		int numberOfTextureCoordinateSets = m_object->GetNumTextureCoordinateSets();
-		if (numberOfTextureCoordinateSets > 0 && m_object->getCoordinateSet(numberOfTextureCoordinateSets - 1) == 4)
+		if (numberOfTextureCoordinateSets > 0 && m_object->getCoordinateSet(numberOfTextureCoordinateSets - 1) == 4)/* Might need to add another statement for GraphicsOptionTags::get(TAG_DOT3) == false*/
 		{
 			numberOfTextureCoordinateSets--;
 			m_object->SetTextreCoordinateDim(numberOfTextureCoordinateSets, 1);
 			m_object->SetNumberOfTextureCoordinateSets(numberOfTextureCoordinateSets);
-			skipDot2 = true;
+			skipDot3 = true;
 		}
 		// Triangle vetexs
 		while (!buffer.end_of_buffer())
@@ -275,8 +275,9 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				textureCoordinatePrime.push_back(textureCoordinateSemiPrime);
 			}
 
-			if (skipDot2)
+			if (skipDot3)
 			{
+				/* We are going to read blank data? */
 				buffer.read_float();
 				buffer.read_float();
 				buffer.read_float();
@@ -293,6 +294,7 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			uint16_t indexValue = buffer.read_uint16();
 			m_object->getIndexArray().push_back(indexValue);
 		}
+		int stop = 32;
 	}
 	else if (name == "SIDX")
 	{
@@ -366,5 +368,28 @@ void meshObject::store(const std::string& path, const Context& context)
 	mesh_node_ptr->SetNodeAttribute(mesh_ptr);
 	scene_ptr->GetRootNode()->AddChild(mesh_node_ptr);
 
+	mesh_ptr->SetControlPointCount(m_NumberofMeshVertices);
+	auto mesh_vertices = mesh_ptr->GetControlPoints();
 
+	for (uint32_t vertex_id = 0; vertex_id < m_triangleVertices.size(); vertex_id++)
+	{
+		/*
+			m_triangleVertices[vertex_id].at(0) - x
+			m_triangleVertices[vertex_id].at(1) - y
+			m_triangleVertices[vertex_id].at(2) - z
+		*/
+		mesh_vertices[vertex_id] = FbxVector4(m_triangleVertices[vertex_id].at(0), m_triangleVertices[vertex_id].at(1), m_triangleVertices[vertex_id].at(2));
+	}
+	// add material layer
+
+	// process polygons
+
+	// add UVs
+
+	// add normals
+
+	// do some morph targets??
+
+	exporter_ptr->Export(scene_ptr);
+	fbx_manager_ptr->Destroy();
 }
