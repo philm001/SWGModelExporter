@@ -170,7 +170,8 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 	/* This is where the good stuff happens. Starting with INFO, we grab the flags for the verticies*/
 	else if (name == "0001INFO")
 	{
-		static bool FirstInfoHit = false;
+		/* Note sure about this one.... */
+		/*static bool FirstInfoHit = false;
 		if (!FirstInfoHit)
 		{
 			uint32_t flags = buffer.read_uint32();
@@ -185,8 +186,15 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 
 			bool hasIndicies = buffer.read_uint8();
 			bool hasSortedIndicies = buffer.read_uint8();
-		}
+		}*/
 		
+	}
+	else if (name == "0003INFO")
+	{
+		uint32_t flags = buffer.read_uint32();
+		uint32_t numVerticies = buffer.read_uint32();
+		m_object->setFlags(flags);
+		m_object->setNumberofVertices(numVerticies);
 	}
 	else if (name == "DATA")
 	{

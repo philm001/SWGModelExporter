@@ -46,7 +46,7 @@ private:
 };
 
 
-class LODObject : public Base_object // This object contains mesh object
+class LODObject : public Base_object // This object contains data related to the LOD file listings. The boxes inside are meant for collision
 {
 public:
 	LODObject() { }
@@ -166,6 +166,9 @@ public:
 	// overrides
 	virtual bool is_object_correct() const override { return true; }
 	virtual void store(const std::string& path, const Context& context) override;
+
+	void setNumberofVertices(uint32_t number) { m_NumberofVertices = number; }
+	uint32_t getNumberofVertices() { return m_NumberofVertices; }
 
 	void setShaderName(std::string shaderName) { m_shaderName = shaderName; }
 
@@ -328,6 +331,8 @@ private:
 
 	bool m_hasIndicies = false;
 	bool m_sortedIndicies = false;
+
+	uint32_t m_NumberofVertices = 0;
 };
 
 class meshParser : public IFF_visitor
