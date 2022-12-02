@@ -110,7 +110,10 @@ private:
 	std::vector<uint32_t> m_indexList;
 };
 
-
+/* 
+	The LOD parser is onyl meant for Level of detail. It does not contain any mesh data.
+	The vertices and indicies that it contains are related to collision which for FBX this does not matter
+*/
 class LODParser : public IFF_visitor
 {
 public:
