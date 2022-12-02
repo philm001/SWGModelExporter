@@ -106,7 +106,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;FBXSDK_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\Libs\boost;D:\Libs\zlib\include;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.1\include;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.0.1\include;$(SolutionDir)..\..\DirectXTex\DirectXTex;E:\Projects\DirectXTex\DirectXTex;$(ProjectDir);$(SolutionDir)Boost\;C:\Users\Phillip\source\repos\SWGModelExporter-master\zlib;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex;$(SolutionDir)..\DirectXTex\DirectXTex;$(SolutionDir)zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Libs\boost;D:\Libs\zlib\include;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.1\include;$(SolutionDir)..\..\DirectXTex\DirectXTex;E:\Projects\DirectXTex\DirectXTex;$(ProjectDir);$(SolutionDir)Boost\;C:\Users\Phillip\source\repos\SWGModelExporter-master\zlib;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex;$(SolutionDir)..\DirectXTex\DirectXTex;$(SolutionDir)zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
