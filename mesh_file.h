@@ -2,6 +2,7 @@
 #include "objects/base_object.h"
 #include "IFF_file.h"
 #include "PrimitiveType.h"
+#include "objects/animated_object.h"
 #include "objects/geometry_common.h"
 
 #include <fbxsdk.h>
@@ -128,39 +129,41 @@ private:
 };
 
 
-/*
-class Shader_appliance
-{
-public:
-	Shader_appliance(const std::string& name) : m_name(name) { }
-	const std::string& get_name() const { return m_name; }
-	std::vector<uint32_t>& get_pos_indexes() { return m_position_indexes; }
-	std::vector<uint32_t>& get_normal_indexes() { return m_normal_indexes; }
-	std::vector<uint32_t>& get_light_indexes() { return m_light_indexes; }
-	std::vector<Graphics::Tex_coord>& get_texels() { return m_texels; }
-	std::vector<Graphics::Triangle_indexed>& get_triangles() { return m_triangles; }
-	std::vector<std::pair<uint32_t, uint32_t>>& get_primivites() { return m_primitives; }
-	void set_definition(const std::shared_ptr<Shader> shader_def) { m_shader_definition = shader_def; }
-	const std::shared_ptr<Shader>& get_definition() const { return m_shader_definition; }
-
-	void add_primitive();
-	void close_primitive() { m_primitives.back().second = static_cast<uint32_t>(m_primitives.size()); }
-private:
-	std::string m_name;
-	std::vector<uint32_t> m_position_indexes;
-	std::vector<uint32_t> m_normal_indexes;
-	std::vector<uint32_t> m_light_indexes;
-	std::vector<Graphics::Tex_coord> m_texels;
-	std::vector<Graphics::Triangle_indexed> m_triangles;
-	std::vector<std::pair<uint32_t, uint32_t>> m_primitives;
-	std::shared_ptr<Shader> m_shader_definition;
-
-};*/
-
-
 class meshObject : public Base_object // This object contains shader data
 {
 public:
+	/* First class definitions */
+
+	class Shader_appliance
+	{
+	public:
+		Shader_appliance(const std::string& name) : m_name(name) { }
+		const std::string& get_name() const { return m_name; }
+		std::vector<uint32_t>& get_pos_indexes() { return m_position_indexes; }
+		std::vector<uint32_t>& get_normal_indexes() { return m_normal_indexes; }
+		std::vector<uint32_t>& get_light_indexes() { return m_light_indexes; }
+		std::vector<Graphics::Tex_coord>& get_texels() { return m_texels; }
+		std::vector<Graphics::Triangle_indexed>& get_triangles() { return m_triangles; }
+		std::vector<std::pair<uint32_t, uint32_t>>& get_primivites() { return m_primitives; }
+		void set_definition(const std::shared_ptr<Shader> shader_def) { m_shader_definition = shader_def; }
+		const std::shared_ptr<Shader>& get_definition() const { return m_shader_definition; }
+
+		void add_primitive();
+		void close_primitive() { m_primitives.back().second = static_cast<uint32_t>(m_primitives.size()); }
+	private:
+		std::string m_name;
+		std::vector<uint32_t> m_position_indexes;
+		std::vector<uint32_t> m_normal_indexes;
+		std::vector<uint32_t> m_light_indexes;
+		std::vector<Graphics::Tex_coord> m_texels;
+		std::vector<Graphics::Triangle_indexed> m_triangles;
+		std::vector<std::pair<uint32_t, uint32_t>> m_primitives;
+		std::shared_ptr<Shader> m_shader_definition;
+
+	};
+
+
+	/* Now functions */
 	meshObject() { }
 
 	// overrides
@@ -308,6 +311,8 @@ public:
 	virtual void resolve_dependencies(const Context&) override { }
 	virtual void set_object_name(const std::string& name) override { m_name = name; }
 	virtual std::string get_object_name() const override { return m_name; }
+
+	void add_new_shader(const std::string& name) { m_shaders.emplace_back(name); }
 private:
 	std::string m_name;
 	std::vector<std::string> m_LODName;
@@ -333,6 +338,8 @@ private:
 	bool m_sortedIndicies = false;
 
 	uint32_t m_NumberofMeshVertices = 0;
+
+	std::vector<Shader_appliance> m_shaders;
 };
 
 class meshParser : public IFF_visitor

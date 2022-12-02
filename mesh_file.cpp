@@ -166,6 +166,7 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		/*The shader name, this is important */
 		std::string Shader = buffer.read_stringz();
 		m_object->setShaderName(Shader);
+		m_object->add_new_shader(Shader);
 	}
 	/* This is where the good stuff happens. Starting with INFO, we grab the flags for the verticies*/
 	else if (name == "0001INFO")
@@ -381,9 +382,100 @@ void meshObject::store(const std::string& path, const Context& context)
 		mesh_vertices[vertex_id] = FbxVector4(m_triangleVertices[vertex_id].at(0), m_triangleVertices[vertex_id].at(1), m_triangleVertices[vertex_id].at(2));
 	}
 	// add material layer
+	auto material_layer = mesh_ptr->CreateElementMaterial();
+	material_layer->SetMappingMode(FbxLayerElement::eByPolygon);
+	material_layer->SetReferenceMode(FbxLayerElement::eIndexToDirect);
 
 	// process polygons
+	std::vector<uint32_t> normal_indexes;
+	std::vector<uint32_t> tangents_idxs;
+	std::vector<Graphics::Tex_coord> uvs;
+	std::vector<uint32_t> uv_indexes;
 
+	for (uint32_t shader_idx = 0; shader_idx < m_shaders.size(); ++shader_idx)
+	{
+		auto& shader = m_shaders.at(shader_idx);
+		if (shader.get_definition())
+		{
+			auto material_ptr = FbxSurfacePhong::Create(scene_ptr, shader.get_name().c_str());
+			material_ptr->ShadingModel.Set("Phong");
+
+			auto& material = shader.get_definition()->material();
+			auto& textures = shader.get_definition()->textures();
+
+			// create material for this shader
+			material_ptr->Ambient.Set(FbxDouble3(material.ambient.r, material.ambient.g, material.ambient.g));
+			material_ptr->Diffuse.Set(FbxDouble3(material.diffuse.r, material.diffuse.g, material.diffuse.g));
+			material_ptr->Emissive.Set(FbxDouble3(material.emissive.r, material.emissive.g, material.emissive.g));
+			material_ptr->Specular.Set(FbxDouble3(material.specular.r, material.specular.g, material.specular.g));
+
+			// add texture definitions
+			for (auto& texture_def : textures)
+			{
+				FbxFileTexture* texture = FbxFileTexture::Create(scene_ptr, texture_def.tex_file_name.c_str());
+				boost::filesystem::path tex_path(path);
+				tex_path /= texture_def.tex_file_name;
+				tex_path.replace_extension("tga");
+
+				texture->SetFileName(tex_path.string().c_str());
+				texture->SetTextureUse(FbxTexture::eStandard);
+				texture->SetMaterialUse(FbxFileTexture::eModelMaterial);
+				texture->SetMappingType(FbxTexture::eUV);
+				texture->SetWrapMode(FbxTexture::eRepeat, FbxTexture::eRepeat);
+				texture->SetTranslation(0.0, 0.0);
+				texture->SetScale(1.0, 1.0);
+				texture->SetTranslation(0.0, 0.0);
+				switch (texture_def.texture_type)
+				{
+				case Shader::texture_type::main:
+					material_ptr->Diffuse.ConnectSrcObject(texture);
+					break;
+				case Shader::texture_type::normal:
+					material_ptr->Bump.ConnectSrcObject(texture);
+					break;
+				case Shader::texture_type::specular:
+					material_ptr->Specular.ConnectSrcObject(texture);
+					break;
+				}
+			}
+
+			mesh_ptr->GetNode()->AddMaterial(material_ptr);
+
+			// get geometry element
+			auto& triangles = shader.get_triangles();
+			auto& positions = shader.get_pos_indexes();
+			auto& normals = shader.get_normal_indexes();
+			auto& tangents = shader.get_light_indexes();
+
+			auto idx_offset = static_cast<uint32_t>(uvs.size());
+			copy(shader.get_texels().begin(), shader.get_texels().end(), back_inserter(uvs));
+
+			normal_indexes.reserve(normal_indexes.size() + normals.size());
+			tangents_idxs.reserve(tangents_idxs.size() + tangents.size());
+
+			for (uint32_t tri_idx = 0; tri_idx < triangles.size(); ++tri_idx)
+			{
+				auto& tri = triangles[tri_idx];
+				mesh_ptr->BeginPolygon(shader_idx, -1, shader_idx, false);
+				for (size_t i = 0; i < 3; ++i)
+				{
+					auto remapped_pos_idx = positions[tri.points[i]];
+					mesh_ptr->AddPolygon(remapped_pos_idx);
+
+					auto remapped_normal_idx = normals[tri.points[i]];
+					normal_indexes.emplace_back(remapped_normal_idx);
+
+					if (!tangents.empty())
+					{
+						auto remapped_tangent = tangents[tri.points[i]];
+						tangents_idxs.emplace_back(remapped_tangent);
+					}
+					uv_indexes.emplace_back(idx_offset + tri.points[i]);
+				}
+				mesh_ptr->EndPolygon();
+			}
+		}
+	}
 	// add UVs
 
 	// add normals
