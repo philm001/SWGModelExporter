@@ -161,8 +161,19 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		//m_object->setMaxPoint(maxValue);
 		//m_object->setMinPoint(minValue);
 	}
-	else if (name == "0001NAME")
+	else if (name == "0001CNT")
 	{
+		uint16_t shaderCount = buffer.read_uint16();
+		m_object->SetShaderCount(shaderCount);
+	}
+	else if (name.find("NAME") != -1)
+	{
+		std::stringstream ss;
+		ss << std::setw(4) << std::setfill('0') << m_object->GetShaderCount();
+		std::string s = ss.str();
+		// https://www.google.com/search?client=firefox-b-1-d&q=c%2B%2B+combining+2+strings
+		//if(name == )
+		// Note: cargo_freighter_l0 has 3 shaders
 		/*The shader name, this is important */
 		std::string Shader = buffer.read_stringz();
 		m_object->setShaderName(Shader);
@@ -264,6 +275,7 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			
 			std::vector<std::vector<float>> textureCoordinatePrime;
 
+			// This is most likely the UVs
 			int testValue = m_object->GetNumTextureCoordinateSets();
 			for (int i = 0; i < m_object->GetNumTextureCoordinateSets(); i++)
 			{
@@ -304,7 +316,6 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			uint16_t v3 = buffer.read_uint16();
 			Graphics::Triangle_indexed tempTri(v1, v2, v3);
 			m_object->GetShader().get_triangles().emplace_back(tempTri);
-			//m_object->getIndexArray().push_back(indexValue);
 		}
 		int stop = 32;
 	}
@@ -473,10 +484,10 @@ void meshObject::store(const std::string& path, const Context& context)
 					//auto remapped_pos_idx = positions[tri.points[i]];
 					mesh_ptr->AddPolygon(tri.points[i]);
 
-					/*auto remapped_normal_idx = normals[tri.points[i]];
+					auto remapped_normal_idx = normals[tri.points[i]];
 					normal_indexes.emplace_back(remapped_normal_idx);
 
-					if (!tangents.empty())
+					/*if (!tangents.empty())
 					{
 						auto remapped_tangent = tangents[tri.points[i]];
 						tangents_idxs.emplace_back(remapped_tangent);
@@ -487,9 +498,32 @@ void meshObject::store(const std::string& path, const Context& context)
 			}
 		}
 	}
+
+	//auto& triangles = shader.get_triangles();
+
 	// add UVs
+	FbxGeometryElementUV* uv_ptr = mesh_ptr->CreateElementUV("UVSet1");
+	uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+	uv_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+
 
 	// add normals
+	if (!normal_indexes.empty())
+	{
+	/*	FbxGeometryElementNormal* normals_ptr = mesh_ptr->CreateElementNormal();
+		normals_ptr->SetMappingMode(FbxGeometryElementNormal::eByPolygonVertex);
+		normals_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+		auto& direct_array = normals_ptr->GetDirectArray();
+		std::for_each(m_normals.begin(), m_normals.end(),
+			[&direct_array](const Geometry::Vector3& elem)
+			{
+				direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
+			});
+
+		auto& index_array = normals_ptr->GetIndexArray();
+		std::for_each(normal_indexes.begin(), normal_indexes.end(),
+			[&index_array](const uint32_t& idx) { index_array.Add(idx); });*/
+	}
 
 	// do some morph targets??
 

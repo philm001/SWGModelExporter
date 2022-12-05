@@ -5,6 +5,8 @@
 #include "objects/animated_object.h"
 #include "objects/geometry_common.h"
 
+#include <sstream>
+
 #include <fbxsdk.h>
 
 struct SortedIndex
@@ -315,6 +317,14 @@ public:
 
 	void add_new_shader(const std::string& name) { m_shaders.emplace_back(name); }
 	Shader_appliance &GetShader() { return m_shaders.back(); }
+
+	void SetShaderCount(uint16_t value)
+	{
+		m_ShaderCount = value;
+		m_shaders.reserve(value);
+	}
+
+	uint8_t GetShaderCount() { return m_ShaderCount; }
 private:
 	std::string m_name;
 	std::vector<std::string> m_LODName;
@@ -342,6 +352,8 @@ private:
 	uint32_t m_NumberofMeshVertices = 0;
 
 	std::vector<Shader_appliance> m_shaders;
+
+	uint16_t m_ShaderCount = 1;// all shaders static objects have a value of 1
 };
 
 class meshParser : public IFF_visitor
