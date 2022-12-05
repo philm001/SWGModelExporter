@@ -485,3 +485,23 @@ void meshObject::store(const std::string& path, const Context& context)
 	exporter_ptr->Export(scene_ptr);
 	fbx_manager_ptr->Destroy();
 }
+
+
+void meshObject::resolve_dependencies(const Context& context)
+{
+	for (auto it_shad = m_shaders.begin(); it_shad != m_shaders.end(); ++it_shad)
+	{
+		auto obj_it = context.object_list.find(it_shad->get_name());
+		if (obj_it != context.object_list.end() && std::dynamic_pointer_cast<Shader>(obj_it->second))
+			it_shad->set_definition(std::dynamic_pointer_cast<Shader>(obj_it->second));
+	}
+
+	auto bad_shaders = any_of(m_shaders.begin(), m_shaders.end(),
+		[](const Shader_appliance& shader) { return shader.get_definition() == nullptr; });
+
+	if (bad_shaders)
+	{
+		// Do something if we have bad shaders???
+		std::cout << "Bad shaders breakpoint" << std::endl;
+	}
+}

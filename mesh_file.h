@@ -308,7 +308,8 @@ public:
 		return m_SortedIndiciesVector;
 	}
 
-	virtual void resolve_dependencies(const Context&) override { }
+	virtual void resolve_dependencies(const Context& context) override;
+	
 	virtual void set_object_name(const std::string& name) override { m_name = name; }
 	virtual std::string get_object_name() const override { return m_name; }
 
