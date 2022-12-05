@@ -79,4 +79,5 @@ struct Triangle_indexed
   }
   uint32_t points[3];
 };
+
 } // Geometry

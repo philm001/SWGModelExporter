@@ -286,14 +286,25 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			}
 		}
 	}
+	/*
+		Testing Notes:
+		Will need to test with:
+		1) Multiple Shaders
+		2) With sorted Indicies
+		3) Other parameters that are parsed above
+	*/
 	else if (name == "INDX")
 	{
 		uint32_t indexCount = buffer.read_uint32();
 
 		while (!buffer.end_of_buffer())
 		{
-			uint16_t indexValue = buffer.read_uint16();
-			m_object->getIndexArray().push_back(indexValue);
+			uint16_t v1 = buffer.read_uint16();
+			uint16_t v2 = buffer.read_uint16();
+			uint16_t v3 = buffer.read_uint16();
+			Graphics::Triangle_indexed tempTri(v1, v2, v3);
+			m_object->GetShader().get_triangles().emplace_back(tempTri);
+			//m_object->getIndexArray().push_back(indexValue);
 		}
 		int stop = 32;
 	}
@@ -459,10 +470,10 @@ void meshObject::store(const std::string& path, const Context& context)
 				mesh_ptr->BeginPolygon(shader_idx, -1, shader_idx, false);
 				for (size_t i = 0; i < 3; ++i)
 				{
-					auto remapped_pos_idx = positions[tri.points[i]];
-					mesh_ptr->AddPolygon(remapped_pos_idx);
+					//auto remapped_pos_idx = positions[tri.points[i]];
+					mesh_ptr->AddPolygon(tri.points[i]);
 
-					auto remapped_normal_idx = normals[tri.points[i]];
+					/*auto remapped_normal_idx = normals[tri.points[i]];
 					normal_indexes.emplace_back(remapped_normal_idx);
 
 					if (!tangents.empty())
@@ -470,7 +481,7 @@ void meshObject::store(const std::string& path, const Context& context)
 						auto remapped_tangent = tangents[tri.points[i]];
 						tangents_idxs.emplace_back(remapped_tangent);
 					}
-					uv_indexes.emplace_back(idx_offset + tri.points[i]);
+					uv_indexes.emplace_back(idx_offset + tri.points[i]);*/
 				}
 				mesh_ptr->EndPolygon();
 			}

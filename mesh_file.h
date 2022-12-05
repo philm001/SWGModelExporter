@@ -314,6 +314,7 @@ public:
 	virtual std::string get_object_name() const override { return m_name; }
 
 	void add_new_shader(const std::string& name) { m_shaders.emplace_back(name); }
+	Shader_appliance &GetShader() { return m_shaders.back(); }
 private:
 	std::string m_name;
 	std::vector<std::string> m_LODName;
