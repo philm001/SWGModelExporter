@@ -40,6 +40,8 @@ public:
 		return move(names);
 	};
 
+
+
 	virtual void resolve_dependencies(const Context&) override { }
 	virtual void set_object_name(const std::string& name) override { m_name = name; }
 	virtual std::string get_object_name() const override { return m_name; }
@@ -152,6 +154,47 @@ public:
 
 		void add_primitive();
 		void close_primitive() { m_primitives.back().second = static_cast<uint32_t>(m_primitives.size()); }
+
+		void SetFlags(uint32_t flags) { m_flags = flags; }
+
+		int GetNumTextureCoordinateSets() { return (m_flags >> 8) & 0x0F; }
+
+		int getCoordinateSet(int textureCoordinateSet)
+		{
+			int shiftValue = 12 + (textureCoordinateSet * 2);
+			return ((m_flags >> shiftValue) & 0x03) + 1;
+		}
+
+		bool hasPosition() { return (m_flags & 0x00000001) != 0; }
+
+		bool isTransformed() { return (m_flags & 0x00000002) != 0; }
+
+		bool hasNormals() { return(m_flags & 0x00000004) != 0; }
+
+		bool hasPointSize() { return (m_flags & 0x00000020) != 0; }
+
+		bool hasColor0() { return (m_flags & 0x00000008) != 0; }
+
+		bool hasColor1() { return (m_flags & 0x00000010) != 0; }
+
+		void SetTextreCoordinateDim(int textureCoordinateSet, int dim)
+		{
+			const unsigned int shift = static_cast<unsigned int>(12 + (textureCoordinateSet * 2));
+			m_flags = (m_flags & ~(static_cast<unsigned int>(0b0011) << shift)) | (static_cast<uint32_t>(dim - 1) << shift);
+		}
+
+		void SetNumberOfTextureCoordinateSets(int numberofTextures)
+		{
+			m_flags = (m_flags & ~(0b1111 << 8)) | (static_cast<uint32_t>(numberofTextures) << 8);
+		}
+
+		void setNumberofMeshVertices(uint32_t number) { m_NumberofMeshVertices = number; }
+		uint32_t getNumberofMeshVertices() { return m_NumberofMeshVertices; }
+
+		void AddVertex(std::vector<float> vec3) { m_triangleVertices.push_back(vec3); }
+		void AddNormal(std::vector<float> vec3) { m_Normals.push_back(vec3); }
+
+		std::vector<std::vector<float>>& GetTriangleVertices() { return m_triangleVertices; }
 	private:
 		std::string m_name;
 		std::vector<uint32_t> m_position_indexes;
@@ -161,6 +204,11 @@ public:
 		std::vector<Graphics::Triangle_indexed> m_triangles;
 		std::vector<std::pair<uint32_t, uint32_t>> m_primitives;
 		std::shared_ptr<Shader> m_shader_definition;
+		std::vector<std::vector<float>> m_triangleVertices;
+		std::vector<std::vector<float>> m_Normals;
+
+		uint32_t m_flags;
+		uint32_t m_NumberofMeshVertices = 0;
 
 	};
 
@@ -172,32 +220,9 @@ public:
 	virtual bool is_object_correct() const override { return true; }
 	virtual void store(const std::string& path, const Context& context) override;
 
-	void setNumberofMeshVertices(uint32_t number) { m_NumberofMeshVertices = number; }
-	uint32_t getNumberofMeshVertices() { return m_NumberofMeshVertices; }
+	
 
 	void setShaderName(std::string shaderName) { m_shaderName = shaderName; }
-
-	void setCenter(std::vector<float> centerPoint) { m_centerPoint = centerPoint; }
-
-	void setRadiusPoint(float radisuPoint)
-	{
-		m_radius = radisuPoint;
-	}
-
-	void setMaxPoint(std::vector<float> point)
-	{
-		m_maxPoint = point;
-	}
-
-	void setMinPoint(std::vector<float> point)
-	{
-		m_minPoint = point;
-	}
-
-	void AddVertex(std::vector<float> vec3)
-	{
-		m_triangleVertices.push_back(vec3);
-	}
 
 	virtual std::set<std::string> get_referenced_objects() const override
 	{
@@ -207,67 +232,6 @@ public:
 
 		return move(names);
 	};
-
-	void setFlags(uint32_t flagSet)
-	{
-		m_flags = flagSet;
-	}
-
-	int GetNumTextureCoordinateSets()
-	{
-		return (m_flags >> 8) & 0x0F;
-	}
-
-	int getCoordinateSet(int textureCoordinateSet)
-	{
-		int shiftValue = 12 + (textureCoordinateSet * 2);
-		return ((m_flags >> shiftValue) & 0x03) + 1;
-	}
-
-	bool hasPosition()
-	{
-		return (m_flags & 0x00000001) != 0;
-	}
-
-	bool isTransformed()
-	{
-		return (m_flags & 0x00000002) != 0;
-	}
-
-	bool hasNormals()
-	{
-		return(m_flags & 0x00000004) != 0;
-	}
-
-	bool hasPointSize()
-	{
-		return (m_flags & 0x00000020) != 0;
-	}
-
-	bool hasColor0()
-	{
-		return (m_flags & 0x00000008) != 0;
-	}
-
-	bool hasColor1()
-	{
-		return (m_flags & 0x00000010) != 0;
-	}
-
-	void addNormal(std::vector<float> normal)
-	{
-		m_Normals.push_back(normal);
-	}
-
-	void SetPrimitiveType(ShaderPrimitiveType type)
-	{
-		m_primitiveType = type;
-	}
-
-	ShaderPrimitiveType getPrimitiveType()
-	{
-		return m_primitiveType;
-	}
 
 	void setIndiciesState(bool state)
 	{
@@ -294,17 +258,6 @@ public:
 		return m_indexArray;
 	}
 
-	void SetTextreCoordinateDim(int textureCoordinateSet, int dim)
-	{
-		const unsigned int shift = static_cast<unsigned int>(12 + (textureCoordinateSet * 2));
-		m_flags = (m_flags & ~(static_cast<unsigned int>(0b0011) << shift)) | (static_cast<uint32_t>(dim - 1) << shift);
-	}
-
-	void SetNumberOfTextureCoordinateSets(int numberofTextures)
-	{
-		m_flags = (m_flags & ~(0b1111 << 8)) | (static_cast<uint32_t>(numberofTextures) << 8);
-	}
-
 	std::vector<SortedIndex>& GetSortedIndex()
 	{
 		return m_SortedIndiciesVector;
@@ -314,6 +267,7 @@ public:
 	
 	virtual void set_object_name(const std::string& name) override { m_name = name; }
 	virtual std::string get_object_name() const override { return m_name; }
+	Shader_appliance& get_current_shader() { assert(m_shaders.empty() == false); return m_shaders.back(); }
 
 	void add_new_shader(const std::string& name) { m_shaders.emplace_back(name); }
 	Shader_appliance &GetShader() { return m_shaders.back(); }
@@ -329,27 +283,13 @@ private:
 	std::string m_name;
 	std::vector<std::string> m_LODName;
 	std::string m_shaderName;
-	std::vector<float> m_maxPoint;
-	std::vector<float> m_minPoint;
 
 	std::vector<uint16_t> m_indexArray;
 
-	std::vector<float> m_centerPoint;
-	float m_radius = 0;
-
-	std::vector<std::vector<float>> m_triangleVertices;
-	std::vector<std::vector<float>> m_Normals;
-
 	std::vector<SortedIndex> m_SortedIndiciesVector;
-
-	uint32_t m_flags;
-
-	ShaderPrimitiveType m_primitiveType;
 
 	bool m_hasIndicies = false;
 	bool m_sortedIndicies = false;
-
-	uint32_t m_NumberofMeshVertices = 0;
 
 	std::vector<Shader_appliance> m_shaders;
 

@@ -59,8 +59,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		//object_name = "shirt_s04_m.sat";
 		//object_name = "ig88.sat";
 		//object_name = "krayt_dragon.sat";
-		//object_name = "asteroid_acid_large_s01.apt";
-		object_name = "cargo_freighter_l0.msh";
+		object_name = "asteroid_acid_large_s01.apt";
+		//object_name = "cargo_freighter_l0.msh";
 		//object_name = "asteroid_acid_large_s01_l0.msh";
 
 		//object_name = "batch:sat";

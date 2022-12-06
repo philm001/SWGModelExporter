@@ -161,23 +161,33 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		//m_object->setMaxPoint(maxValue);
 		//m_object->setMinPoint(minValue);
 	}
-	else if (name == "0001CNT")
+	//else if (name.find("CNT") != -1)
+	else if(name == "0001CNT ")
 	{
 		uint16_t shaderCount = buffer.read_uint16();
 		m_object->SetShaderCount(shaderCount);
 	}
 	else if (name.find("NAME") != -1)
 	{
-		std::stringstream ss;
-		ss << std::setw(4) << std::setfill('0') << m_object->GetShaderCount();
-		std::string s = ss.str();
-		// https://www.google.com/search?client=firefox-b-1-d&q=c%2B%2B+combining+2+strings
-		//if(name == )
 		// Note: cargo_freighter_l0 has 3 shaders
-		/*The shader name, this is important */
-		std::string Shader = buffer.read_stringz();
-		m_object->setShaderName(Shader);
-		m_object->add_new_shader(Shader);
+		static uint16_t shaderLoop = 0;
+		if (shaderLoop < m_object->GetShaderCount())
+		{
+			shaderLoop++;
+		}
+		std::stringstream ss;
+		ss << std::setw(4) << std::setfill('0') << shaderLoop;
+		std::string s = ss.str();
+		s += "NAME";
+		if (name == s)
+		{
+			std::string Shader = buffer.read_stringz();
+			m_object->setShaderName(Shader);
+			m_object->add_new_shader(Shader);
+		}
+
+		if (shaderLoop == m_object->GetShaderCount())
+			shaderLoop = 0; // Reset the counter back to 0
 	}
 	/* This is where the good stuff happens. Starting with INFO, we grab the flags for the verticies*/
 	else if (name == "0001INFO")
@@ -205,24 +215,24 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 	{
 		uint32_t flags = buffer.read_uint32();
 		uint32_t numVerticies = buffer.read_uint32();
-		m_object->setFlags(flags);
-		m_object->setNumberofMeshVertices(numVerticies);
+		m_object->get_current_shader().SetFlags(flags);
+		m_object->get_current_shader().setNumberofMeshVertices(numVerticies);
 	}
 	else if (name == "DATA")
 	{
 		bool skipDot3 = false;
-		int numberOfTextureCoordinateSets = m_object->GetNumTextureCoordinateSets();
-		if (numberOfTextureCoordinateSets > 0 && m_object->getCoordinateSet(numberOfTextureCoordinateSets - 1) == 4)/* Might need to add another statement for GraphicsOptionTags::get(TAG_DOT3) == false*/
+		int numberOfTextureCoordinateSets = m_object->get_current_shader().GetNumTextureCoordinateSets();
+		if (numberOfTextureCoordinateSets > 0 && m_object->get_current_shader().getCoordinateSet(numberOfTextureCoordinateSets - 1) == 4)/* Might need to add another statement for GraphicsOptionTags::get(TAG_DOT3) == false*/
 		{
 			numberOfTextureCoordinateSets--;
-			m_object->SetTextreCoordinateDim(numberOfTextureCoordinateSets, 1);
-			m_object->SetNumberOfTextureCoordinateSets(numberOfTextureCoordinateSets);
+			m_object->get_current_shader().SetTextreCoordinateDim(numberOfTextureCoordinateSets, 1);
+			m_object->get_current_shader().SetNumberOfTextureCoordinateSets(numberOfTextureCoordinateSets);
 			skipDot3 = true;
 		}
 		// Triangle vetexs
 		while (!buffer.end_of_buffer())
 		{
-			if (m_object->hasPosition())
+			if (m_object->get_current_shader().hasPosition())
 			{
 				std::vector<float> triPoints;
 
@@ -234,15 +244,15 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				triPoints.push_back(y);
 				triPoints.push_back(z);
 
-				m_object->AddVertex(triPoints);
+				m_object->get_current_shader().AddVertex(triPoints);
 			}
 			
-			if (m_object->isTransformed())
+			if (m_object->get_current_shader().isTransformed())
 			{
 				float transformFloat = buffer.read_float();
 			}
 				
-			if (m_object->hasNormals())
+			if (m_object->get_current_shader().hasNormals())
 			{
 				std::vector<float> parsedNormal;
 
@@ -254,21 +264,21 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				parsedNormal.push_back(yNormal);
 				parsedNormal.push_back(zNormal);
 
-				m_object->addNormal(parsedNormal);
+				m_object->get_current_shader().AddNormal(parsedNormal);
 			}
 			
-			if (m_object->hasPointSize())
+			if (m_object->get_current_shader().hasPointSize())
 			{
 				float pointSize = buffer.read_float();
 			}
 				
 
-			if (m_object->hasColor0())
+			if (m_object->get_current_shader().hasColor0())
 			{
 				uint32_t color0 = buffer.read_uint32();
 			}
 			
-			if (m_object->hasColor1())
+			if (m_object->get_current_shader().hasColor1())
 			{
 				uint32_t color1 = buffer.read_uint32();
 			}
@@ -276,12 +286,12 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			std::vector<std::vector<float>> textureCoordinatePrime;
 
 			// This is most likely the UVs
-			int testValue = m_object->GetNumTextureCoordinateSets();
-			for (int i = 0; i < m_object->GetNumTextureCoordinateSets(); i++)
+			int testValue = m_object->get_current_shader().GetNumTextureCoordinateSets();
+			for (int i = 0; i < m_object->get_current_shader().GetNumTextureCoordinateSets(); i++)
 			{
 				std::vector<float> textureCoordinateSemiPrime;
-				int testValue2 = m_object->getCoordinateSet(i);
-				for (int j = 0; j < m_object->getCoordinateSet(i); j++)
+				int testValue2 = m_object->get_current_shader().getCoordinateSet(i);
+				for (int j = 0; j < m_object->get_current_shader().getCoordinateSet(i); j++)
 				{
 					textureCoordinateSemiPrime.push_back(buffer.read_float());
 				}
@@ -391,18 +401,34 @@ void meshObject::store(const std::string& path, const Context& context)
 	mesh_node_ptr->SetNodeAttribute(mesh_ptr);
 	scene_ptr->GetRootNode()->AddChild(mesh_node_ptr);
 
-	mesh_ptr->SetControlPointCount(m_NumberofMeshVertices);
+	uint32_t meshVerticies = 0;
+	uint32_t triangleVertices = 0;
+
+	for (auto shader : m_shaders)
+	{
+		meshVerticies += shader.getNumberofMeshVertices();
+		triangleVertices += shader.GetTriangleVertices().size();
+	}
+
+	mesh_ptr->SetControlPointCount(meshVerticies);
 	auto mesh_vertices = mesh_ptr->GetControlPoints();
 
-	for (uint32_t vertex_id = 0; vertex_id < m_triangleVertices.size(); vertex_id++)
+	uint16_t lastTriCount = 0;
+
+	for (auto shader : m_shaders)
 	{
-		/*
+		// Will need to confirm that this works this way....
+		for (uint32_t vertex_id = 0; vertex_id < shader.GetTriangleVertices().size(); vertex_id++)
+		{
+			/*
 			m_triangleVertices[vertex_id].at(0) - x
 			m_triangleVertices[vertex_id].at(1) - y
 			m_triangleVertices[vertex_id].at(2) - z
 		*/
-		mesh_vertices[vertex_id] = FbxVector4(m_triangleVertices[vertex_id].at(0), m_triangleVertices[vertex_id].at(1), m_triangleVertices[vertex_id].at(2));
+			mesh_vertices[vertex_id + lastTriCount] = FbxVector4(shader.GetTriangleVertices()[vertex_id].at(0), shader.GetTriangleVertices()[vertex_id].at(1), shader.GetTriangleVertices()[vertex_id].at(2));
+		}
 	}
+
 	// add material layer
 	auto material_layer = mesh_ptr->CreateElementMaterial();
 	material_layer->SetMappingMode(FbxLayerElement::eByPolygon);
@@ -484,8 +510,8 @@ void meshObject::store(const std::string& path, const Context& context)
 					//auto remapped_pos_idx = positions[tri.points[i]];
 					mesh_ptr->AddPolygon(tri.points[i]);
 
-					auto remapped_normal_idx = normals[tri.points[i]];
-					normal_indexes.emplace_back(remapped_normal_idx);
+//					auto remapped_normal_idx = normals[tri.points[i]];
+//					normal_indexes.emplace_back(remapped_normal_idx);
 
 					/*if (!tangents.empty())
 					{
