@@ -228,9 +228,10 @@ public:
 	{
 		std::set<std::string> names;
 
-		names.insert(m_shaderName);
+		std::for_each(m_shaders.begin(), m_shaders.end(),
+			[&names](const Shader_appliance& shader) { names.insert(shader.get_name()); });
 
-		return move(names);
+		return names;
 	};
 
 	void setIndiciesState(bool state)

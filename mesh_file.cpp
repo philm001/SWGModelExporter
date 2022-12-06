@@ -406,14 +406,14 @@ void meshObject::store(const std::string& path, const Context& context)
 
 	for (auto shader : m_shaders)
 	{
-		meshVerticies += shader.GetTriangleVertices().size();
+		meshVerticies += shader.getNumberofMeshVertices();
 		triangleVertices += shader.GetTriangleVertices().size();
 	}
 
 	mesh_ptr->SetControlPointCount(meshVerticies);
 	auto mesh_vertices = mesh_ptr->GetControlPoints();
 
-	uint16_t lastTriCount = 0;
+	uint32_t lastTriCount = 0;
 
 	for (auto shader : m_shaders)
 	{
@@ -443,7 +443,7 @@ void meshObject::store(const std::string& path, const Context& context)
 
 	uint32_t triangleCounter = 0;
 
-	for (uint32_t shader_idx = 0; shader_idx < 1 /*m_shaders.size()*/; ++shader_idx)
+	for (uint32_t shader_idx = 0; shader_idx < m_shaders.size(); ++shader_idx)
 	{
 		auto& shader = m_shaders.at(shader_idx);
 		if (shader.get_definition())
@@ -524,8 +524,8 @@ void meshObject::store(const std::string& path, const Context& context)
 					uv_indexes.emplace_back(idx_offset + tri.points[i]);*/
 				}
 				mesh_ptr->EndPolygon();
-				triangleCounter += triangles.size();
 			}
+			triangleCounter += triangles.size();
 		}
 	}
 
