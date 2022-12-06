@@ -325,7 +325,7 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			uint16_t v2 = buffer.read_uint16();
 			uint16_t v3 = buffer.read_uint16();
 			Graphics::Triangle_indexed tempTri(v1, v2, v3);
-			m_object->GetShader().get_triangles().emplace_back(tempTri);
+			m_object->get_current_shader().get_triangles().emplace_back(tempTri);
 		}
 		int stop = 32;
 	}
@@ -406,7 +406,7 @@ void meshObject::store(const std::string& path, const Context& context)
 
 	for (auto shader : m_shaders)
 	{
-		meshVerticies += shader.getNumberofMeshVertices();
+		meshVerticies += shader.GetTriangleVertices().size();
 		triangleVertices += shader.GetTriangleVertices().size();
 	}
 
@@ -427,6 +427,7 @@ void meshObject::store(const std::string& path, const Context& context)
 		*/
 			mesh_vertices[vertex_id + lastTriCount] = FbxVector4(shader.GetTriangleVertices()[vertex_id].at(0), shader.GetTriangleVertices()[vertex_id].at(1), shader.GetTriangleVertices()[vertex_id].at(2));
 		}
+		lastTriCount += shader.GetTriangleVertices().size();
 	}
 
 	// add material layer
@@ -440,7 +441,9 @@ void meshObject::store(const std::string& path, const Context& context)
 	std::vector<Graphics::Tex_coord> uvs;
 	std::vector<uint32_t> uv_indexes;
 
-	for (uint32_t shader_idx = 0; shader_idx < m_shaders.size(); ++shader_idx)
+	uint32_t triangleCounter = 0;
+
+	for (uint32_t shader_idx = 0; shader_idx < 1 /*m_shaders.size()*/; ++shader_idx)
 	{
 		auto& shader = m_shaders.at(shader_idx);
 		if (shader.get_definition())
@@ -508,7 +511,7 @@ void meshObject::store(const std::string& path, const Context& context)
 				for (size_t i = 0; i < 3; ++i)
 				{
 					//auto remapped_pos_idx = positions[tri.points[i]];
-					mesh_ptr->AddPolygon(tri.points[i]);
+					mesh_ptr->AddPolygon(tri.points[i] + triangleCounter);
 
 //					auto remapped_normal_idx = normals[tri.points[i]];
 //					normal_indexes.emplace_back(remapped_normal_idx);
@@ -521,6 +524,7 @@ void meshObject::store(const std::string& path, const Context& context)
 					uv_indexes.emplace_back(idx_offset + tri.points[i]);*/
 				}
 				mesh_ptr->EndPolygon();
+				triangleCounter += triangles.size();
 			}
 		}
 	}
@@ -576,5 +580,44 @@ void meshObject::resolve_dependencies(const Context& context)
 	{
 		// Do something if we have bad shaders???
 		std::cout << "Bad shaders breakpoint" << std::endl;
+
+		/*vector<uint8_t> counters(m_vertices.size(), 0);
+		for (auto& shader : m_shaders)
+		{
+			for (auto& vert_idx : shader.get_pos_indexes())
+			{
+				if (vert_idx >= counters.size())
+					break;
+				counters[vert_idx]++;
+			}
+
+
+			if (shader.get_definition() == nullptr)
+				for (auto& vert_idx : shader.get_pos_indexes())
+				{
+					if (vert_idx >= counters.size())
+						break;
+					counters[vert_idx]--;
+				}
+
+		}
+
+		auto safe_clear = is_partitioned(counters.begin(), counters.end(),
+			[](uint8_t val) { return val > 0; });
+		if (safe_clear)
+		{
+			// we can do safe clear of trouble shader, if not - oops
+			auto beg = find_if(counters.begin(), counters.end(),
+				[](uint8_t val) { return val == 0; });
+			auto idx = distance(counters.begin(), beg);
+			m_vertices.erase(m_vertices.begin() + idx, m_vertices.end());
+
+			for (size_t idx = 0; idx < m_shaders.size(); ++idx)
+				if (m_shaders[idx].get_definition() == nullptr)
+				{
+					m_shaders.erase(m_shaders.begin() + idx);
+					break;
+				}
+		}*/
 	}
 }
