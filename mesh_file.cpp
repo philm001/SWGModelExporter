@@ -553,6 +553,8 @@ void meshObject::store(const std::string& path, const Context& context)
 
 	// do some morph targets??
 
+	// Smoothing? Might need to look here: https://forums.autodesk.com/t5/fbx-forum/how-to-create-a-smoothing-group/td-p/4245673
+
 	exporter_ptr->Export(scene_ptr);
 	fbx_manager_ptr->Destroy();
 }
