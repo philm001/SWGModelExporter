@@ -148,6 +148,8 @@ public:
 		std::vector<uint32_t>& get_light_indexes() { return m_light_indexes; }
 		std::vector<Graphics::Tex_coord>& get_texels() { return m_texels; }
 		std::vector<Graphics::Triangle_indexed>& get_triangles() { return m_triangles; }
+		std::vector<std::vector<float>>& get_normals() { return m_Normals; }
+
 		std::vector<std::pair<uint32_t, uint32_t>>& get_primivites() { return m_primitives; }
 		void set_definition(const std::shared_ptr<Shader> shader_def) { m_shader_definition = shader_def; }
 		const std::shared_ptr<Shader>& get_definition() const { return m_shader_definition; }

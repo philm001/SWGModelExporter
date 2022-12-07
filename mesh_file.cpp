@@ -502,7 +502,7 @@ void meshObject::store(const std::string& path, const Context& context)
 			copy(shader.get_texels().begin(), shader.get_texels().end(), back_inserter(uvs));
 
 			normal_indexes.reserve(normal_indexes.size() + normals.size());
-			tangents_idxs.reserve(tangents_idxs.size() + tangents.size());
+			//tangents_idxs.reserve(tangents_idxs.size() + tangents.size());
 
 			for (uint32_t tri_idx = 0; tri_idx < triangles.size(); ++tri_idx)
 			{
@@ -513,8 +513,8 @@ void meshObject::store(const std::string& path, const Context& context)
 					//auto remapped_pos_idx = positions[tri.points[i]];
 					mesh_ptr->AddPolygon(tri.points[i] + triangleCounter);
 
-//					auto remapped_normal_idx = normals[tri.points[i]];
-//					normal_indexes.emplace_back(remapped_normal_idx);
+					auto remapped_normal_idx = normals[tri.points[i]];
+					normal_indexes.emplace_back(remapped_normal_idx);
 
 					/*if (!tangents.empty())
 					{
@@ -529,7 +529,7 @@ void meshObject::store(const std::string& path, const Context& context)
 		}
 	}
 
-	//auto& triangles = shader.get_triangles();
+	triangleCounter = 0;
 
 	// add UVs
 	FbxGeometryElementUV* uv_ptr = mesh_ptr->CreateElementUV("UVSet1");
@@ -538,22 +538,23 @@ void meshObject::store(const std::string& path, const Context& context)
 
 
 	// add normals
-	if (!normal_indexes.empty())
+	FbxGeometryElementNormal* normals_ptr = mesh_ptr->CreateElementNormal();
+	normals_ptr->SetMappingMode(FbxGeometryElementNormal::eByPolygonVertex);
+	normals_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+	auto& direct_array = normals_ptr->GetDirectArray();
+	for (auto shader : m_shaders)
 	{
-	/*	FbxGeometryElementNormal* normals_ptr = mesh_ptr->CreateElementNormal();
-		normals_ptr->SetMappingMode(FbxGeometryElementNormal::eByPolygonVertex);
-		normals_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
-		auto& direct_array = normals_ptr->GetDirectArray();
-		std::for_each(m_normals.begin(), m_normals.end(),
-			[&direct_array](const Geometry::Vector3& elem)
+		std::for_each(shader.get_normals().begin(), shader.get_normals().end(),
+			[&direct_array](const std::vector<float>& elem)
 			{
-				direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
+				direct_array.Add(FbxVector4(elem.at(0), elem.at(1), elem.at(2)));
 			});
-
-		auto& index_array = normals_ptr->GetIndexArray();
-		std::for_each(normal_indexes.begin(), normal_indexes.end(),
-			[&index_array](const uint32_t& idx) { index_array.Add(idx); });*/
 	}
+	
+
+	auto& index_array = normals_ptr->GetIndexArray();
+	std::for_each(normal_indexes.begin(), normal_indexes.end(),
+		[&index_array](const uint32_t& idx) { index_array.Add(idx); });
 
 	// do some morph targets??
 
