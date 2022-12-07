@@ -513,8 +513,8 @@ void meshObject::store(const std::string& path, const Context& context)
 					//auto remapped_pos_idx = positions[tri.points[i]];
 					mesh_ptr->AddPolygon(tri.points[i] + triangleCounter);
 
-					auto remapped_normal_idx = normals[tri.points[i]];
-					normal_indexes.emplace_back(remapped_normal_idx);
+					//auto remapped_normal_idx = normals[tri.points[i]];
+					//normal_indexes.emplace_back(remapped_normal_idx);
 
 					/*if (!tangents.empty())
 					{
@@ -552,9 +552,9 @@ void meshObject::store(const std::string& path, const Context& context)
 	}
 	
 
-	auto& index_array = normals_ptr->GetIndexArray();
-	std::for_each(normal_indexes.begin(), normal_indexes.end(),
-		[&index_array](const uint32_t& idx) { index_array.Add(idx); });
+	//auto& index_array = normals_ptr->GetIndexArray();
+	//std::for_each(normal_indexes.begin(), normal_indexes.end(),
+		//[&index_array](const uint32_t& idx) { index_array.Add(idx); });
 
 	// do some morph targets??
 
