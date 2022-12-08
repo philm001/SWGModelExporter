@@ -284,18 +284,29 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			}
 			
 			std::vector<std::vector<float>> textureCoordinatePrime;
+			std::vector<Graphics::Tex_coord> textureCoordinate;
 
 			// This is most likely the UVs
 			int testValue = m_object->get_current_shader().GetNumTextureCoordinateSets();
 			for (int i = 0; i < m_object->get_current_shader().GetNumTextureCoordinateSets(); i++)
 			{
 				std::vector<float> textureCoordinateSemiPrime;
+				float uValue = 0;
+				float vValue = 0;
 				int testValue2 = m_object->get_current_shader().getCoordinateSet(i);
 				for (int j = 0; j < m_object->get_current_shader().getCoordinateSet(i); j++)
 				{
-					textureCoordinateSemiPrime.push_back(buffer.read_float());
+					if (j == 0)
+					{
+						uValue = buffer.read_float();
+					}
+					else
+					{
+						vValue = buffer.read_float();
+					}
 				}
-				textureCoordinatePrime.push_back(textureCoordinateSemiPrime);
+				Graphics::Tex_coord currentValue(uValue, vValue);
+				m_object->GetShader().get_texels().push_back(currentValue);
 			}
 
 			if (skipDot3)
@@ -442,6 +453,7 @@ void meshObject::store(const std::string& path, const Context& context)
 	std::vector<uint32_t> uv_indexes;
 
 	uint32_t triangleCounter = 0;
+	uint32_t tempCounter = 0;
 
 	for (uint32_t shader_idx = 0; shader_idx < m_shaders.size(); ++shader_idx)
 	{
@@ -476,6 +488,17 @@ void meshObject::store(const std::string& path, const Context& context)
 				texture->SetTranslation(0.0, 0.0);
 				texture->SetScale(1.0, 1.0);
 				texture->SetTranslation(0.0, 0.0);
+				/*
+				if (texture_def.texture_tag == "EMIS")
+					material_ptr->Emissive.ConnectSrcObject(texture);
+				else if (texture_def.texture_tag == "MAIN")
+				{
+					material_ptr->Diffuse.ConnectSrcObject(texture);
+					mainlockout = true;
+				}
+				else if(texture_def.texture_tag == "CNRM")
+					material_ptr->Bump.ConnectSrcObject(texture);
+				*/
 				switch (texture_def.texture_type)
 				{
 				case Shader::texture_type::main:
@@ -511,6 +534,7 @@ void meshObject::store(const std::string& path, const Context& context)
 				for (size_t i = 0; i < 3; ++i)
 				{
 					//auto remapped_pos_idx = positions[tri.points[i]];
+					uint32_t tempValue = tri.points[i] + triangleCounter;
 					mesh_ptr->AddPolygon(tri.points[i] + triangleCounter);
 
 					//auto remapped_normal_idx = normals[tri.points[i]];
@@ -525,7 +549,7 @@ void meshObject::store(const std::string& path, const Context& context)
 				}
 				mesh_ptr->EndPolygon();
 			}
-			triangleCounter += triangles.size();
+			triangleCounter += shader.getNumberofMeshVertices();
 		}
 	}
 
@@ -536,7 +560,18 @@ void meshObject::store(const std::string& path, const Context& context)
 	uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
 	uv_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
-
+	for (auto shader : m_shaders)
+	{
+		std::for_each(uvs.begin(), uvs.end(), [&uv_ptr](const Graphics::Tex_coord& coord)
+			{
+				uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
+			});
+		std::for_each(uv_indexes.begin(), uv_indexes.end(), [&uv_ptr](const uint32_t idx)
+			{
+				uv_ptr->GetIndexArray().Add(idx);
+			});
+	}
+	
 	// add normals
 	FbxGeometryElementNormal* normals_ptr = mesh_ptr->CreateElementNormal();
 	normals_ptr->SetMappingMode(FbxGeometryElementNormal::eByPolygonVertex);
