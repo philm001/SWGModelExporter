@@ -488,17 +488,7 @@ void meshObject::store(const std::string& path, const Context& context)
 				texture->SetTranslation(0.0, 0.0);
 				texture->SetScale(1.0, 1.0);
 				texture->SetTranslation(0.0, 0.0);
-				/*
-				if (texture_def.texture_tag == "EMIS")
-					material_ptr->Emissive.ConnectSrcObject(texture);
-				else if (texture_def.texture_tag == "MAIN")
-				{
-					material_ptr->Diffuse.ConnectSrcObject(texture);
-					mainlockout = true;
-				}
-				else if(texture_def.texture_tag == "CNRM")
-					material_ptr->Bump.ConnectSrcObject(texture);
-				*/
+
 				switch (texture_def.texture_type)
 				{
 				case Shader::texture_type::main:
@@ -525,7 +515,6 @@ void meshObject::store(const std::string& path, const Context& context)
 			copy(shader.get_texels().begin(), shader.get_texels().end(), back_inserter(uvs));
 
 			normal_indexes.reserve(normal_indexes.size() + normals.size());
-			//tangents_idxs.reserve(tangents_idxs.size() + tangents.size());
 
 			for (uint32_t tri_idx = 0; tri_idx < triangles.size(); ++tri_idx)
 			{
@@ -540,12 +529,9 @@ void meshObject::store(const std::string& path, const Context& context)
 					//auto remapped_normal_idx = normals[tri.points[i]];
 					//normal_indexes.emplace_back(remapped_normal_idx);
 
-					/*if (!tangents.empty())
-					{
-						auto remapped_tangent = tangents[tri.points[i]];
-						tangents_idxs.emplace_back(remapped_tangent);
-					}
-					uv_indexes.emplace_back(idx_offset + tri.points[i]);*/
+					//uv_indexes.emplace_back(idx_offset + tri.points[i]);// Might want to consider changing idx_offset to trainalgeCounter
+					uv_indexes.emplace_back(idx_offset + tri.points[i] + triangleCounter);// Might want to consider changing idx_offset to trainalgeCounter
+
 				}
 				mesh_ptr->EndPolygon();
 			}
@@ -560,17 +546,14 @@ void meshObject::store(const std::string& path, const Context& context)
 	uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
 	uv_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
-	for (auto shader : m_shaders)
-	{
-		std::for_each(uvs.begin(), uvs.end(), [&uv_ptr](const Graphics::Tex_coord& coord)
-			{
-				uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
-			});
-		std::for_each(uv_indexes.begin(), uv_indexes.end(), [&uv_ptr](const uint32_t idx)
-			{
-				uv_ptr->GetIndexArray().Add(idx);
-			});
-	}
+	std::for_each(uvs.begin(), uvs.end(), [&uv_ptr](const Graphics::Tex_coord& coord)
+		{
+			uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
+		});
+	std::for_each(uv_indexes.begin(), uv_indexes.end(), [&uv_ptr](const uint32_t idx)
+		{
+			uv_ptr->GetIndexArray().Add(idx);
+		});
 	
 	// add normals
 	FbxGeometryElementNormal* normals_ptr = mesh_ptr->CreateElementNormal();
@@ -590,6 +573,8 @@ void meshObject::store(const std::string& path, const Context& context)
 	//auto& index_array = normals_ptr->GetIndexArray();
 	//std::for_each(normal_indexes.begin(), normal_indexes.end(),
 		//[&index_array](const uint32_t& idx) { index_array.Add(idx); });
+
+	mesh_ptr->BuildMeshEdgeArray();
 
 	// do some morph targets??
 
