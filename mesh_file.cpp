@@ -465,6 +465,7 @@ void meshObject::store(const std::string& path, const Context& context)
 	std::vector<uint32_t> tangents_idxs;
 	std::vector<Graphics::Tex_coord> uvs;
 	std::vector<uint32_t> uv_indexes;
+	std::vector<uint32_t> uv_indexes_prime;
 
 	uint32_t triangleCounter = 0;
 	uint32_t tempCounter = 0;
@@ -544,18 +545,13 @@ void meshObject::store(const std::string& path, const Context& context)
 					//auto remapped_normal_idx = normals[tri.points[i]];
 					normal_indexes.emplace_back(tri.points[i] + triangleCounter);
 
-					//uv_indexes.emplace_back(idx_offset + tri.points[i]);// Might want to consider changing idx_offset to trainalgeCounter
+					uv_indexes_prime.emplace_back(idx_offset + tri.points[i]);// Might want to consider changing idx_offset to trainalgeCounter
 					//uv_indexes.emplace_back(idx_offset + tri.points[i] + triangleCounter);// Might want to consider changing idx_offset to trainalgeCounter
 
 				}
 				mesh_ptr->EndPolygon();
 			}
 
-			for (auto vertexInfoIterator : shader.GetStaticMeshVertexInfo())
-			{
-				mesh_ptr->BeginPolygon(shader_idx, -1, shader_idx, false);
-
-			}
 			triangleCounter += shader.getNumberofMeshVertices();
 		}
 	}
@@ -566,26 +562,37 @@ void meshObject::store(const std::string& path, const Context& context)
 	FbxGeometryElementUV* uv_ptr = mesh_ptr->CreateElementUV("UVSet1");
 	uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
 	uv_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+	uint32_t counterIndex = 0;
+
+	uint32_t finaliValue = 0;
+
+	std::for_each(uvs.begin(), uvs.end(), [&uv_ptr](const Graphics::Tex_coord& coord)
+		{
+			uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
+		});
 
 	for (auto shader : m_shaders)
 	{
-		uint32_t offsetSize = uv_indexes.size();
-		for (int i = 0; i < shader.GetStaticMeshVertexInfo().size(); i++)
+		uint32_t offsetSize = 0;
+
+		if(uv_indexes.size() > 0)
+			offsetSize = uv_indexes.at(uv_indexes.size() - 1) + 1;
+
+		for (uint32_t i = 0; i < shader.GetStaticMeshVertexInfo().size(); i++)
 		{
 			StaticMeshVertexInfo addInfo = shader.GetStaticMeshVertexInfo().at(i);
 
 			for (int j = 0; j < addInfo.UVs.size(); j++)
 			{
-				uv_ptr->GetDirectArray().Add(FbxVector2(addInfo.UVs.at(j).u, addInfo.UVs.at(j).v));
-				uv_indexes.emplace_back(i + offsetSize);
+				//uv_ptr->GetDirectArray().Add(FbxVector2(addInfo.UVs.at(j).u, addInfo.UVs.at(j).v));
+				uv_indexes.emplace_back(i+offsetSize);
 			}
+			finaliValue = i;
 		}
+		int stop = 0;
 	}
 
-/*	std::for_each(uvs.begin(), uvs.end(), [&uv_ptr](const Graphics::Tex_coord& coord)
-		{
-			uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
-		});*/
+	
 	std::for_each(uv_indexes.begin(), uv_indexes.end(), [&uv_ptr](const uint32_t idx)
 		{
 			uv_ptr->GetIndexArray().Add(idx);
