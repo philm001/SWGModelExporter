@@ -527,10 +527,10 @@ void meshObject::store(const std::string& path, const Context& context)
 					mesh_ptr->AddPolygon(tri.points[i] + triangleCounter);
 
 					//auto remapped_normal_idx = normals[tri.points[i]];
-					//normal_indexes.emplace_back(remapped_normal_idx);
+					normal_indexes.emplace_back(tri.points[i] + triangleCounter);
 
-					//uv_indexes.emplace_back(idx_offset + tri.points[i]);// Might want to consider changing idx_offset to trainalgeCounter
-					uv_indexes.emplace_back(idx_offset + tri.points[i] + triangleCounter);// Might want to consider changing idx_offset to trainalgeCounter
+					uv_indexes.emplace_back(idx_offset + tri.points[i]);// Might want to consider changing idx_offset to trainalgeCounter
+					//uv_indexes.emplace_back(idx_offset + tri.points[i] + triangleCounter);// Might want to consider changing idx_offset to trainalgeCounter
 
 				}
 				mesh_ptr->EndPolygon();
@@ -570,9 +570,9 @@ void meshObject::store(const std::string& path, const Context& context)
 	}
 	
 
-	//auto& index_array = normals_ptr->GetIndexArray();
-	//std::for_each(normal_indexes.begin(), normal_indexes.end(),
-		//[&index_array](const uint32_t& idx) { index_array.Add(idx); });
+	auto& index_array = normals_ptr->GetIndexArray();
+	std::for_each(normal_indexes.begin(), normal_indexes.end(),
+		[&index_array](const uint32_t& idx) { index_array.Add(idx); });
 
 	mesh_ptr->BuildMeshEdgeArray();
 
