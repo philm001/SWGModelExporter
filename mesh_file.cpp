@@ -232,6 +232,8 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		// Triangle vetexs
 		while (!buffer.end_of_buffer())
 		{
+			StaticMeshVertexInfo newVertex;
+
 			if (m_object->get_current_shader().hasPosition())
 			{
 				std::vector<float> triPoints;
@@ -245,6 +247,10 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				triPoints.push_back(z);
 
 				m_object->get_current_shader().AddVertex(triPoints);
+
+				newVertex.triangleVertices.push_back(x);
+				newVertex.triangleVertices.push_back(y);
+				newVertex.triangleVertices.push_back(z);
 			}
 			
 			if (m_object->get_current_shader().isTransformed())
@@ -265,6 +271,10 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				parsedNormal.push_back(zNormal);
 
 				m_object->get_current_shader().AddNormal(parsedNormal);
+
+				newVertex.triangleNormals.push_back(xNormal);
+				newVertex.triangleNormals.push_back(yNormal);
+				newVertex.triangleNormals.push_back(zNormal);
 			}
 			
 			if (m_object->get_current_shader().hasPointSize())
@@ -307,6 +317,8 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				}
 				Graphics::Tex_coord currentValue(uValue, vValue);
 				m_object->GetShader().get_texels().push_back(currentValue);
+
+				newVertex.UVs.push_back(currentValue);
 			}
 
 			if (skipDot3)
@@ -317,6 +329,8 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				buffer.read_float();
 				buffer.read_float();
 			}
+
+			m_object->get_current_shader().GetStaticMeshVertexInfo().push_back(newVertex);
 		}
 	}
 	/*
@@ -460,6 +474,7 @@ void meshObject::store(const std::string& path, const Context& context)
 		auto& shader = m_shaders.at(shader_idx);
 		if (shader.get_definition())
 		{
+			
 			auto material_ptr = FbxSurfacePhong::Create(scene_ptr, shader.get_name().c_str());
 			material_ptr->ShadingModel.Set("Phong");
 
@@ -529,11 +544,17 @@ void meshObject::store(const std::string& path, const Context& context)
 					//auto remapped_normal_idx = normals[tri.points[i]];
 					normal_indexes.emplace_back(tri.points[i] + triangleCounter);
 
-					uv_indexes.emplace_back(idx_offset + tri.points[i]);// Might want to consider changing idx_offset to trainalgeCounter
+					//uv_indexes.emplace_back(idx_offset + tri.points[i]);// Might want to consider changing idx_offset to trainalgeCounter
 					//uv_indexes.emplace_back(idx_offset + tri.points[i] + triangleCounter);// Might want to consider changing idx_offset to trainalgeCounter
 
 				}
 				mesh_ptr->EndPolygon();
+			}
+
+			for (auto vertexInfoIterator : shader.GetStaticMeshVertexInfo())
+			{
+				mesh_ptr->BeginPolygon(shader_idx, -1, shader_idx, false);
+
 			}
 			triangleCounter += shader.getNumberofMeshVertices();
 		}
@@ -546,10 +567,25 @@ void meshObject::store(const std::string& path, const Context& context)
 	uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
 	uv_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
-	std::for_each(uvs.begin(), uvs.end(), [&uv_ptr](const Graphics::Tex_coord& coord)
+	for (auto shader : m_shaders)
+	{
+		uint32_t offsetSize = uv_indexes.size();
+		for (int i = 0; i < shader.GetStaticMeshVertexInfo().size(); i++)
+		{
+			StaticMeshVertexInfo addInfo = shader.GetStaticMeshVertexInfo().at(i);
+
+			for (int j = 0; j < addInfo.UVs.size(); j++)
+			{
+				uv_ptr->GetDirectArray().Add(FbxVector2(addInfo.UVs.at(j).u, addInfo.UVs.at(j).v));
+				uv_indexes.emplace_back(i + offsetSize);
+			}
+		}
+	}
+
+/*	std::for_each(uvs.begin(), uvs.end(), [&uv_ptr](const Graphics::Tex_coord& coord)
 		{
 			uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
-		});
+		});*/
 	std::for_each(uv_indexes.begin(), uv_indexes.end(), [&uv_ptr](const uint32_t idx)
 		{
 			uv_ptr->GetIndexArray().Add(idx);

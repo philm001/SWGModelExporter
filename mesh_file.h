@@ -132,6 +132,12 @@ private:
 	std::shared_ptr<LODObject> m_object;
 };
 
+struct StaticMeshVertexInfo
+{
+	std::vector<float> triangleVertices;
+	std::vector<float> triangleNormals;
+	std::vector<Graphics::Tex_coord> UVs;
+};
 
 class meshObject : public Base_object // This object contains shader data
 {
@@ -197,6 +203,9 @@ public:
 		void AddNormal(std::vector<float> vec3) { m_Normals.push_back(vec3); }
 
 		std::vector<std::vector<float>>& GetTriangleVertices() { return m_triangleVertices; }
+
+		// possible new code
+		std::vector<StaticMeshVertexInfo>& GetStaticMeshVertexInfo() { return m_VertexInfoList; }
 	private:
 		std::string m_name;
 		std::vector<uint32_t> m_position_indexes;
@@ -212,6 +221,8 @@ public:
 		uint32_t m_flags;
 		uint32_t m_NumberofMeshVertices = 0;
 
+		// Possible New code
+		std::vector<StaticMeshVertexInfo> m_VertexInfoList;
 	};
 
 
