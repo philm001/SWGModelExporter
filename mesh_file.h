@@ -188,7 +188,7 @@ public:
 		void SetTextreCoordinateDim(int textureCoordinateSet, int dim)
 		{
 			const unsigned int shift = static_cast<unsigned int>(12 + (textureCoordinateSet * 2));
-			m_flags = (m_flags & ~(static_cast<unsigned int>(0b0011) << shift)) | (static_cast<uint32_t>(dim - 1) << shift);
+			m_flags = (m_flags & ~(static_cast<unsigned int>(0x03) << shift)) | (static_cast<uint32_t>(dim - 1) << shift);
 		}
 
 		void SetNumberOfTextureCoordinateSets(int numberofTextures)

@@ -27,6 +27,8 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray)
 			continue;
 
 		std::cout << "Processing : " << assetName << std::endl;
+		if (assetName.find("no_render.iff") != std::string::npos)// Skip this guy
+			continue;
 
 		// do not try find object on this step
 		std::vector<uint8_t> buffer;

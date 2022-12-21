@@ -297,13 +297,14 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			std::vector<Graphics::Tex_coord> textureCoordinate;
 
 			// This is most likely the UVs
-			int testValue = m_object->get_current_shader().GetNumTextureCoordinateSets();
-			for (int i = 0; i < m_object->get_current_shader().GetNumTextureCoordinateSets(); i++)
+			int testValue = numberOfTextureCoordinateSets;
+			for (int i = 0; i < numberOfTextureCoordinateSets; i++)
 			{
 				std::vector<float> textureCoordinateSemiPrime;
 				float uValue = 0;
 				float vValue = 0;
 				int testValue2 = m_object->get_current_shader().getCoordinateSet(i);
+				
 				for (int j = 0; j < m_object->get_current_shader().getCoordinateSet(i); j++)
 				{
 					if (j == 0)
@@ -312,13 +313,17 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 					}
 					else
 					{
-						vValue = buffer.read_float();
+						vValue = 1.0f - buffer.read_float();
 					}
 				}
-				Graphics::Tex_coord currentValue(uValue, vValue);
-				m_object->GetShader().get_texels().push_back(currentValue);
+				if (i == 0 || testValue == 1)
+				{
+					Graphics::Tex_coord currentValue(uValue, vValue);
+					m_object->GetShader().get_texels().push_back(currentValue);
 
-				newVertex.UVs.push_back(currentValue);
+					newVertex.UVs.push_back(currentValue);
+				}
+				
 			}
 
 			if (skipDot3)
@@ -571,7 +576,7 @@ void meshObject::store(const std::string& path, const Context& context)
 			uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
 		});
 
-	for (auto shader : m_shaders)
+/*	for (auto shader : m_shaders)
 	{
 		uint32_t offsetSize = 0;
 
@@ -590,10 +595,10 @@ void meshObject::store(const std::string& path, const Context& context)
 			finaliValue = i;
 		}
 		int stop = 0;
-	}
+	}*/
 
 	
-	std::for_each(uv_indexes.begin(), uv_indexes.end(), [&uv_ptr](const uint32_t idx)
+	std::for_each(uv_indexes_prime.begin(), uv_indexes_prime.end(), [&uv_ptr](const uint32_t idx)
 		{
 			uv_ptr->GetIndexArray().Add(idx);
 		});
