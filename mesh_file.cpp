@@ -229,6 +229,10 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			m_object->get_current_shader().SetNumberOfTextureCoordinateSets(numberOfTextureCoordinateSets);
 			skipDot3 = true;
 		}
+		else
+		{
+			std::cout << "DOT3 has been found" << std::endl;
+		}
 		// Triangle vetexs
 		while (!buffer.end_of_buffer())
 		{
@@ -300,7 +304,7 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			int testValue = numberOfTextureCoordinateSets;
 			for (int i = 0; i < numberOfTextureCoordinateSets; i++)
 			{
-				std::vector<float> textureCoordinateSemiPrime;
+				std::vector<Graphics::Tex_coord> readTextureCoordinates;
 				float uValue = 0;
 				float vValue = 0;
 				int testValue2 = m_object->get_current_shader().getCoordinateSet(i);
@@ -316,10 +320,25 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 						vValue = 1.0f - buffer.read_float();
 					}
 				}
+
+				Graphics::Tex_coord currentValue(uValue, vValue);
+
+				if (m_object->GetShader().GetTexelArray().size() < i + 1)
+				{
+					std::vector<Graphics::Tex_coord> textureCoordinate;
+					textureCoordinate.push_back(currentValue);
+					m_object->GetShader().GetTexelArray().push_back(textureCoordinate);
+				}
+				else
+				{
+					m_object->GetShader().GetTexelArray().at(i).push_back(currentValue);
+				}
+
 				if (i == 0 || testValue == 1)
 				{
-					Graphics::Tex_coord currentValue(uValue, vValue);
+					
 					m_object->GetShader().get_texels().push_back(currentValue);
+					
 
 					newVertex.UVs.push_back(currentValue);
 				}
@@ -361,27 +380,27 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 	}
 	else if (name == "SIDX")
 	{
-	/* Will get to this later. The logic here will be a little different*/
-		uint32_t indexCount = buffer.read_uint32();
-		while (!buffer.end_of_buffer())
-		{
-			// Read direction of buffer
-			std::vector<float> Coordinate{ buffer.read_float(), buffer.read_float(), buffer.read_float() };
-			// Read in index value
-			uint32_t indexValue = buffer.read_uint32();// Confirm this is the correct order
+	/* For exporting, this does not matter. However, the code will remain here for archival purposes*/
+		//uint32_t indexCount = buffer.read_uint32();
+		//while (!buffer.end_of_buffer())
+		//{
+		//	// Read direction of buffer
+		//	std::vector<float> Coordinate{ buffer.read_float(), buffer.read_float(), buffer.read_float() };
+		//	// Read in index value
+		//	uint32_t indexValue = buffer.read_uint32();// Confirm this is the correct order
 
-			SortedIndex AdditionalIndex;
-			AdditionalIndex.CoordinateDirection = Coordinate;
-			AdditionalIndex.IndexValue = indexValue;
+		//	SortedIndex AdditionalIndex;
+		//	AdditionalIndex.CoordinateDirection = Coordinate;
+		//	AdditionalIndex.IndexValue = indexValue;
 
-			// After reading index value will need to read through for indice values
-			for (int i = 0; i < indexValue; i++)
-			{
-				AdditionalIndex.Indicie.push_back(buffer.read_uint16());
-			}
+		//	// After reading index value will need to read through for indice values
+		//	for (int i = 0; i < indexValue; i++)
+		//	{
+		//		AdditionalIndex.Indicie.push_back(buffer.read_uint16());
+		//	}
 
-			m_object->GetSortedIndex().push_back(AdditionalIndex);
-		}
+		//	m_object->GetSortedIndex().push_back(AdditionalIndex);
+		//}
 	}
 }
 
@@ -469,8 +488,11 @@ void meshObject::store(const std::string& path, const Context& context)
 	std::vector<uint32_t> normal_indexes;
 	std::vector<uint32_t> tangents_idxs;
 	std::vector<Graphics::Tex_coord> uvs;
-	std::vector<uint32_t> uv_indexes;
 	std::vector<uint32_t> uv_indexes_prime;
+
+	// New UV Code
+	std::vector<std::vector<Graphics::Tex_coord>> primed_uvs;
+	std::vector<std::vector<uint32_t>> uv_indexes;
 
 	uint32_t triangleCounter = 0;
 	uint32_t tempCounter = 0;
@@ -549,12 +571,45 @@ void meshObject::store(const std::string& path, const Context& context)
 
 					//auto remapped_normal_idx = normals[tri.points[i]];
 					normal_indexes.emplace_back(tri.points[i] + triangleCounter);
+					uint32_t triTempValue = idx_offset + tri.points[i];
+					//uv_indexes_prime.emplace_back(idx_offset + tri.points[i]);// Might want to consider changing idx_offset to trainalgeCounter
 
-					uv_indexes_prime.emplace_back(idx_offset + tri.points[i]);// Might want to consider changing idx_offset to trainalgeCounter
+					for (int j = 0; j < shader.GetTexelArray().size(); j++)
+					{
+						uint32_t offsetValue = 0;
+
+						if (primed_uvs.size() != 0)
+						{
+							offsetValue = primed_uvs.at(j).size();
+						}
+						
+						if (uv_indexes.size() < j + 1)
+						{
+							std::vector<uint32_t> initialValue;
+							initialValue.push_back(offsetValue + tri.points[i]);
+							uv_indexes.push_back(initialValue);
+						}
+						else
+						{
+							uv_indexes.at(j).emplace_back(offsetValue + tri.points[i]);
+						}
+					}
 					//uv_indexes.emplace_back(idx_offset + tri.points[i] + triangleCounter);// Might want to consider changing idx_offset to trainalgeCounter
 
 				}
 				mesh_ptr->EndPolygon();
+			}
+
+			for (int j = 0; j < shader.GetTexelArray().size(); j++)
+			{
+				if (primed_uvs.size() < j + 1)
+				{
+					std::vector<Graphics::Tex_coord> initialValue;
+					primed_uvs.push_back(initialValue);
+				}
+
+				copy(shader.GetTexelArray().at(j).begin(), shader.GetTexelArray().at(j).end(), back_inserter(primed_uvs.at(j)));
+
 			}
 
 			triangleCounter += shader.getNumberofMeshVertices();
@@ -564,44 +619,45 @@ void meshObject::store(const std::string& path, const Context& context)
 	triangleCounter = 0;
 
 	// add UVs
-	FbxGeometryElementUV* uv_ptr = mesh_ptr->CreateElementUV("UVSet1");
-	uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
-	uv_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
-	uint32_t counterIndex = 0;
-
-	uint32_t finaliValue = 0;
-
-	std::for_each(uvs.begin(), uvs.end(), [&uv_ptr](const Graphics::Tex_coord& coord)
-		{
-			uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
-		});
-
-/*	for (auto shader : m_shaders)
+	for (int i = 0; i < primed_uvs.size(); i++)
 	{
-		uint32_t offsetSize = 0;
+		std::stringstream ss;
+		ss << i;
+		std::string str = "UVSet" + ss.str();
 
-		if(uv_indexes.size() > 0)
-			offsetSize = uv_indexes.at(uv_indexes.size() - 1) + 1;
+		FbxGeometryElementUV* uv_ptr = mesh_ptr->CreateElementUV(str.c_str());
+		uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+		uv_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
-		for (uint32_t i = 0; i < shader.GetStaticMeshVertexInfo().size(); i++)
-		{
-			StaticMeshVertexInfo addInfo = shader.GetStaticMeshVertexInfo().at(i);
-
-			for (int j = 0; j < addInfo.UVs.size(); j++)
+		std::for_each(primed_uvs.at(i).begin(), primed_uvs.at(i).end(), [&uv_ptr](const Graphics::Tex_coord& coord)
 			{
-				//uv_ptr->GetDirectArray().Add(FbxVector2(addInfo.UVs.at(j).u, addInfo.UVs.at(j).v));
-				uv_indexes.emplace_back(i+offsetSize);
-			}
-			finaliValue = i;
-		}
-		int stop = 0;
-	}*/
+				uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
+			});
 
-	
-	std::for_each(uv_indexes_prime.begin(), uv_indexes_prime.end(), [&uv_ptr](const uint32_t idx)
-		{
-			uv_ptr->GetIndexArray().Add(idx);
-		});
+		std::for_each(uv_indexes.at(i).begin(), uv_indexes.at(i).end(), [&uv_ptr](const uint32_t idx)
+			{
+				uv_ptr->GetIndexArray().Add(idx);
+			});
+	}
+
+
+	//FbxGeometryElementUV* uv_ptr = mesh_ptr->CreateElementUV("UVSet1");
+	//uv_ptr->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+	//uv_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+	//uint32_t counterIndex = 0;
+
+	//uint32_t finaliValue = 0;
+
+	//std::for_each(uvs.begin(), uvs.end(), [&uv_ptr](const Graphics::Tex_coord& coord)
+	//	{
+	//		uv_ptr->GetDirectArray().Add(FbxVector2(coord.u, coord.v));
+	//	});
+
+	//
+	//std::for_each(uv_indexes_prime.begin(), uv_indexes_prime.end(), [&uv_ptr](const uint32_t idx)
+	//	{
+	//		uv_ptr->GetIndexArray().Add(idx);
+	//	});
 	
 	// add normals
 	FbxGeometryElementNormal* normals_ptr = mesh_ptr->CreateElementNormal();

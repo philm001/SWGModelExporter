@@ -147,6 +147,11 @@ public:
 	class Shader_appliance
 	{
 	public:
+		Shader_appliance()
+		{
+			m_texels_array.reserve(8);
+		}
+
 		Shader_appliance(const std::string& name) : m_name(name) { }
 		const std::string& get_name() const { return m_name; }
 		std::vector<uint32_t>& get_pos_indexes() { return m_position_indexes; }
@@ -155,6 +160,7 @@ public:
 		std::vector<Graphics::Tex_coord>& get_texels() { return m_texels; }
 		std::vector<Graphics::Triangle_indexed>& get_triangles() { return m_triangles; }
 		std::vector<std::vector<float>>& get_normals() { return m_Normals; }
+		std::vector <std::vector<Graphics::Tex_coord>>& GetTexelArray() { return m_texels_array; }
 
 		std::vector<std::pair<uint32_t, uint32_t>>& get_primivites() { return m_primitives; }
 		void set_definition(const std::shared_ptr<Shader> shader_def) { m_shader_definition = shader_def; }
@@ -212,6 +218,7 @@ public:
 		std::vector<uint32_t> m_normal_indexes;
 		std::vector<uint32_t> m_light_indexes;
 		std::vector<Graphics::Tex_coord> m_texels;
+		std::vector <std::vector<Graphics::Tex_coord>> m_texels_array;
 		std::vector<Graphics::Triangle_indexed> m_triangles;
 		std::vector<std::pair<uint32_t, uint32_t>> m_primitives;
 		std::shared_ptr<Shader> m_shader_definition;
