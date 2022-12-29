@@ -51,8 +51,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	try
 	{
 		po::variables_map vm;
-		//po::store(po::parse_command_line(argc, argv, flags), vm);
-		swg_path = "C:\\swg\\SWGEmu";
+		po::store(po::parse_command_line(argc, argv, flags), vm);
+
+		/* Will keep these guys here for later deugging */
+		//swg_path = "C:\\swg\\SWGEmu";
 		//object_name = "dress_s06_f.sat";// bug here
 		//object_name = "bageraset.sat";
 		//object_name = "armor_composite_s01_helmet_twk_f.sat";
@@ -64,8 +66,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		//object_name = "asteroid_acid_large_s01_l0.msh";
 		//object_name = "door_jabba_backdoor.msh";
 		//object_name = "door_djt_arena_down_l0.msh";
-		object_name = "ply_tato_capitol_s01.pob";
-		//object_name = "batch:apt";
+		//object_name = "thm_corl_skyskraper_s01.pob";
+		//object_name = "batch:pob";
+
 		output_pathname = "C:\\extraction\\test";
 		po::notify(vm);
 	}

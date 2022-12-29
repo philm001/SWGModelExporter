@@ -26,6 +26,7 @@ void LODParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t da
 	}
 	else if (name == "BOX ")
 	{
+		/* Keeping here for historicas/archival purposes */
 		// Collision box. This is not needed
 		//std::vector<float> maxValues;
 		//std::vector<float> minValues;
@@ -51,6 +52,7 @@ void LODParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t da
 	}
 	else if (name == "0001SPHR")
 	{
+		/* Keeping here for historicas/archival purposes */
 		// Collision Sphere, this is also not needed in fbx
 		//std::vector<float> CenterPoint;
 
@@ -86,7 +88,8 @@ void LODParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t da
 	}
 	else if (name == "0000VERT")
 	{
-		/* These are not for tiagnels but for collision around the mesh*/
+		/* Keeping here for historicas/archival purposes */
+		/* These are not for triangles but for collision around the mesh*/
 		//while (!buffer.end_of_buffer())
 		//{
 		//	std::vector<float> triPoints;
@@ -104,6 +107,7 @@ void LODParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t da
 	}
 	else if (name == "INDX")
 	{
+		/* Keeping here for historicas/archival purposes */
 		// Triangles INdicies?
 		/*while (!buffer.end_of_buffer())
 		{
@@ -132,7 +136,8 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 	base_buffer buffer(data_ptr, data_size);
 	if (name == "0001SPHR")
 	{
-		/* MOre collision stuff */
+		/* Keeping here for historicas/archival purposes */
+		/* More collision stuff */
 		/*float centerX = buffer.read_float();
 		float centerY = buffer.read_float();
 		float centerZ = buffer.read_float();
@@ -146,6 +151,7 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 	}
 	else if (name == "BOX ")
 	{
+		/* Keeping here for historicas/archival purposes */
 		/* More collision stuff */
 		//std::vector<float> maxValue;
 		//std::vector<float> minValue;
@@ -169,7 +175,7 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 	}
 	else if (name.find("NAME") != -1)
 	{
-		// Note: cargo_freighter_l0 has 3 shaders
+		/* Grab all of the shaders */
 		static uint16_t shaderLoop = 0;
 		if (shaderLoop < m_object->GetShaderCount())
 		{
@@ -189,7 +195,6 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		if (shaderLoop == m_object->GetShaderCount())
 			shaderLoop = 0; // Reset the counter back to 0
 	}
-	/* This is where the good stuff happens. Starting with INFO, we grab the flags for the verticies*/
 	else if (name == "0000INFO")
 	{
 		/* Note sure about this one.... */
@@ -209,6 +214,7 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			bool hasIndicies = buffer.read_uint8();
 			bool hasSortedIndicies = buffer.read_uint8();
 		}*/
+
 		/* For this one, this is a flag to indicate if we need to read the index as 32 or 16 bit ints*/
 		m_object->get_current_shader().set32BitIndexState(true);
 
@@ -220,6 +226,7 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		m_object->get_current_shader().SetFlags(flags);
 		m_object->get_current_shader().setNumberofMeshVertices(numVerticies);
 	}
+	/* So far the 0002 and 0001 Info are not needed. Break points were never but keeping here just in case */
 	else if (name == "0002INFO")
 	{
 		std::cout << "Need to account for this";

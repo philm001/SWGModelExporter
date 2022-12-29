@@ -12,7 +12,7 @@ void pob_parser::section_begin(const std::string& name, uint8_t* data_ptr, size_
 
 void pob_parser::parse_data(const std::string& name, uint8_t* data_ptr, size_t data_size)
 {
-	if (name == "0005DATA")
+	if (name == "0005DATA" || name == "0004DATA")
 	{
 		base_buffer buffer(data_ptr, data_size);
 		
@@ -26,6 +26,23 @@ void pob_parser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		// Now read the data that we need
 		std::string LODString = buffer.read_stringz();
 		m_object->AddLODFile(LODString);
+	}
+	else if (name == "0003DATA")
+	{
+		std::cout << "account for this";
+	}
+	else if (name == "0002DATA")
+	{
+		std::cout << "account for this";
+	}
+	else if (name == "0001DATA")
+	{
+		// This most likely occurs at the beginning
+		//std::cout << "account for this";
+	}
+	else if (name == "0000DATA")
+	{
+		std::cout << "account for this";
 	}
 }
 
