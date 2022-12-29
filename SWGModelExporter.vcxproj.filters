@@ -102,6 +102,9 @@
     <ClInclude Include="ShaderCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="pob_parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -162,6 +165,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mesh_file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pob_parser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

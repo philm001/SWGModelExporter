@@ -184,6 +184,7 @@
     <ClInclude Include="parsers\parser_selector.h" />
     <ClInclude Include="parsers\sht_parser.h" />
     <ClInclude Include="parsers\skt_parser.h" />
+    <ClInclude Include="pob_parser.h" />
     <ClInclude Include="PrimitiveType.h" />
     <ClInclude Include="ShaderCommon.h" />
     <ClInclude Include="stdafx.h" />
@@ -209,6 +210,7 @@
     <ClCompile Include="parsers\parser_selector.cpp" />
     <ClCompile Include="parsers\sht_parser.cpp" />
     <ClCompile Include="parsers\skt_parser.cpp" />
+    <ClCompile Include="pob_parser.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

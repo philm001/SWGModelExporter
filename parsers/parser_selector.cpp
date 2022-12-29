@@ -8,6 +8,7 @@
 #include "anim_parser.h"
 #include "latt_parser.h"
 #include "apt_parser.h"
+#include "pob_parser.h"
 
 using namespace std;
 
@@ -35,6 +36,8 @@ void Parser_selector::section_begin(const string& name, uint8_t* data_ptr, size_
 			m_selected_parser = make_shared<latt_parser>();
 		else if (name == "APT FORM")
 			m_selected_parser = make_shared<apt_parser>();
+		else if (name == "PRTOFORM")
+			m_selected_parser = make_shared<pob_parser>();
 		else if (name == "DTLAFORM")
 			m_selected_parser = make_shared<LODParser>();
 		else if (name == "MESHFORM")

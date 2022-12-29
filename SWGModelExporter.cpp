@@ -64,7 +64,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		//object_name = "asteroid_acid_large_s01_l0.msh";
 		//object_name = "door_jabba_backdoor.msh";
 		//object_name = "door_djt_arena_down_l0.msh";
-		object_name = "batch:apt";
+		object_name = "ply_tato_capitol_s01.pob";
+		//object_name = "batch:apt";
 		output_pathname = "C:\\extraction\\test";
 		po::notify(vm);
 	}
