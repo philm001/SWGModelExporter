@@ -116,7 +116,7 @@ private:
 };
 
 /* 
-	The LOD parser is onyl meant for Level of detail. It does not contain any mesh data.
+	The LOD parser is only meant for Level of detail. It does not contain any mesh data.
 	The vertices and indicies that it contains are related to collision which for FBX this does not matter
 */
 class LODParser : public IFF_visitor
@@ -161,6 +161,9 @@ public:
 		std::vector<Graphics::Triangle_indexed>& get_triangles() { return m_triangles; }
 		std::vector<std::vector<float>>& get_normals() { return m_Normals; }
 		std::vector <std::vector<Graphics::Tex_coord>>& GetTexelArray() { return m_texels_array; }
+
+		void add_lighting_normal(const Geometry::Vector4& light_norm) { m_lighting_normals.emplace_back(light_norm); }
+		std::vector<Geometry::Vector4>& getNormalLighting() { return m_lighting_normals; }
 
 		std::vector<std::pair<uint32_t, uint32_t>>& get_primivites() { return m_primitives; }
 		void set_definition(const std::shared_ptr<Shader> shader_def) { m_shader_definition = shader_def; }
@@ -212,6 +215,12 @@ public:
 
 		// possible new code
 		std::vector<StaticMeshVertexInfo>& GetStaticMeshVertexInfo() { return m_VertexInfoList; }
+
+		bool get32BitIndexState() { return m_is32BitIndex; }
+		void set32BitIndexState(bool state) { m_is32BitIndex = state; }
+
+		int getInfoCounter() { return m_InfoCounter; }
+		void AddInfoCounter() { m_InfoCounter++; }
 	private:
 		std::string m_name;
 		std::vector<uint32_t> m_position_indexes;
@@ -224,9 +233,14 @@ public:
 		std::shared_ptr<Shader> m_shader_definition;
 		std::vector<std::vector<float>> m_triangleVertices;
 		std::vector<std::vector<float>> m_Normals;
+		std::vector<Geometry::Vector4> m_lighting_normals;
+		
 
 		uint32_t m_flags;
 		uint32_t m_NumberofMeshVertices = 0;
+
+		bool m_is32BitIndex = false;
+		int m_InfoCounter = 0;
 
 		// Possible New code
 		std::vector<StaticMeshVertexInfo> m_VertexInfoList;
@@ -253,6 +267,9 @@ public:
 
 		return names;
 	};
+
+	int getMaxUVChannelCount() { return m_maxUVChannelCount; }
+	void setMaxUVChannel(int value) { m_maxUVChannelCount = value; }
 
 	void setIndiciesState(bool state)
 	{
@@ -313,6 +330,8 @@ private:
 	bool m_sortedIndicies = false;
 
 	std::vector<Shader_appliance> m_shaders;
+
+	int m_maxUVChannelCount = 0;
 
 	uint16_t m_ShaderCount = 1;// all shaders static objects have a value of 1
 };

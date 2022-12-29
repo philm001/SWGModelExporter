@@ -2,7 +2,7 @@
 #include "SWGMainObject.h"
 
 
-void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray)
+void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray, std::string output_pathname)
 {
 	p_queueArray = queueArray;
 	
@@ -11,6 +11,16 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray)
 		std::string assetName;
 		assetName = p_queueArray.front();
 		p_queueArray.pop();
+
+		boost::filesystem::path obj_name(assetName);
+		boost::filesystem::path target_path(output_pathname);
+		target_path /= obj_name.filename();
+		target_path.replace_extension("fbx");
+
+		if (boost::filesystem::exists(target_path))
+		{
+			continue;
+		}
 
 		// normalize path
 		std::replace_if(assetName.begin(), assetName.end(), [](const char& value) { return value == '\\'; }, '/');
@@ -27,8 +37,13 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray)
 			continue;
 
 		std::cout << "Processing : " << assetName << std::endl;
-		if (assetName.find("no_render.iff") != std::string::npos)// Skip this guy
+		if (assetName.find("no_render.iff") != std::string::npos ||
+			assetName.find("defaultappearance") != std::string::npos 
+			)// Skip this guy
+		{
+			std::cout << "Asset not compatible" << std::endl;
 			continue;
+		}
 
 		// do not try find object on this step
 		std::vector<uint8_t> buffer;

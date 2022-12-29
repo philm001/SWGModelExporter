@@ -57,13 +57,14 @@ int _tmain(int argc, _TCHAR* argv[])
 		//object_name = "bageraset.sat";
 		//object_name = "armor_composite_s01_helmet_twk_f.sat";
 		//object_name = "shirt_s04_m.sat";
-		//object_name = "ig88.sat";
+		//object_name = "ig88.sat"; b
 		//object_name = "krayt_dragon.sat";
 		//object_name = "asteroid_acid_large_s01.apt";
-		object_name = "cargo_freighter_l0.msh";
+		//object_name = "bunker_mine_car_s01_l0.msh";
 		//object_name = "asteroid_acid_large_s01_l0.msh";
-		//object_name = "bunker_mine_device_s01_l0.msh";
-		//object_name = "batch:apt";
+		//object_name = "door_jabba_backdoor.msh";
+		//object_name = "door_djt_arena_down_l0.msh";
+		object_name = "batch:apt";
 		output_pathname = "C:\\extraction\\test";
 		po::notify(vm);
 	}
@@ -144,99 +145,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	while (objects_to_process.empty() == false)
 	{
 		queue<std::string> frontValue = objects_to_process.front();
-		shared_ptr<Parser_selector> parser = make_shared<Parser_selector>();
+		objects_to_process.pop();
 
-	/*//	if (frontValue.size() == 1)
-		{
-			objects_to_process.pop();
-			while (frontValue.empty() == false)
-			{
-				full_name = frontValue.front();
-				frontValue.pop();
-				// normalize path
-				replace_if(full_name.begin(), full_name.end(), [](const char& value) { return value == '\\'; }, '/');
-				if (full_name.length() <= 3)
-				{
-					std::cout << "Invalid Name: " + full_name << std::endl;
-					continue;
-				}
-					
-				
-				string ext = full_name.substr(full_name.length() - 3);
-				boost::to_lower(ext);
+		SWGMainObject SWGObject;
+		SWGObject.SetLibrary(library);
 
-				// skip already parsed object
-				if (context.object_list.find(full_name) != context.object_list.end())
-					continue;
-
-				cout << "Processing : " << full_name << endl;
-				std::vector<uint8_t> buffer;
-				// do not try find object on this step
-				if (!library->get_object(full_name, buffer))
-					continue;
-
-				//special processing for pure binary files (WAV, DDS, TGA, etc)
-				if (ext == "dds")
-				{
-					auto texture = DDS_Texture::construct(full_name, buffer.data(), buffer.size());
-					if (texture)
-						context.object_list.insert(make_pair(full_name, dynamic_pointer_cast<Base_object>(texture)));
-
-					continue;
-				}
-
-				IFF_file iff_file(buffer);
-
-				iff_file.full_process(parser);
-
-				if (parser->is_object_parsed())
-				{
-					auto object = parser->get_parsed_object();
-					if (object)
-					{
-						object->set_object_name(full_name);
-						context.object_list.insert(make_pair(full_name, object));
-
-						std::set<std::string> references_objects = object->get_referenced_objects();
-						queue<std::string> ObjectVector;
-
-						std::for_each(references_objects.begin(), references_objects.end(),
-							[&context, &objects_to_process, &full_name, &ObjectVector](const string& object_name)
-							{
-								if (context.object_list.find(object_name) == context.object_list.end() &&
-									context.unknown.find(object_name) == context.unknown.end())
-								{
-									ObjectVector.push(object_name);
-									context.opened_by[object_name] = full_name;
-								}
-							}
-						);
-
-						objects_to_process.push(ObjectVector);
-					}
-				}
-				else
-				{
-					std::cout << "Objects of this type could not be converted at this time. Sorry!" << std::endl;
-					context.unknown.insert(full_name);
-				}
-	
-		
-			}
-			
-		}*/
-		//else if (frontValue.size() > 1)
-	 {
-			queue<std::string> frontValue = objects_to_process.front();
-			objects_to_process.pop();
-			SWGMainObject SWGObject;
-			SWGObject.SetLibrary(library);
-
-			SWGObject.beginParsingProcess(frontValue);
-			SWGObject.resolveDependecies();
-			SWGObject.storeObject(output_pathname);
-			// reset everything here????
-		}
+		SWGObject.beginParsingProcess(frontValue, output_pathname);
+		SWGObject.resolveDependecies();
+		SWGObject.storeObject(output_pathname);
 	}
 
 	std::cout << "Resolve dependencies..." << endl;
