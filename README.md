@@ -45,7 +45,7 @@ If you run into bugs, please submit a bug report to the GitHub page. If you want
 
 I would like to personally thank the following members for assistance on this project:
 
-Synter
-Borrie BoBaka
-bhtrail - the initial creator of the project. Link to original project: https://github.com/bhtrail/SWGModelExporter
+1) Synter
+2) Borrie BoBaka
+3) bhtrail - the initial creator of the project. Link to original project: https://github.com/bhtrail/SWGModelExporter
  
