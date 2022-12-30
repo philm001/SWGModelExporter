@@ -81,7 +81,7 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -106,7 +106,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;FBXSDK_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\Libs\boost;D:\Libs\zlib\include;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.1\include;$(SolutionDir)..\..\DirectXTex\DirectXTex;E:\Projects\DirectXTex\DirectXTex;$(ProjectDir);$(SolutionDir)Boost\;C:\Users\Phillip\source\repos\SWGModelExporter-master\zlib;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex;$(SolutionDir)..\DirectXTex\DirectXTex;$(SolutionDir)zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.0.1\include;$(SolutionDir)..\..\DirectXTex\DirectXTex;$(ProjectDir);$(SolutionDir)Boost\;$(SolutionDir)..\DirectXTex\DirectXTex;$(SolutionDir)zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -115,7 +115,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Libs\zlib\lib.x64;D:\Libs\boost\lib\x64\lib;C:\Program Files\Autodesk\FBX\FBX SDK\2020.0.1\lib\vs2017\x64\debug;C:\Users\Phillip\source\repos\SWGModelExporter-master\lib\Debug;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Debug;$(SolutionDir)..\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Debug;$(SolutionDir)lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Debug;$(SolutionDir)lib\Debug;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.0.1\lib\vs2017\x64\debug;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.1\lib\vs2017\x64\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>DirectXTex.lib;zdll.lib;libfbxsdk-mt.lib;wininet.lib;libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -148,24 +148,27 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;FBXSDK_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\Libs\boost;D:\Libs\zlib\include;C:\Program Files\Autodesk\FBX\FBX SDK\2020.0.1\include;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex;$(ProjectDir);C:\Users\Phillip\source\repos\SWGModelExporter-master\Boost;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\FBX\FBX SDK\2020.0.1\include;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex;$(ProjectDir);C:\Users\Phillip\source\repos\SWGModelExporter-master\Boost;$(ProjectDir)Boost\;$(SolutionDir)..\DirectXTex\DirectXTex;$(SolutionDir)zlib;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\Users\Phillip\source\repos\SWGModelExporter-master\lib;D:\Libs\boost\lib\x64\lib;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Release;C:\Program Files\Autodesk\FBX\FBX SDK\2016.1.2\lib\vs2015\x64\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <EnableCOMDATFolding>
+      </EnableCOMDATFolding>
+      <OptimizeReferences>
+      </OptimizeReferences>
+      <AdditionalLibraryDirectories>$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.0.1\lib\vs2017\x64\release;$(SolutionDir)lib\Release;$(SolutionDir)..\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>DirectXTex.lib;zdll.lib;libfbxsdk-mt.lib;wininet.lib;libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkTimeCodeGeneration />
     </Link>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
   <ItemGroup>
     <ClInclude Include="apt_parser.h" />
     <ClInclude Include="base_buffer.h" />
@@ -228,11 +231,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </Library>
     <None Include="boost.7z" />
     <None Include="DirectXTex-main.zip" />
     <None Include="lib.7z" />
     <None Include="packages.config" />
+    <None Include="README.md" />
     <None Include="Scene.fbx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -21,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -176,6 +173,7 @@
     <None Include="packages.config" />
     <None Include="DirectXTex-main.zip" />
     <None Include="boost.7z" />
+    <None Include="README.md" />
     <None Include="lib.7z" />
   </ItemGroup>
   <ItemGroup>

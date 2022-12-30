@@ -45,10 +45,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	po::options_description flags("Program options");
 	flags.add_options()
 		("help", "get this help message")
-		("swg-path", po::value<string>(&swg_path)->required(), "path to Star Wars Galaxies")
-		("object", po::value<string>(&object_name)->required(), "name of object to extract. use batch:<ext> to extract all files of given ext")
-		("output-path", po::value<string>(&output_pathname)->required(), "path to output location")
-		("overwrite-result", po::value<bool>(&overwriteResult)->required(), "set to 1 to overwrite current file. Default is to skip file if it exists");
+		("swg-path", po::value<string>(&swg_path)->required(), "Path to Star Wars Galaxies. Ex: C:\\swg\\SWGEmu")
+		("object", po::value<string>(&object_name)->required(), "Name of object to extract. use batch:<ext> to extract all files of given ext. Ex: asteroid_acid_large_s01.apt")
+		("output-path", po::value<string>(&output_pathname)->required(), "Path to output location Ex: C:\\extraction\\test")
+		("overwrite-result", po::value<bool>(&overwriteResult)->required(), "Set to 1 to overwrite current file. Default is to skip file if it exists Ex: 1");
 
 	try
 	{
