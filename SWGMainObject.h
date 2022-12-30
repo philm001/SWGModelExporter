@@ -66,7 +66,7 @@ public:
 		p_Library = library;
 	}
 
-	void beginParsingProcess(std::queue<std::string> queueArray, std::string output_pathname);
+	void beginParsingProcess(std::queue<std::string> queueArray, std::string output_pathname, bool overwrite);
 
 	void StoreObject(const std::string& path)
 	{

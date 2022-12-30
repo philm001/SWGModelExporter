@@ -188,7 +188,6 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		if (name == s)
 		{
 			std::string Shader = buffer.read_stringz();
-			m_object->setShaderName(Shader);
 			m_object->add_new_shader(Shader);
 		}
 
@@ -251,50 +250,14 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 		if (numberOfTextureCoordinateSets > 0 && m_object->get_current_shader().getCoordinateSet(numberOfTextureCoordinateSets - 1) == 4)/* Might need to add another statement for GraphicsOptionTags::get(TAG_DOT3) == false*/
 		{
 			numberOfTextureCoordinateSets--;
-			m_object->get_current_shader().SetTextreCoordinateDim(numberOfTextureCoordinateSets, 1);
+			m_object->get_current_shader().SetTextureCoordinateDim(numberOfTextureCoordinateSets, 1);
 			m_object->get_current_shader().SetNumberOfTextureCoordinateSets(numberOfTextureCoordinateSets);
 			skipDot3 = true;
 		}
-		else
-		{
-			int currentByteCount = 0;
 
-			int bytesNeeded = buffer.get_size() / m_object->get_current_shader().getNumberofMeshVertices();
-
-			if (m_object->get_current_shader().hasPosition())
-				currentByteCount += 12;
-
-			if (m_object->get_current_shader().isTransformed())
-				currentByteCount += 4;
-
-			if (m_object->get_current_shader().hasNormals())
-				currentByteCount += 12;
-			
-			if (m_object->get_current_shader().hasColor0())
-				currentByteCount += 4;
-
-			if (m_object->get_current_shader().hasColor1())
-				currentByteCount += 4;
-
-			currentByteCount += 16;
-
-			int temp = m_object->get_current_shader().getCoordinateSet(0) * 4;
-			currentByteCount += temp;
-
-			/*if(numberOfTextureCoordinateSets > 2)
-				numberOfTextureCoordinateSets -= 2;*/
-			m_object->get_current_shader().SetTextreCoordinateDim(numberOfTextureCoordinateSets, 1);
-			m_object->get_current_shader().SetNumberOfTextureCoordinateSets(numberOfTextureCoordinateSets);
-		}
-
-		if (m_object->getMaxUVChannelCount() < numberOfTextureCoordinateSets)
-		{
-			m_object->setMaxUVChannel(numberOfTextureCoordinateSets);
-		}
 		// Triangle vetexs
 		while (!buffer.end_of_buffer())
 		{
-			StaticMeshVertexInfo newVertex;
 			static uint32_t tempCounter = 0;
 			
 			if (m_object->get_current_shader().hasPosition())
@@ -310,10 +273,6 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				triPoints.push_back(z);
 
 				m_object->get_current_shader().AddVertex(triPoints);
-
-				newVertex.triangleVertices.push_back(x);
-				newVertex.triangleVertices.push_back(y);
-				newVertex.triangleVertices.push_back(z);
 			}
 			
 			if (m_object->get_current_shader().isTransformed())
@@ -334,10 +293,6 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				parsedNormal.push_back(zNormal);
 
 				m_object->get_current_shader().AddNormal(parsedNormal);
-
-				newVertex.triangleNormals.push_back(xNormal);
-				newVertex.triangleNormals.push_back(yNormal);
-				newVertex.triangleNormals.push_back(zNormal);
 			}
 			
 			if (m_object->get_current_shader().hasPointSize())
@@ -360,18 +315,11 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 			std::vector<Graphics::Tex_coord> textureCoordinate;
 
 			// This is most likely the UVs
-			int testValue = numberOfTextureCoordinateSets;
-			int loopValue = 0;
-
 			for (int i = 0; i < numberOfTextureCoordinateSets; i++)
 			{
 				std::vector<Graphics::Tex_coord> readTextureCoordinates;
 				float uValue = 0;
 				float vValue = 0;
-				int testValue2 = m_object->get_current_shader().getCoordinateSet(i);
-				
-				if(testValue2 != 2)
-					std::cout << "May need to account for this";
 				
 				for (int j = 0; j < m_object->get_current_shader().getCoordinateSet(i); j++)
 				{
@@ -396,17 +344,7 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				else
 				{
 					m_object->GetShader().GetTexelArray().at(i).push_back(currentValue);
-				}
-
-				if (i == 1 || testValue == 1)
-				{
-					
-					m_object->GetShader().get_texels().push_back(currentValue);
-					
-
-					newVertex.UVs.push_back(currentValue);
-				}
-				
+				}			
 			}
 
 			if (skipDot3)
@@ -417,34 +355,15 @@ void meshParser::parse_data(const std::string& name, uint8_t* data_ptr, size_t d
 				buffer.read_float();
 				buffer.read_float();
 			}
-			else
-			{
-				//Geometry::Vector4 vec;
-				//vec.x = buffer.read_float();
-				//vec.y = buffer.read_float();
-				//vec.z = buffer.read_float();
-				//vec.a = buffer.read_float(); // This will be a sign bit of either 1 or -1
-
-				//m_object->get_current_shader().add_lighting_normal(vec);
-			}
-
-			m_object->get_current_shader().GetStaticMeshVertexInfo().push_back(newVertex);
 		}
 	}
-	/*
-		Testing Notes:
-		Will need to test with:
-		1) Multiple Shaders
-		2) With sorted Indicies
-		3) Other parameters that are parsed above
-	*/
 	else if (name == "INDX")
 	{
 		uint32_t indexCount = buffer.read_uint32();
 
 		while (!buffer.end_of_buffer())
 		{
-
+			/* There could be a better way of doing this*/
 			if (m_object->get_current_shader().get32BitIndexState())
 			{
 				uint32_t v1 = buffer.read_uint32();
@@ -572,9 +491,6 @@ void meshObject::store(const std::string& path, const Context& context)
 
 	// process polygons
 	std::vector<uint32_t> normal_indexes;
-	std::vector<uint32_t> tangents_idxs;
-	std::vector<Graphics::Tex_coord> uvs;
-	std::vector<uint32_t> uv_indexes_prime;
 	std::vector<std::vector<uint32_t>> tangent_idxs_prime;
 
 	// New UV Code
@@ -637,13 +553,6 @@ void meshObject::store(const std::string& path, const Context& context)
 
 			// get geometry element
 			auto& triangles = shader.get_triangles();
-			auto& positions = shader.get_pos_indexes();
-			auto& normals = shader.get_normal_indexes();
-
-			auto idx_offset = static_cast<uint32_t>(uvs.size());
-			copy(shader.get_texels().begin(), shader.get_texels().end(), back_inserter(uvs));
-
-			normal_indexes.reserve(normal_indexes.size() + normals.size());
 
 			for (uint32_t tri_idx = 0; tri_idx < triangles.size(); ++tri_idx)
 			{
@@ -657,19 +566,22 @@ void meshObject::store(const std::string& path, const Context& context)
 
 					//auto remapped_normal_idx = normals[tri.points[i]];
 					normal_indexes.emplace_back(tri.points[i] + triangleCounter);
-					uint32_t triTempValue = idx_offset + tri.points[i];
-					uv_indexes_prime.emplace_back(idx_offset + tri.points[i]);// Might want to consider changing idx_offset to trainalgeCounter
+				
 
-					if (shader.getNormalLighting().size() > 0)
-					{
-						if (tangent_idxs_prime.size() < shader_idx + 1)
-						{
-							std::vector<uint32_t> initialValue;
-							tangent_idxs_prime.push_back(initialValue);
-						}
+					/* So the normal lightening does not do anything but in the parser, there was a version where it gets the tangents.
+						And the tangets are stored in the normal lighening. However, everything is now being stored in the UVs and the 
+						normal lighening is not used. This may change at a future version so will keep the logic here but commented out.
+					*/
+					//if (shader.getNormalLighting().size() > 0)
+					//{
+					//	if (tangent_idxs_prime.size() < shader_idx + 1)
+					//	{
+					//		std::vector<uint32_t> initialValue;
+					//		tangent_idxs_prime.push_back(initialValue);
+					//	}
 
-						tangent_idxs_prime.at(shader_idx).push_back(tri.points[i] + triangleCounter); // First we will try it with this one
-					}
+					//	tangent_idxs_prime.at(shader_idx).push_back(tri.points[i] + triangleCounter); // First we will try it with this one
+					//}
 
 					for (int j = 0; j < shader.GetTexelArray().size(); j++)
 					{
@@ -691,8 +603,6 @@ void meshObject::store(const std::string& path, const Context& context)
 							uv_indexes.at(j).emplace_back(offsetValue + tri.points[i]);
 						}
 					}
-					//uv_indexes.emplace_back(idx_offset + tri.points[i] + triangleCounter);// Might want to consider changing idx_offset to trainalgeCounter
-
 				}
 				mesh_ptr->EndPolygon();
 			}
@@ -759,7 +669,8 @@ void meshObject::store(const std::string& path, const Context& context)
 	
 
 	// Add tangents if they are present
-	if (tangent_idxs_prime.size() > 0)
+	/* Again commenting it out for now. Maybe added in at a later time*/
+	/*if (tangent_idxs_prime.size() > 0)
 	{
 		for (uint32_t shader_idx = 0; shader_idx < m_shaders.size(); ++shader_idx)
 		{
@@ -782,11 +693,9 @@ void meshObject::store(const std::string& path, const Context& context)
 			std::for_each(tangent_idxs_prime.at(shader_idx).begin(), tangent_idxs_prime.at(shader_idx).end(),
 				[&index_array](const uint32_t& idx) { index_array.Add(idx); });
 		}
-	}
+	}*/
 
 	mesh_ptr->BuildMeshEdgeArray();
-
-	// do some morph targets??
 
 	// Smoothing? Might need to look here: https://forums.autodesk.com/t5/fbx-forum/how-to-create-a-smoothing-group/td-p/4245673
 
@@ -816,46 +725,7 @@ void meshObject::resolve_dependencies(const Context& context)
 
 	if (bad_shaders)
 	{
-		// Do something if we have bad shaders???
+		// So far I haven't ran into bad shaders. If this becomes an issue, look at what is being done on the skeletal mesh side of things
 		std::cout << "Bad shaders breakpoint" << std::endl;
-
-		/*vector<uint8_t> counters(m_vertices.size(), 0);
-		for (auto& shader : m_shaders)
-		{
-			for (auto& vert_idx : shader.get_pos_indexes())
-			{
-				if (vert_idx >= counters.size())
-					break;
-				counters[vert_idx]++;
-			}
-
-
-			if (shader.get_definition() == nullptr)
-				for (auto& vert_idx : shader.get_pos_indexes())
-				{
-					if (vert_idx >= counters.size())
-						break;
-					counters[vert_idx]--;
-				}
-
-		}
-
-		auto safe_clear = is_partitioned(counters.begin(), counters.end(),
-			[](uint8_t val) { return val > 0; });
-		if (safe_clear)
-		{
-			// we can do safe clear of trouble shader, if not - oops
-			auto beg = find_if(counters.begin(), counters.end(),
-				[](uint8_t val) { return val == 0; });
-			auto idx = distance(counters.begin(), beg);
-			m_vertices.erase(m_vertices.begin() + idx, m_vertices.end());
-
-			for (size_t idx = 0; idx < m_shaders.size(); ++idx)
-				if (m_shaders[idx].get_definition() == nullptr)
-				{
-					m_shaders.erase(m_shaders.begin() + idx);
-					break;
-				}
-		}*/
 	}
 }

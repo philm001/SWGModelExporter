@@ -40,36 +40,45 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::string swg_path;
 	std::string object_name;
 	std::string output_pathname;
+	bool overwriteResult = true;
 
 	po::options_description flags("Program options");
 	flags.add_options()
 		("help", "get this help message")
 		("swg-path", po::value<string>(&swg_path)->required(), "path to Star Wars Galaxies")
 		("object", po::value<string>(&object_name)->required(), "name of object to extract. use batch:<ext> to extract all files of given ext")
-		("output-path", po::value<string>(&output_pathname)->required(), "path to output location");
+		("output-path", po::value<string>(&output_pathname)->required(), "path to output location")
+		("over-write-result", po::value<bool>(&overwriteResult)->required(), "set to 1 to overwrite current file. Default is to skip file if it exists");
 
 	try
 	{
 		po::variables_map vm;
-		po::store(po::parse_command_line(argc, argv, flags), vm);
+		//po::store(po::parse_command_line(argc, argv, flags), vm); // For development, it is recommened to comment this line out
 
-		/* Will keep these guys here for later deugging */
-		//swg_path = "C:\\swg\\SWGEmu";
+		swg_path = "C:\\swg\\SWGEmu"; // For developing, delete the comment here and manually add in the location of SWG
+
+		/* These animations have known bugs and will not export correctly */
 		//object_name = "dress_s06_f.sat";// bug here
-		//object_name = "bageraset.sat";
 		//object_name = "armor_composite_s01_helmet_twk_f.sat";
-		//object_name = "shirt_s04_m.sat";
-		//object_name = "ig88.sat"; b
+		
+		/* These animations export. However, the animations themselves have a couple of minor bugs (all naimations do) */
+		//object_name = "bageraset.sat";
+		object_name = "acklay.sat";
 		//object_name = "krayt_dragon.sat";
-		//object_name = "asteroid_acid_large_s01.apt";
-		//object_name = "bunker_mine_car_s01_l0.msh";
-		//object_name = "asteroid_acid_large_s01_l0.msh";
-		//object_name = "door_jabba_backdoor.msh";
-		//object_name = "door_djt_arena_down_l0.msh";
+		
+		/* For testing static meshes, test each of these 3 */
+		//object_name = "asteroid_acid_large_s01.apt"; // For apt parsing
+		//object_name = "asteroid_acid_large_s01_l0.msh"; // Simple case
+		//object_name = "bunker_mine_car_s01_l0.msh"; // Has multiple shaders + DOT3
+		//object_name = "door_jabba_backdoor.msh"; // Has multiple shaders + DOT3 + 32 bit indicies for index
+		
+		/* Test for pob */
 		//object_name = "thm_corl_skyskraper_s01.pob";
+
+		/* Example for batch mode */
 		//object_name = "batch:pob";
 
-		output_pathname = "C:\\extraction\\test";
+		output_pathname = "C:\\extraction\\test"; // For developing, delete the comment here and manually add in the location of output file
 		po::notify(vm);
 	}
 	catch (...)
@@ -154,7 +163,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		SWGMainObject SWGObject;
 		SWGObject.SetLibrary(library);
 
-		SWGObject.beginParsingProcess(frontValue, output_pathname);
+		SWGObject.beginParsingProcess(frontValue, output_pathname, overwriteResult);
 		SWGObject.resolveDependecies();
 		SWGObject.storeObject(output_pathname);
 	}

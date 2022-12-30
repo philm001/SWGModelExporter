@@ -2,7 +2,7 @@
 #include "SWGMainObject.h"
 
 
-void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray, std::string output_pathname)
+void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray, std::string output_pathname, bool overwrite)
 {
 	p_queueArray = queueArray;
 	
@@ -17,11 +17,14 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray, std:
 		target_path /= obj_name.filename();
 		target_path.replace_extension("fbx");
 
-		if (boost::filesystem::exists(target_path))
+		if (!overwrite)
 		{
-			continue;
+			if (boost::filesystem::exists(target_path))
+			{
+				continue;
+			}
 		}
-
+		
 		// normalize path
 		std::replace_if(assetName.begin(), assetName.end(), [](const char& value) { return value == '\\'; }, '/');
 		if (assetName.length() <= 3)
@@ -349,10 +352,6 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 	auto directory = target_path.parent_path();
 	if (!boost::filesystem::exists(directory))
 		boost::filesystem::create_directories(directory);
-
-	
-	if (target_path.string().find("l0") == std::string::npos)
-		return;
 
 	// get lod level (by _lX end of file name). If there is no such pattern - lod level will be zero.
 	int lodLevel = mesh.at(0).getLodLevel();
@@ -755,6 +754,8 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 	//max.ConvertScene(scene_ptr);
 	FbxAxisSystem::MayaZUp.ConvertScene(scene_ptr);
 
+	// Yeah, this is should be deleted. These are models that were giving issues.....
+	/*
 	if (target_path.string().find("bikini") != std::string::npos)
 	{
 		std::cout << "bikini Found" << std::endl;
@@ -798,10 +799,10 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 			fbx_manager_ptr->Destroy();
 			return;
 		}
-	}
+	}*/
 
 	// Next loop through the entire animation list
-	/*for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
+	for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
 	{
 		auto animationObject = animationList.at(i);
 
@@ -1117,7 +1118,7 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 				}
 			}
 		}
-	}*/
+	}
 
 	exporter_ptr->Export(scene_ptr);
 	// cleanup
@@ -1136,27 +1137,18 @@ void SWGMainObject::storeObject(const std::string& path)
 			std::cout << "Object : " << item.first;
 			if (item.first.find("mgn") != std::string::npos)
 			{
-			//	for (auto& listIterator : ModelCopy)
+				for (auto& listIterator : ModelCopy)
 				{
-					std::vector<Animated_mesh> listIterator = ModelCopy[0];
+					//std::vector<Animated_mesh> listIterator = ModelCopy[0];
 					for each (Animated_mesh meshIterator in listIterator)
 					{
 						if (meshIterator.get_object_name() == item.first)
 						{
-							std::vector<Animated_mesh> tempVector;// hacky way to get this to work on single meshes
+							std::vector<Animated_mesh> tempVector;// hacky way to get this to work on single meshes. There was a time where this program could combine multiple meshes into a signle mesh. This has since been removed.
 							tempVector.push_back(meshIterator);
 							storeMGN(path, tempVector);
 						}
 					}
-				/*	if (listIterator.at(0).get_object_name() == item.first)
-					{
-						
-						for each (Animated_mesh temp in listIterator)
-						{
-							tempVector.push_back(temp);
-							storeMGN(path, tempVector);
-						}
-					} */
 				}
 				
 			}

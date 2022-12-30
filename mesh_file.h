@@ -105,6 +105,7 @@ public:
 	virtual void set_object_name(const std::string& name) override { m_name = name; }
 	virtual std::string get_object_name() const override { return m_name; }
 private:
+	/* Some of these items, I will keep here for any future updates */
 	std::vector<std::string> m_LODName;
 	std::string m_name;
 
@@ -154,10 +155,8 @@ public:
 
 		Shader_appliance(const std::string& name) : m_name(name) { }
 		const std::string& get_name() const { return m_name; }
-		std::vector<uint32_t>& get_pos_indexes() { return m_position_indexes; }
-		std::vector<uint32_t>& get_normal_indexes() { return m_normal_indexes; }
+
 		std::vector<uint32_t>& get_light_indexes() { return m_light_indexes; }
-		std::vector<Graphics::Tex_coord>& get_texels() { return m_texels; }
 		std::vector<Graphics::Triangle_indexed>& get_triangles() { return m_triangles; }
 		std::vector<std::vector<float>>& get_normals() { return m_Normals; }
 		std::vector <std::vector<Graphics::Tex_coord>>& GetTexelArray() { return m_texels_array; }
@@ -165,12 +164,8 @@ public:
 		void add_lighting_normal(const Geometry::Vector4& light_norm) { m_lighting_normals.emplace_back(light_norm); }
 		std::vector<Geometry::Vector4>& getNormalLighting() { return m_lighting_normals; }
 
-		std::vector<std::pair<uint32_t, uint32_t>>& get_primivites() { return m_primitives; }
 		void set_definition(const std::shared_ptr<Shader> shader_def) { m_shader_definition = shader_def; }
 		const std::shared_ptr<Shader>& get_definition() const { return m_shader_definition; }
-
-		void add_primitive();
-		void close_primitive() { m_primitives.back().second = static_cast<uint32_t>(m_primitives.size()); }
 
 		void SetFlags(uint32_t flags) { m_flags = flags; }
 
@@ -194,7 +189,7 @@ public:
 
 		bool hasColor1() { return (m_flags & 0x00000010) != 0; }
 
-		void SetTextreCoordinateDim(int textureCoordinateSet, int dim)
+		void SetTextureCoordinateDim(int textureCoordinateSet, int dim)
 		{
 			const unsigned int shift = static_cast<unsigned int>(12 + (textureCoordinateSet * 2));
 			m_flags = (m_flags & ~(static_cast<unsigned int>(0x03) << shift)) | (static_cast<uint32_t>(dim - 1) << shift);
@@ -213,23 +208,20 @@ public:
 
 		std::vector<std::vector<float>>& GetTriangleVertices() { return m_triangleVertices; }
 
-		// possible new code
-		std::vector<StaticMeshVertexInfo>& GetStaticMeshVertexInfo() { return m_VertexInfoList; }
-
 		bool get32BitIndexState() { return m_is32BitIndex; }
 		void set32BitIndexState(bool state) { m_is32BitIndex = state; }
 
 		int getInfoCounter() { return m_InfoCounter; }
 		void AddInfoCounter() { m_InfoCounter++; }
 	private:
+		/* Some of these items, I will keep here for any future updates */
 		std::string m_name;
-		std::vector<uint32_t> m_position_indexes;
-		std::vector<uint32_t> m_normal_indexes;
+
 		std::vector<uint32_t> m_light_indexes;
-		std::vector<Graphics::Tex_coord> m_texels;
+
 		std::vector <std::vector<Graphics::Tex_coord>> m_texels_array;
 		std::vector<Graphics::Triangle_indexed> m_triangles;
-		std::vector<std::pair<uint32_t, uint32_t>> m_primitives;
+
 		std::shared_ptr<Shader> m_shader_definition;
 		std::vector<std::vector<float>> m_triangleVertices;
 		std::vector<std::vector<float>> m_Normals;
@@ -241,9 +233,6 @@ public:
 
 		bool m_is32BitIndex = false;
 		int m_InfoCounter = 0;
-
-		// Possible New code
-		std::vector<StaticMeshVertexInfo> m_VertexInfoList;
 	};
 
 
@@ -254,9 +243,6 @@ public:
 	virtual bool is_object_correct() const override { return true; }
 	virtual void store(const std::string& path, const Context& context) override;
 
-	
-
-	void setShaderName(std::string shaderName) { m_shaderName = shaderName; }
 
 	virtual std::set<std::string> get_referenced_objects() const override
 	{
@@ -267,39 +253,6 @@ public:
 
 		return names;
 	};
-
-	int getMaxUVChannelCount() { return m_maxUVChannelCount; }
-	void setMaxUVChannel(int value) { m_maxUVChannelCount = value; }
-
-	void setIndiciesState(bool state)
-	{
-		m_hasIndicies = state;
-	}
-
-	bool getIndiciesState()
-	{
-		return m_hasIndicies;
-	}
-
-	void setIndiciesSortedState(bool state)
-	{
-		m_sortedIndicies = state;
-	}
-
-	bool getSortIndiciesState()
-	{
-		return m_sortedIndicies;
-	}
-
-	std::vector<uint16_t>& getIndexArray()
-	{
-		return m_indexArray;
-	}
-
-	std::vector<SortedIndex>& GetSortedIndex()
-	{
-		return m_SortedIndiciesVector;
-	}
 
 	virtual void resolve_dependencies(const Context& context) override;
 	
@@ -320,14 +273,6 @@ public:
 private:
 	std::string m_name;
 	std::vector<std::string> m_LODName;
-	std::string m_shaderName;
-
-	std::vector<uint16_t> m_indexArray;
-
-	std::vector<SortedIndex> m_SortedIndiciesVector;
-
-	bool m_hasIndicies = false;
-	bool m_sortedIndicies = false;
 
 	std::vector<Shader_appliance> m_shaders;
 
