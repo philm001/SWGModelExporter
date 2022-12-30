@@ -48,14 +48,14 @@ int _tmain(int argc, _TCHAR* argv[])
 		("swg-path", po::value<string>(&swg_path)->required(), "path to Star Wars Galaxies")
 		("object", po::value<string>(&object_name)->required(), "name of object to extract. use batch:<ext> to extract all files of given ext")
 		("output-path", po::value<string>(&output_pathname)->required(), "path to output location")
-		("over-write-result", po::value<bool>(&overwriteResult)->required(), "set to 1 to overwrite current file. Default is to skip file if it exists");
+		("overwrite-result", po::value<bool>(&overwriteResult)->required(), "set to 1 to overwrite current file. Default is to skip file if it exists");
 
 	try
 	{
 		po::variables_map vm;
-		//po::store(po::parse_command_line(argc, argv, flags), vm); // For development, it is recommened to comment this line out
+		po::store(po::parse_command_line(argc, argv, flags), vm); // For development, it is recommened to comment this line out
 
-		swg_path = "C:\\swg\\SWGEmu"; // For developing, delete the comment here and manually add in the location of SWG
+		//swg_path = "C:\\swg\\SWGEmu"; // For developing, delete the comment here and manually add in the location of SWG
 
 		/* These animations have known bugs and will not export correctly */
 		//object_name = "dress_s06_f.sat";// bug here
@@ -63,7 +63,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		
 		/* These animations export. However, the animations themselves have a couple of minor bugs (all naimations do) */
 		//object_name = "bageraset.sat";
-		object_name = "acklay.sat";
+		//object_name = "acklay.sat";
 		//object_name = "krayt_dragon.sat";
 		
 		/* For testing static meshes, test each of these 3 */
@@ -78,7 +78,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		/* Example for batch mode */
 		//object_name = "batch:pob";
 
-		output_pathname = "C:\\extraction\\test"; // For developing, delete the comment here and manually add in the location of output file
+		//output_pathname = "C:\\extraction\\test"; // For developing, delete the comment here and manually add in the location of output file
 		po::notify(vm);
 	}
 	catch (...)
