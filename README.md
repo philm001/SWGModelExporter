@@ -21,7 +21,7 @@ Installing everything else:
 
 # Additional Notes
 
-Please remember to check all include directory paths for any changes. This version used FBX SDK 2020.1
+Please remember to check all include directory paths for any changes. This version used FBX SDK 2020.0.1
 
 Another thing to note is that you might get linker error: 
 error LNK2038 mismatch detected for 'RuntimeLibrary': value 'MDd_DynamicDebug' doesn't match value 'MTd_StaticDebug'
