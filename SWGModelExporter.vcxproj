@@ -170,7 +170,6 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="apt_parser.h" />
     <ClInclude Include="base_buffer.h" />
     <ClInclude Include="defines.h" />
     <ClInclude Include="IFF_file.h" />
@@ -181,13 +180,14 @@
     <ClInclude Include="objects\geometry_common.h" />
     <ClInclude Include="objects\static_object.h" />
     <ClInclude Include="parsers\anim_parser.h" />
+    <ClInclude Include="parsers\apt_parser.h" />
     <ClInclude Include="parsers\cat_parser.h" />
     <ClInclude Include="parsers\lmg_parser.h" />
     <ClInclude Include="parsers\mgn_parser.h" />
     <ClInclude Include="parsers\parser_selector.h" />
+    <ClInclude Include="parsers\pob_parser.h" />
     <ClInclude Include="parsers\sht_parser.h" />
     <ClInclude Include="parsers\skt_parser.h" />
-    <ClInclude Include="pob_parser.h" />
     <ClInclude Include="PrimitiveType.h" />
     <ClInclude Include="ShaderCommon.h" />
     <ClInclude Include="stdafx.h" />
@@ -199,7 +199,6 @@
     <ClInclude Include="UncompressQuaternion.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="apt_parser.cpp" />
     <ClCompile Include="base_buffer.cpp" />
     <ClCompile Include="IFF_file.cpp" />
     <ClCompile Include="latt_parser.cpp" />
@@ -207,13 +206,14 @@
     <ClCompile Include="objects\animated_object.cpp" />
     <ClCompile Include="objects\static_object.cpp" />
     <ClCompile Include="parsers\anim_parser.cpp" />
+    <ClCompile Include="parsers\apt_parser.cpp" />
     <ClCompile Include="parsers\cat_parser.cpp" />
     <ClCompile Include="parsers\lmg_parser.cpp" />
     <ClCompile Include="parsers\mgn_parser.cpp" />
     <ClCompile Include="parsers\parser_selector.cpp" />
+    <ClCompile Include="parsers\pob_parser.cpp" />
     <ClCompile Include="parsers\sht_parser.cpp" />
     <ClCompile Include="parsers\skt_parser.cpp" />
-    <ClCompile Include="pob_parser.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

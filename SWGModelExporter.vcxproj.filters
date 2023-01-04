@@ -87,9 +87,6 @@
     <ClInclude Include="SWGMainObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="apt_parser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="mesh_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -99,8 +96,11 @@
     <ClInclude Include="ShaderCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pob_parser.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="parsers\apt_parser.h">
+      <Filter>Source Files\parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="parsers\pob_parser.h">
+      <Filter>Source Files\parsers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -158,14 +158,14 @@
     <ClCompile Include="SWGMainObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="apt_parser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mesh_file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pob_parser.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="parsers\apt_parser.cpp">
+      <Filter>Source Files\parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="parsers\pob_parser.cpp">
+      <Filter>Source Files\parsers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
