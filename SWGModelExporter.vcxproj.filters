@@ -75,9 +75,6 @@
     <ClInclude Include="parsers\anim_parser.h">
       <Filter>Source Files\parsers</Filter>
     </ClInclude>
-    <ClInclude Include="latt_parser.h">
-      <Filter>Source Files\parsers</Filter>
-    </ClInclude>
     <ClInclude Include="UncompressQuaternion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -100,6 +97,9 @@
       <Filter>Source Files\parsers</Filter>
     </ClInclude>
     <ClInclude Include="parsers\pob_parser.h">
+      <Filter>Source Files\parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="parsers\latt_parser.h">
       <Filter>Source Files\parsers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -149,9 +149,6 @@
     <ClCompile Include="parsers\anim_parser.cpp">
       <Filter>Source Files\parsers</Filter>
     </ClCompile>
-    <ClCompile Include="latt_parser.cpp">
-      <Filter>Source Files\parsers</Filter>
-    </ClCompile>
     <ClCompile Include="UncompressQuaternion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -165,6 +162,9 @@
       <Filter>Source Files\parsers</Filter>
     </ClCompile>
     <ClCompile Include="parsers\pob_parser.cpp">
+      <Filter>Source Files\parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="parsers\latt_parser.cpp">
       <Filter>Source Files\parsers</Filter>
     </ClCompile>
   </ItemGroup>

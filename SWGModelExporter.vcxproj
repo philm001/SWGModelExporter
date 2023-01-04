@@ -173,7 +173,6 @@
     <ClInclude Include="base_buffer.h" />
     <ClInclude Include="defines.h" />
     <ClInclude Include="IFF_file.h" />
-    <ClInclude Include="latt_parser.h" />
     <ClInclude Include="mesh_file.h" />
     <ClInclude Include="objects\animated_object.h" />
     <ClInclude Include="objects\base_object.h" />
@@ -182,6 +181,7 @@
     <ClInclude Include="parsers\anim_parser.h" />
     <ClInclude Include="parsers\apt_parser.h" />
     <ClInclude Include="parsers\cat_parser.h" />
+    <ClInclude Include="parsers\latt_parser.h" />
     <ClInclude Include="parsers\lmg_parser.h" />
     <ClInclude Include="parsers\mgn_parser.h" />
     <ClInclude Include="parsers\parser_selector.h" />
@@ -201,13 +201,13 @@
   <ItemGroup>
     <ClCompile Include="base_buffer.cpp" />
     <ClCompile Include="IFF_file.cpp" />
-    <ClCompile Include="latt_parser.cpp" />
     <ClCompile Include="mesh_file.cpp" />
     <ClCompile Include="objects\animated_object.cpp" />
     <ClCompile Include="objects\static_object.cpp" />
     <ClCompile Include="parsers\anim_parser.cpp" />
     <ClCompile Include="parsers\apt_parser.cpp" />
     <ClCompile Include="parsers\cat_parser.cpp" />
+    <ClCompile Include="parsers\latt_parser.cpp" />
     <ClCompile Include="parsers\lmg_parser.cpp" />
     <ClCompile Include="parsers\mgn_parser.cpp" />
     <ClCompile Include="parsers\parser_selector.cpp" />
