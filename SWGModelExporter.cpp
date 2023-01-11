@@ -59,9 +59,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		/* These animations have known bugs and will not export correctly */
 		//object_name = "dress_s06_f.sat";// bug here
-		//object_name = "armor_composite_s01_helmet_twk_f.sat";
+		//object_name = "armor_kashyyykian_ceremonial_leggings_wke_m.sat";// This one still has issue
 		
-		/* These animations export. However, the animations themselves have a couple of minor bugs (all naimations do) */
+		/* These animations export. However, the animations themselves have a couple of minor bugs (all animations do) */
 		//object_name = "bageraset.sat";
 		//object_name = "acklay.sat";
 		//object_name = "krayt_dragon.sat";
@@ -78,7 +78,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		/* Example for batch mode */
 		//object_name = "batch:pob";
 
-		//output_pathname = "C:\\extraction\\test"; // For developing, delete the comment here and manually add in the location of output file
+		//output_pathname = "C:\\extraction\\test2"; // For developing, delete the comment here and manually add in the location of output file
 		po::notify(vm);
 	}
 	catch (...)

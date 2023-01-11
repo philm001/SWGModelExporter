@@ -656,7 +656,7 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 				shape_vertices[idx].Set(pos.x, pos.y, pos.z);
 			}
 
-			// apply morph
+	//		// apply morph
 			for (auto& morph_pt : morph.get_positions())
 			{
 				size_t idx = morph_pt.first;
@@ -672,15 +672,15 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 				// get normals
 				auto normal_element = shape->CreateElementNormal();
 				normal_element->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
-				normal_element->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
+				normal_element->SetReferenceMode(FbxGeometryElement::eIndexToDirect); // maybe need to add array for index?
 
 				auto& direct_array = normal_element->GetDirectArray();
-				// set a base normals
-				std::for_each(modelIterator.getNormals().begin(), modelIterator.getNormals().end(),
+				//// set a base normals
+				/*std::for_each(modelIterator.getNormals().begin(), modelIterator.getNormals().end(),
 					[&direct_array](const Geometry::Vector3& elem)
 					{
 						direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
-					});
+					});*/
 
 
 				for (auto& morph_normal : morph.get_normals())
@@ -688,7 +688,7 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 					uint32_t idx = morph_normal.first;
 					auto& offset = morph_normal.second;
 					auto& base = modelIterator.getNormals().at(idx);
-					direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
+					direct_array.Add(FbxVector4(base.x + offset.x, base.y + offset.y, base.z + offset.z));
 				}
 
 				auto& index_array = normal_element->GetIndexArray();
@@ -754,7 +754,7 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 	//max.ConvertScene(scene_ptr);
 	FbxAxisSystem::MayaZUp.ConvertScene(scene_ptr);
 
-	// Yeah, this is should be deleted. These are models that were giving issues.....
+	// Yeah, this should be deleted. These are models that were giving issues.....
 	/*
 	if (target_path.string().find("bikini") != std::string::npos)
 	{

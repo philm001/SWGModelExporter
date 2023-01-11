@@ -500,7 +500,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 	//max.ConvertScene(scene_ptr);
 	FbxAxisSystem::MayaZUp.ConvertScene(scene_ptr);
 	// Next loop through the entire animation list
-	for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
+	for (int i = 0; i < animationList.size(); i++)// This method is easy for debugging
 	{
 		auto animationObject = animationList.at(i);
 
