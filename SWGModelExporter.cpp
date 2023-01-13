@@ -59,7 +59,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		/* These animations have known bugs and will not export correctly */
 		//object_name = "dress_s06_f.sat";// bug here
-		//object_name = "armor_kashyyykian_ceremonial_leggings_wke_m.sat";// This one still has issue
+		//object_name = "bikini_s01_f.sat";// This one still has issue
 		
 		/* These animations export. However, the animations themselves have a couple of minor bugs (all animations do) */
 		//object_name = "bageraset.sat";

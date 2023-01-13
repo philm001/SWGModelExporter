@@ -521,6 +521,53 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 					mesh_ptr->EndPolygon();
 				}
 			}
+			else if (shader.get_name().find("skin") != std::string::npos)
+			{
+				// Create a default material
+				auto material_ptr = FbxSurfacePhong::Create(scene_ptr, shader.get_name().c_str());
+				material_ptr->ShadingModel.Set("Phong");
+
+				material_ptr->Ambient.Set(FbxDouble3(1.0, 1.0, 1.0));
+				material_ptr->Diffuse.Set(FbxDouble3(1.0, 1.0, 1.0));
+				material_ptr->Emissive.Set(FbxDouble3(0.0, 0.0, 0.0));
+				material_ptr->Specular.Set(FbxDouble3(1.0, 0.305779994, 0.305779994));
+
+				mesh_ptr->GetNode()->AddMaterial(material_ptr);
+
+				// get geometry element
+				auto& triangles = shader.get_triangles();
+				auto& positions = shader.get_pos_indexes();
+				auto& normals = shader.get_normal_indexes();
+				auto& tangents = shader.get_light_indexes();
+
+				auto idx_offset = static_cast<uint32_t>(uvs.size());
+				copy(shader.get_texels().begin(), shader.get_texels().end(), back_inserter(uvs));
+
+				normal_indexes.reserve(normal_indexes.size() + normals.size());
+				tangents_idxs.reserve(tangents_idxs.size() + tangents.size());
+
+				for (uint32_t tri_idx = 0; tri_idx < triangles.size(); ++tri_idx)
+				{
+					auto& tri = triangles[tri_idx];
+					mesh_ptr->BeginPolygon(shader_idx + shaderCounter, -1, shader_idx + shaderCounter, false);
+					for (size_t i = 0; i < 3; ++i)
+					{
+						auto remapped_pos_idx = positions[tri.points[i]] + counter;
+						mesh_ptr->AddPolygon(remapped_pos_idx);
+
+						auto remapped_normal_idx = normals[tri.points[i]] + normalCounter;
+						normal_indexes.emplace_back(remapped_normal_idx);
+
+						if (!tangents.empty())
+						{
+							auto remapped_tangent = tangents[tri.points[i]];
+							tangents_idxs.emplace_back(remapped_tangent);
+						}
+						uv_indexes.emplace_back(idx_offset + tri.points[i]);
+					}
+					mesh_ptr->EndPolygon();
+				}
+			}
 		}
 		shaderCounter += modelIterator.getShaders().size();
 		counter += static_cast<uint32_t>(modelIterator.get_vertices().size());
@@ -591,10 +638,6 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 	for (int cc = 0; cc < mesh.size(); cc++)
 	{
 		auto& modelIterator = mesh.at(cc);
-		if (mesh.at(cc).getSkeletonNames().size() == 2)
-		{
-			std::cout << "twoskeletons found" << std::endl;
-		}
 
 		uint32_t m_lod_level = modelIterator.getLodLevel();
 
@@ -675,13 +718,6 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 				normal_element->SetReferenceMode(FbxGeometryElement::eIndexToDirect); // maybe need to add array for index?
 
 				auto& direct_array = normal_element->GetDirectArray();
-				//// set a base normals
-				/*std::for_each(modelIterator.getNormals().begin(), modelIterator.getNormals().end(),
-					[&direct_array](const Geometry::Vector3& elem)
-					{
-						direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
-					});*/
-
 
 				for (auto& morph_normal : morph.get_normals())
 				{
@@ -694,8 +730,6 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 				auto& index_array = normal_element->GetIndexArray();
 				std::for_each(normal_indexes.begin(), normal_indexes.end(),
 					[&index_array](const uint32_t& idx) { index_array.Add(idx); });
-
-				std::cout << "Finished" << std::endl;
 			}
 
 			if (!tangents_idxs.empty() && !p_Context.batch_mode)
@@ -706,18 +740,13 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 				tangents_ptr->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
 				auto& direct_array = tangents_ptr->GetDirectArray();
-				std::for_each(modelIterator.getNormalLighting().begin(), modelIterator.getNormalLighting().end(),
-					[&direct_array](const Geometry::Vector4& elem)
-					{
-						direct_array.Add(FbxVector4(elem.x, elem.y, elem.z));
-					});
 
 				for (auto& morph_tangent : morph.get_tangents())
 				{
 					uint32_t idx = morph_tangent.first;
 					auto& offset = morph_tangent.second;
 					auto& base = modelIterator.getNormalLighting().at(idx);
-					direct_array[idx].Set(base.x + offset.x, base.y + offset.y, base.z + offset.z);
+					direct_array.Add(FbxVector4(base.x + offset.x, base.y + offset.y, base.z + offset.z));
 				}
 
 				auto& index_array = tangents_ptr->GetIndexArray();
@@ -727,8 +756,6 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 
 			auto success = morph_channel->AddTargetShape(shape);
 			success = blend_shape_ptr->AddBlendShapeChannel(morph_channel);
-
-			std::cout << "Finished" << std::endl;
 		}
 	}
 	mesh_node_ptr->GetGeometry()->AddDeformer(blend_shape_ptr);
@@ -753,53 +780,6 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 	//FbxAxisSystem max; // we desire to convert the scene from Y-Up to Z-Up
 	//max.ConvertScene(scene_ptr);
 	FbxAxisSystem::MayaZUp.ConvertScene(scene_ptr);
-
-	// Yeah, this should be deleted. These are models that were giving issues.....
-	/*
-	if (target_path.string().find("bikini") != std::string::npos)
-	{
-		std::cout << "bikini Found" << std::endl;
-	}
-
-	if (boost::filesystem::exists(target_path))
-	{
-		if (target_path.string().find("armor") != std::string::npos || 
-			target_path.string().find("bikini") != std::string::npos || 
-			target_path.string().find("bustier") != std::string::npos)
-		{
-			boost::filesystem::remove(target_path);
-			if (target_path.string().find("armor_composite_s01_helmet_twk_f") == std::string::npos &&
-				target_path.string().find("armor_kashyyykian_ceremonial_leggings_wke") == std::string::npos &&
-				target_path.string().find("bikini") == std::string::npos &&
-				target_path.string().find("helmet_twk") == std::string::npos &&
-				target_path.string().find("bustier") == std::string::npos)
-			{
-				exporter_ptr->Export(scene_ptr);
-			}
-			
-		}
-		fbx_manager_ptr->Destroy();
-		return;
-		// boost::filesystem::remove(target_path); // For now, this is commented out
-	}
-	else
-	{
-		if (target_path.string().find("armor") != std::string::npos || 
-			target_path.string().find("bikini") != std::string::npos || 
-			target_path.string().find("bustier") != std::string::npos)
-		{
-			if (target_path.string().find("armor_composite_s01_helmet_twk_f") == std::string::npos &&
-				target_path.string().find("armor_kashyyykian_ceremonial_leggings_wke") == std::string::npos &&
-				target_path.string().find("bikini") == std::string::npos &&
-				target_path.string().find("helmet_twk") == std::string::npos &&
-				target_path.string().find("bustier") == std::string::npos)
-			{
-				exporter_ptr->Export(scene_ptr);
-			}
-			fbx_manager_ptr->Destroy();
-			return;
-		}
-	}*/
 
 	// Next loop through the entire animation list
 	for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
