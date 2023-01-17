@@ -66,6 +66,9 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 
 		bone.name = buffer.read_stringz();
 
+		if (bone.name == "r_f_leg2")
+			std::cout << "break" << std::endl;
+
 		bone.has_rotations = buffer.read_uint8() == 1;
 
 		if (p_isKFATFORM)
@@ -228,7 +231,7 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 		auto loopCounter = key_count;
 		auto counter = 0;
 
-		while (buffer.get_position() < buffer.get_size())
+		while (!buffer.end_of_buffer())
 		{
 			uint32_t frame_num = 0;
 
@@ -252,9 +255,7 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 	}
 	else if (name == "STRN" || name == "ATRNSTRN")
 	{
-		uint16_t dataCounterSize = data_size / sizeof(float);
-
-		for (int i = 0; i < dataCounterSize; i++)
+		while (!buffer.end_of_buffer())
 		{
 			auto staticValue = buffer.read_float();
 

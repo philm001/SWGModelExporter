@@ -63,7 +63,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		
 		/* These animations export. However, the animations themselves have a couple of minor bugs (all animations do) */
 		//object_name = "bageraset.sat";
-		//object_name = "acklay.sat";
+		//object_name = "at_at.sat";
 		//object_name = "krayt_dragon.sat";
 		
 		/* For testing static meshes, test each of these 3 */

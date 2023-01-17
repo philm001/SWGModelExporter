@@ -828,275 +828,228 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 			exportedTimeSpan.Set(exportedStartTime, exportedStopTime);
 			animationStack->SetLocalTimeSpan(exportedTimeSpan);
 
-			for (auto& boneIterator : animationObject->get_bones())
+			FbxAnimCurveFilterUnroll unrollFilter;
+			unrollFilter.SetForceAutoTangents(true);
+
+			for (auto& animatedBoneIterator : animationObject->get_bones())
 			{
 				std::vector<FbxNode*> treeBranch;
 				treeBranch.push_back(mesh_node_ptr->GetChild(0));// The first node to start with is the child of the root node
-				std::string boneName = boneIterator.name;
+				boost::to_lower(animatedBoneIterator.name);
+				Skeleton::Bone skeletonBone = Skeleton::Bone("test");
+				int testValue = mesh_node_ptr->GetChildCount(true);
 
-				for (int i = 0; i < treeBranch.size(); i++)// Loop through the branches of the tree
+				for (auto& boneIterator : m_bones.at(0))// Need to grab specifics about the bone
 				{
-					std::string treeBranchName = treeBranch.at(i)->GetName();// Grab the name of the current element Also for debugging
-
-					boost::to_lower(treeBranchName);
-					boost::to_lower(boneName);
-
-					if (treeBranchName == boneName)// Found a match between the selected 
+					boost::to_lower(boneIterator.name);
+					if (boneIterator.name == animatedBoneIterator.name)
 					{
-						Skeleton::Bone skeletonBone = Skeleton::Bone("test");
-						for (auto& boneInfoIterator : BoneInfoList)
-						{
-							std::string searchBoneName = boneInfoIterator.name;
-							boost::to_lower(searchBoneName);
-
-							if (searchBoneName == boneName)
-							{
-								skeletonBone = boneInfoIterator;
-								break;
-							}
-						}
-
-						// For easy access placing pointers to the bones
-						FbxNode* rootSkeleton = mesh_node_ptr;
-						FbxNode* boneToUse = treeBranch.at(i);
-						fbxsdk::FbxAMatrix& globalNode = boneToUse->EvaluateLocalTransform();
-						// The bone iteratator will have all the animation info for the specific bone
-						fbxsdk::FbxAnimCurve* Curves[9];
-
-						Curves[0] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
-						Curves[1] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
-						Curves[2] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
-
-						Curves[3] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
-						Curves[4] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
-						Curves[5] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
-
-						Curves[6] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
-						Curves[7] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
-						Curves[8] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
-
-
-						for (fbxsdk::FbxAnimCurve* Curve : Curves)
-						{
-							Curve->KeyModifyBegin();
-						}
-
-						for (int frameCounter = 0; frameCounter < animationObject->get_info().frame_count + 1; frameCounter++)
-						{
-							// For each frame, we need to build the translation vector and the rotation vector
-							FbxVector4 TranslationVector;
-							FbxVector4 RotationVector;
-							// -------------------------------------- Translation Extraction -------------------------------------
-							if (boneIterator.hasXAnimatedTranslation)
-							{
-
-								std::vector<float> translationValues = animationObject->getCHNLValues().at(boneIterator.x_translation_channel_index);
-
-								if (translationValues.size() != animationObject->get_info().frame_count + 1)
-								{
-									std::cout << "Mis-match size";
-								}
-
-								float translationValue = translationValues.at(frameCounter);
-								if (translationValue > -1000.0)
-								{
-									TranslationVector.mData[0] = translationValue;
-								}
-								else
-								{
-									TranslationVector.mData[0] = -1000.0;
-								}
-							}
-							else
-							{
-								float translationValue = animationObject->getStaticTranslationValues().at(boneIterator.x_translation_channel_index);
-								TranslationVector.mData[0] = translationValue;
-							}
-
-							if (boneIterator.hasYAnimatedTranslation)
-							{
-								std::vector<float> translationValues = animationObject->getCHNLValues().at(boneIterator.y_translation_channel_index);
-
-								if (translationValues.size() != animationObject->get_info().frame_count + 1)
-								{
-									std::cout << "Mis-match size";
-								}
-
-								float translationValue = translationValues.at(frameCounter);
-								if (translationValue > -1000.0)
-								{
-									TranslationVector.mData[1] = translationValue;
-								}
-								else
-								{
-									//Need to do something here....
-									//cout << "Frame Skipped";
-									TranslationVector.mData[1] = -1000.0;
-								}
-							}
-							else
-							{
-								float translationValue = animationObject->getStaticTranslationValues().at(boneIterator.y_translation_channel_index);
-								TranslationVector.mData[1] = translationValue;
-							}
-
-							if (boneIterator.hasZAnimatedTranslation)
-							{
-								std::vector<float> translationValues = animationObject->getCHNLValues().at(boneIterator.z_translation_channel_index);
-
-								if (translationValues.size() != animationObject->get_info().frame_count + 1)
-								{
-									std::cout << "Mis-match size";
-								}
-
-								float translationValue = translationValues.at(frameCounter);
-								if (translationValue > -1000.0)
-								{
-									TranslationVector.mData[2] = translationValue;
-								}
-								else
-								{
-									//Need to do something here....
-									//cout << "Frame Skipped";
-									TranslationVector.mData[2] = -1000.0;
-								}
-							}
-							else
-							{
-								float translationValue = animationObject->getStaticTranslationValues().at(boneIterator.z_translation_channel_index);
-								TranslationVector.mData[2] = translationValue;
-							}
-
-							// --------------------------------------------------- Rotation extraction --------------------------------------
-
-							if (boneIterator.has_rotations)
-							{
-								EulerAngles result;
-
-								if (!animationObject->checkIsUnCompressed())
-								{
-									// Compressed format
-									std::vector<uint32_t> compressedValues = animationObject->getQCHNValues().at(boneIterator.rotation_channel_index);
-									std::vector<uint8_t> FormatValues;
-
-									if (compressedValues.size() - 1 != animationObject->get_info().frame_count + 1)
-									{
-										std::cout << "Mis-match size";
-									}
-
-									uint32_t formatValue = compressedValues.at(0);
-									uint32_t compressedValue = compressedValues.at(frameCounter + 1);
-
-									FormatValues.push_back((formatValue & (((1 << 8) - 1) << 16)) >> 16);
-									FormatValues.push_back((formatValue & (((1 << 8) - 1) << 8)) >> 8);
-									FormatValues.push_back((formatValue & (((1 << 8) - 1))));
-
-									if (compressedValue != 100)
-									{
-										Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(compressedValue, FormatValues[0], FormatValues[1], FormatValues[2]);
-										result = ConvertCombineCompressQuat(Quat, skeletonBone);
-										RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
-									}
-									else
-									{
-										RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
-									}
-								}
-								else
-								{
-									// uncompressed format
-									auto uncompressedValues = animationObject->getKFATQCHNValues().at(boneIterator.rotation_channel_index);
-									std::vector<float> QuatValues = uncompressedValues.at(frameCounter);
-									if (QuatValues.at(0) != 100)
-									{
-										Geometry::Vector4 Quat = { QuatValues.at(1), QuatValues.at(2), QuatValues.at(3), QuatValues.at(0) };
-										result = ConvertCombineCompressQuat(Quat, skeletonBone);
-										RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
-									}
-									else
-									{
-										RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
-									}
-
-								}
-
-							}
-							else
-							{
-								if (!animationObject->checkIsUnCompressed())
-								{
-									// compressed format
-									uint32_t staticValue = animationObject->getStaticRotationValues().at(boneIterator.rotation_channel_index);
-									std::vector<uint8_t> formatValues = animationObject->getStaticROTFormats().at(boneIterator.rotation_channel_index);
-
-									Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(staticValue, formatValues[0], formatValues[1], formatValues[2]);
-
-									EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
-
-									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
-								}
-								else
-								{
-									std::vector<float> uncompressedValues = animationObject->getStaticKFATRotationValues().at(boneIterator.rotation_channel_index);
-									Geometry::Vector4 Quat = { uncompressedValues.at(1), uncompressedValues.at(2), uncompressedValues.at(3), uncompressedValues.at(0) };
-									EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
-									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
-								}
-
-							}
-
-							// ---------------------------------- Matrix setup ---------------------------------
-
-							FbxVector4 ScalingVector(1.0, 1.0, 1.0);
-
-							FbxVector4 Vectors[3] = { TranslationVector, RotationVector, ScalingVector };
-
-							double timeValue = (double)frameCounter * ((double)1.0 / (double)animationObject->get_info().FPS);
-							FbxVector4 finalVector[3] = { globalNode.GetT() + TranslationVector , RotationVector, ScalingVector };
-
-							for (int curveIndex = 0; curveIndex < 2; curveIndex++)
-							{
-								for (int coordinateIndex = 0; coordinateIndex < 3; coordinateIndex++)
-								{
-									if (Vectors[curveIndex][coordinateIndex] != -1000.0)// If the coordinate value is -1000 then this means we need to skip it since it is not a key frame
-									{
-										int offsetCurveIndex = (curveIndex * 3) + coordinateIndex;
-										FbxTime setTime;
-										setTime.SetSecondDouble(timeValue);
-										uint32_t keyIndex = Curves[offsetCurveIndex]->KeyAdd(setTime);
-										Curves[offsetCurveIndex]->KeySet(keyIndex, setTime, finalVector[curveIndex][coordinateIndex], frameCounter == animationObject->get_info().frame_count ? FbxAnimCurveDef::eInterpolationConstant : FbxAnimCurveDef::eInterpolationCubic);
-										if (frameCounter == animationObject->get_info().frame_count)
-										{
-											Curves[offsetCurveIndex]->KeySetConstantMode(keyIndex, FbxAnimCurveDef::eConstantStandard);
-										}
-									}
-									else
-									{
-										//cout << "Frame Skipped" << endl;
-									}
-								}
-							}
-						}
-
-						for (fbxsdk::FbxAnimCurve* Curve : Curves)
-						{
-							Curve->KeyModifyEnd();
-						}
-					}
-					else
-					{
-						// If not found, then we will add the children to the treeBranch vector so that we can 
-						// check the children also
-						if (treeBranch.at(i)->GetChildCount() > 0)
-						{
-							for (int ii = 0; ii < treeBranch.at(i)->GetChildCount(); ii++)
-							{
-								treeBranch.push_back(treeBranch.at(i)->GetChild(ii));
-							}
-						}
+						skeletonBone = boneIterator;
+						break;
 					}
 				}
+
+				if (skeletonBone.name != "test") // quick check for valid bone
+				{
+					// For easy access placing pointers to the bones
+					FbxNode* rootSkeleton = mesh_node_ptr;
+					FbxNode* boneToUse = skeletonBone.boneNodeptr;
+
+					
+					// The bone iteratator will have all the animation info for the specific bone
+					fbxsdk::FbxAnimCurve* Curves[9];
+
+					Curves[0] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+					Curves[1] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+					Curves[2] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+
+					Curves[3] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+					Curves[4] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+					Curves[5] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+
+					Curves[6] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+					Curves[7] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+					Curves[8] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+
+					for (fbxsdk::FbxAnimCurve* Curve : Curves)
+					{
+						Curve->KeyModifyBegin();
+					}
+
+					for (int frameCounter = 0; frameCounter < animationObject->get_info().frame_count + 1; frameCounter++)
+					{
+						// For each frame, we need to build the translation vector and the rotation vector
+						FbxVector4 TranslationVector;
+						FbxVector4 RotationVector;
+
+			// -------------------------------------- Translation Extraction -------------------------------------
+						if (animatedBoneIterator.hasXAnimatedRotatation)
+						{
+							std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.x_translation_channel_index);
+							float translationValue = translationValues.at(frameCounter);
+
+							if (translationValue != -1000)
+							{
+								TranslationVector.mData[0] = translationValue;
+							}
+							else
+								TranslationVector.mData[0] = -1000.0;
+						}
+						else
+						{
+							float translationValue = animationObject->getStaticTranslationValues().at(animatedBoneIterator.x_translation_channel_index);
+							TranslationVector.mData[0] = translationValue;
+						}
+
+						if (animatedBoneIterator.hasYAnimatedRotatation)
+						{
+							std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.y_translation_channel_index);
+							float translationValue = translationValues.at(frameCounter);
+
+							if (translationValue != -1000)
+							{
+								TranslationVector.mData[1] = translationValue;
+							}
+							else
+								TranslationVector.mData[1] = -1000.0;
+						}
+						else
+						{
+							float translationValue = animationObject->getStaticTranslationValues().at(animatedBoneIterator.y_translation_channel_index);
+							TranslationVector.mData[1] = translationValue;
+						}
+
+						if (animatedBoneIterator.hasZAnimatedRotatation)
+						{
+							std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.z_translation_channel_index);
+							float translationValue = translationValues.at(frameCounter);
+
+							if (translationValue != -1000)
+							{
+								TranslationVector.mData[2] = translationValue;
+							}
+							else
+								TranslationVector.mData[2] = -1000.0;
+						}
+						else
+						{
+							float translationValue = animationObject->getStaticTranslationValues().at(animatedBoneIterator.z_translation_channel_index);
+							TranslationVector.mData[2] = translationValue;
+						}
+		// --------------------------------------------------- Rotation extraction --------------------------------------
+						if (animatedBoneIterator.has_rotations)
+						{
+							EulerAngles result;
+							if (!animationObject->checkIsUnCompressed())
+							{
+								std::vector<uint32_t> compressedValues = animationObject->getQCHNValues().at(animatedBoneIterator.rotation_channel_index);
+								std::vector<uint8_t> FormatValues;
+								uint32_t formatValue = compressedValues.at(0);
+								uint32_t compressedValue = compressedValues.at(frameCounter + 1);
+
+								FormatValues.push_back((formatValue& (((1 << 8) - 1) << 16)) >> 16);
+								FormatValues.push_back((formatValue& (((1 << 8) - 1) << 8)) >> 8);
+								FormatValues.push_back((formatValue& (((1 << 8) - 1))));
+
+								if (compressedValue != 100)
+								{
+									Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(compressedValue, FormatValues[0], FormatValues[1], FormatValues[2]);
+									result = ConvertCombineCompressQuat(Quat, skeletonBone);
+									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+								}
+								else
+								{
+									RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+								}
+							}
+							else
+							{
+								// For objects that are not compressed
+								auto uncompressedValues = animationObject->getKFATQCHNValues().at(animatedBoneIterator.rotation_channel_index);
+								std::vector<float> QuatValues = uncompressedValues.at(frameCounter);
+								if (QuatValues.at(0) != 100)
+								{
+									Geometry::Vector4 Quat = { QuatValues.at(1), QuatValues.at(2), QuatValues.at(3), QuatValues.at(0) };
+									result = ConvertCombineCompressQuat(Quat, skeletonBone);
+									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+								}
+								else
+								{
+									RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+								}
+							}
+						}
+						else
+						{
+							// The case for static rotations
+							if (!animationObject->checkIsUnCompressed())
+							{
+								// compressed format
+								uint32_t staticValue = animationObject->getStaticRotationValues().at(animatedBoneIterator.rotation_channel_index);
+								std::vector<uint8_t> formatValues = animationObject->getStaticROTFormats().at(animatedBoneIterator.rotation_channel_index);
+
+								Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(staticValue, formatValues[0], formatValues[1], formatValues[2]);
+
+								EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
+
+								RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+							}
+							else
+							{
+								std::vector<float> uncompressedValues = animationObject->getStaticKFATRotationValues().at(animatedBoneIterator.rotation_channel_index);
+								Geometry::Vector4 Quat = { uncompressedValues.at(1), uncompressedValues.at(2), uncompressedValues.at(3), uncompressedValues.at(0) };
+								EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
+								RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+							}
+						}
+
+						// ---------------------------------- Matrix setup ---------------------------------
+
+						FbxVector4 ScalingVector(1.0, 1.0, 1.0);
+						FbxVector4 Vectors[3] = { TranslationVector, RotationVector, ScalingVector };
+						double timeValue = (double)frameCounter * ((double)1.0 / (double)animationObject->get_info().FPS);
+						FbxTime setTime;
+						setTime.SetSecondDouble(timeValue);
+
+						fbxsdk::FbxAMatrix& globalNode = boneToUse->EvaluateLocalTransform(0);
+						FbxVector4 finalVector[3] = { globalNode.GetT() + TranslationVector , RotationVector, ScalingVector};
+						
+
+						for (int curveIndex = 0; curveIndex < 2; curveIndex++)
+						{
+							for (int coordinateIndex = 0; coordinateIndex < 3; coordinateIndex++)
+							{
+								if (Vectors[curveIndex][coordinateIndex] != -1000.0)// If the coordinate value is -1000 then this means we need to skip it since it is not a key frame
+								{
+									int offsetCurveIndex = (curveIndex * 3) + coordinateIndex;
+									
+									uint32_t keyIndex = Curves[offsetCurveIndex]->KeyAdd(setTime);
+									Curves[offsetCurveIndex]->KeySet(keyIndex, setTime, finalVector[curveIndex][coordinateIndex], frameCounter == animationObject->get_info().frame_count ? FbxAnimCurveDef::eInterpolationConstant : FbxAnimCurveDef::eInterpolationCubic);
+									
+									
+									if (frameCounter == animationObject->get_info().frame_count)
+									{
+										Curves[offsetCurveIndex]->KeySetConstantMode(keyIndex, FbxAnimCurveDef::eConstantStandard);
+									}
+								}
+							}
+						}
+
+						
+					}
+
+					for (fbxsdk::FbxAnimCurve* Curve : Curves)
+					{
+						Curve->KeyModifyEnd();
+					}
+				}
+				else
+				{
+					std::cout << "Invalid bone found" << std::endl;
+				}
 			}
+
+			unrollFilter.Apply(animationStack);
 		}
 	}
 
@@ -1172,19 +1125,22 @@ SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::
 
 	// roll (x-axis rotation)
 	double sinr_cosp = 2.0 * (Quat.a * Quat.x + Quat.y * Quat.z);
-	double cosr_cosp = Quat.a * Quat.a - Quat.x * Quat.x - Quat.y * Quat.y + Quat.z * Quat.z;
+	double cosr_cosp = 1.0 - 2.0 * (Quat.x * Quat.x + Quat.y * Quat.y); /*Quat.a * Quat.a - Quat.x * Quat.x - Quat.y * Quat.y + Quat.z * Quat.z;*/
 	angles.roll = std::atan2(sinr_cosp, cosr_cosp);
 
 	// pitch (y-axis rotation)
-	double sinp = 2.0 * (Quat.a * Quat.y - Quat.z * Quat.x);
-	if (std::abs(sinp) >= 1)
-		angles.pitch = std::copysign(pi / 2.0, sinp); // use 90 degrees if out of range
-	else
-		angles.pitch = std::asin(sinp);
+	double sinp = std::sqrt(1.0 + 2.0 * (Quat.a * Quat.y - Quat.x * Quat.z));
+	double cosp = std::sqrt(1.0 - 2.0 * (Quat.a * Quat.y - Quat.x * Quat.z));
+	angles.pitch = 2 * std::atan2(sinp, cosp) - pi / 2;
+	//double sinp = 2.0 * (Quat.a * Quat.y - Quat.z * Quat.x);
+	//if (std::abs(sinp) >= 1)
+	//	angles.pitch = std::copysign(pi / 2.0, sinp); // use 90 degrees if out of range
+	//else
+	//	angles.pitch = std::asin(sinp);
 
 	// yaw (z-axis rotation)
 	double siny_cosp = 2.0 * (Quat.a * Quat.z + Quat.x * Quat.y);
-	double cosy_cosp = Quat.a * Quat.a + Quat.x * Quat.x - Quat.y * Quat.y - Quat.z * Quat.z;
+	double cosy_cosp = 1.0 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z); /*Quat.a * Quat.a + Quat.x * Quat.x - Quat.y * Quat.y - Quat.z * Quat.z; */
 	angles.yaw = std::atan2(siny_cosp, cosy_cosp);
 
 	//angles.yaw = std::atan2(2.0 * (Quat.x * Quat.y + Quat.z * Quat.a), sqx - sqy - sqz + sqa); // heading
@@ -1215,6 +1171,16 @@ SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::
 		angles.roll = std::atan2(2.0 * Quat.x * Quat.a - 2.0 * Quat.y * Quat.z, 1.0 - 2.0 * sqx - 2.0 * sqz);
 	}*/
 
+	/*FbxVector4 zeroVector(0, 0, 0);
+	FbxQuaternion testQuat(Quat.x, Quat.y, Quat.z, Quat.a);
+	FbxMatrix testMatrix;
+	testMatrix.SetTQS(zeroVector, testQuat, zeroVector);
+	EulerAngles testAngles;
+	FbxVector4 returnVector = testMatrix.GetColumn(0);
+
+	testAngles.roll = returnVector[0] * rotationFactor;
+	testAngles.pitch = returnVector[1] * rotationFactor;
+	testAngles.yaw = returnVector[2] * rotationFactor;*/
 
 	angles.roll *= rotationFactor;
 	angles.pitch *= rotationFactor;
@@ -1272,6 +1238,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 
 		boneListing.push_back(bone);
 		nodes[boneCounter] = node_ptr;
+		bone.boneNodeptr = node_ptr;
 	}
 
 	// build hierarchy

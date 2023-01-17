@@ -231,6 +231,7 @@ public:
 		Geometry::Vector3 bind_pose_transform;
 		Geometry::Vector4 bind_pose_rotation;
 		uint32_t rotation_order;
+		FbxNode* boneNodeptr = nullptr;
 	};
 
 public:
