@@ -133,6 +133,13 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 				float quatY = buffer.read_float();
 				float quatZ = buffer.read_float();
 
+				if (quatA < 0.0f)
+				{
+					quatX *= -1.0f;
+					quatY *= -1.0f;
+					quatZ *= -1.0f;
+				}
+
 				std::vector<float> temp;
 
 				temp.push_back(quatA);

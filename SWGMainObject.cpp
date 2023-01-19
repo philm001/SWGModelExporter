@@ -828,8 +828,7 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 			exportedTimeSpan.Set(exportedStartTime, exportedStopTime);
 			animationStack->SetLocalTimeSpan(exportedTimeSpan);
 
-			FbxAnimCurveFilterUnroll unrollFilter;
-			unrollFilter.SetForceAutoTangents(true);
+			
 
 			for (auto& animatedBoneIterator : animationObject->get_bones())
 			{
@@ -859,13 +858,13 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 					// The bone iteratator will have all the animation info for the specific bone
 					fbxsdk::FbxAnimCurve* Curves[9];
 
-					Curves[0] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
-					Curves[1] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
-					Curves[2] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+					Curves[0] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+					Curves[1] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+					Curves[2] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
 
-					Curves[3] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
-					Curves[4] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
-					Curves[5] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+					Curves[3] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+					Curves[4] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+					Curves[5] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
 
 					Curves[6] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
 					Curves[7] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
@@ -1006,14 +1005,16 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 						// ---------------------------------- Matrix setup ---------------------------------
 
 						FbxVector4 ScalingVector(1.0, 1.0, 1.0);
-						FbxVector4 Vectors[3] = { TranslationVector, RotationVector, ScalingVector };
+						FbxVector4 Vectors[3] = { RotationVector, TranslationVector, ScalingVector };
 						double timeValue = (double)frameCounter * ((double)1.0 / (double)animationObject->get_info().FPS);
 						FbxTime setTime;
 						setTime.SetSecondDouble(timeValue);
 
 						fbxsdk::FbxAMatrix& globalNode = boneToUse->EvaluateLocalTransform(0);
-						FbxVector4 finalVector[3] = { globalNode.GetT() + TranslationVector , RotationVector, ScalingVector};
+						FbxVector4 finalVector[3] = { RotationVector, globalNode.GetT() + TranslationVector, ScalingVector};
 						
+						FbxAnimCurveFilterUnroll unrollFilter;
+						unrollFilter.SetForceAutoTangents(true);
 
 						for (int curveIndex = 0; curveIndex < 2; curveIndex++)
 						{
@@ -1035,7 +1036,8 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 							}
 						}
 
-						
+						if(unrollFilter.NeedApply(Curves, 3))
+							unrollFilter.Apply(Curves, 3);
 					}
 
 					for (fbxsdk::FbxAnimCurve* Curve : Curves)
@@ -1048,8 +1050,6 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 					std::cout << "Invalid bone found" << std::endl;
 				}
 			}
-
-			unrollFilter.Apply(animationStack);
 		}
 	}
 
@@ -1115,7 +1115,7 @@ SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::
 
 	auto full_rot = post_rot_quat * (AnimationQuat * bind_rot_quat) * pre_rot_quat;
 	Quat = Geometry::Vector4(full_rot.mData[0], full_rot.mData[1], full_rot.mData[2], full_rot.mData[3]);
-
+	//Quat = Geometry::Vector4(0.564613, 0.564613, 0.564613, 0.2088938);
 	double test = Quat.x * Quat.z - Quat.y * Quat.a;
 	double sqx = Quat.x * Quat.x;
 	double sqy = Quat.y * Quat.y;
@@ -1123,9 +1123,15 @@ SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::
 	double sqa = Quat.a * Quat.a;
 	double unit = sqx + sqy + sqz + sqa;
 
+	// Quat to Euler Implenetation 1
+
+
+
 	// roll (x-axis rotation)
 	double sinr_cosp = 2.0 * (Quat.a * Quat.x + Quat.y * Quat.z);
 	double cosr_cosp = 1.0 - 2.0 * (Quat.x * Quat.x + Quat.y * Quat.y); /*Quat.a * Quat.a - Quat.x * Quat.x - Quat.y * Quat.y + Quat.z * Quat.z;*/
+	
+	
 	angles.roll = std::atan2(sinr_cosp, cosr_cosp);
 
 	// pitch (y-axis rotation)
