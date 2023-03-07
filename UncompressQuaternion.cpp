@@ -95,7 +95,7 @@ Geometry::Vector4 QuatExpand::UncompressQuaternion::ExpandCompressedValue(uint32
 	x = s_formatData[xFormat].expandElevenBit(value >> cs_xShift);
 	y = s_formatData[yFormat].expandElevenBit(value >> cs_yShift);
 	z = s_formatData[zFormat].expandTenBit(value);
-	w = sqrt(1.0f - (x * x + y * y + z * z));
+	w = sqrt(1.0 - (x * x + y * y + z * z));
 
 	Geometry::Vector4 vec{ x, y, z, w };
 	return vec;

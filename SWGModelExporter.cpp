@@ -65,6 +65,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		//object_name = "bageraset.sat";
 		//object_name = "acklay.sat";
 		//object_name = "krayt_dragon.sat";
+		//object_name = "bantha_hue.sat"; // bone rotation 4th one
 		
 		/* For testing static meshes, test each of these 3 */
 		//object_name = "asteroid_acid_large_s01.apt"; // For apt parsing

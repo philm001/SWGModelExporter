@@ -39,6 +39,21 @@ struct Vector4 : public Vector3
   {
       return point.a == this->a && point.x == this->x && point.y == this->y && point.z == this->z;
   }
+
+  Vector4 operator*(const Vector4& point)
+  {
+      double aValue = 0;
+      double xValue = 0;
+      double yValue = 0;
+      double zValue = 0;
+
+      aValue = this->a * point.a - this->x * point.x - this->y * point.y - this->z * point.z;
+      xValue = this->a * point.x + this->x * point.a + this->y * point.z - this->z * point.y;
+      yValue = this->a * point.y - this->x * point.z + this->y * point.a + this->z * point.x;
+      zValue = this->a * point.z + this->x * point.y - this->y * point.x + this->z * point.a;
+
+      return Vector4(xValue, yValue, zValue, aValue);
+  }
 };
 
 struct Sphere

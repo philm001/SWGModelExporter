@@ -1036,8 +1036,8 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 							}
 						}
 
-						if(unrollFilter.NeedApply(Curves, 3))
-							unrollFilter.Apply(Curves, 3);
+						//if(unrollFilter.NeedApply(Curves, 3))
+						//	unrollFilter.Apply(Curves, 3);
 					}
 
 					for (fbxsdk::FbxAnimCurve* Curve : Curves)
@@ -1105,16 +1105,18 @@ SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::
 	const double pi = 3.14159265358979323846;
 	double rotationFactor = 180.0 / pi;
 
-	Geometry::Vector4 Quat;
+	//Geometry::Vector4 Quat;
 	EulerAngles angles;
 
-	FbxQuaternion AnimationQuat = FbxQuaternion(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
+	//FbxQuaternion AnimationQuat = FbxQuaternion(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
+	//Geometry::Vector4()
 	FbxQuaternion bind_rot_quat{ BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a };
 	FbxQuaternion pre_rot_quat{ BoneReference.pre_rot_quaternion.x, BoneReference.pre_rot_quaternion.y, BoneReference.pre_rot_quaternion.z, BoneReference.pre_rot_quaternion.a };
 	FbxQuaternion post_rot_quat{ BoneReference.post_rot_quaternion.x, BoneReference.post_rot_quaternion.y, BoneReference.post_rot_quaternion.z, BoneReference.post_rot_quaternion.a };
 
-	auto full_rot = post_rot_quat * (AnimationQuat * bind_rot_quat) * pre_rot_quat;
-	Quat = Geometry::Vector4(full_rot.mData[0], full_rot.mData[1], full_rot.mData[2], full_rot.mData[3]);
+	//auto full_rot = post_rot_quat * (AnimationQuat * bind_rot_quat) * pre_rot_quat;
+	auto Quat = BoneReference.post_rot_quaternion * (DecompressedQuaterion * BoneReference.bind_pose_rotation) * BoneReference.pre_rot_quaternion;
+	//Quat = Geometry::Vector4(full_rot.mData[0], full_rot.mData[1], full_rot.mData[2], full_rot.mData[3]);
 	//Quat = Geometry::Vector4(0.564613, 0.564613, 0.564613, 0.2088938);
 	double test = Quat.x * Quat.z - Quat.y * Quat.a;
 	double sqx = Quat.x * Quat.x;
