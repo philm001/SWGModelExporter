@@ -10,8 +10,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SWGModelExporter", "SWGMode
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectXTex", "..\DirectXTex\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj", "{246A0A03-E07D-483E-B84F-505F1501F960}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlibvc", "zlib\contrib\vstudio\vc14\zlibvc.vcxproj", "{8FD826F8-3739-44E6-8CC8-997122E53B8D}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -96,38 +94,6 @@ Global
 		{246A0A03-E07D-483E-B84F-505F1501F960}.ReleaseWithoutAsm|x64.Build.0 = Release|x64
 		{246A0A03-E07D-483E-B84F-505F1501F960}.ReleaseWithoutAsm|x86.ActiveCfg = Release|Win32
 		{246A0A03-E07D-483E-B84F-505F1501F960}.ReleaseWithoutAsm|x86.Build.0 = Release|Win32
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Debug|ARM64.ActiveCfg = Debug|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Debug|ARM64.Build.0 = Debug|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Debug|Itanium.ActiveCfg = Debug|Itanium
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Debug|Itanium.Build.0 = Debug|Itanium
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Debug|x64.ActiveCfg = Release|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Debug|x64.Build.0 = Release|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Debug|x86.ActiveCfg = Debug|Win32
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Debug|x86.Build.0 = Debug|Win32
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Profile|ARM64.ActiveCfg = Debug|Win32
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Profile|ARM64.Build.0 = Debug|Win32
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Profile|Itanium.ActiveCfg = Debug|Itanium
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Profile|Itanium.Build.0 = Debug|Itanium
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Profile|x64.ActiveCfg = ReleaseWithoutAsm|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Profile|x64.Build.0 = ReleaseWithoutAsm|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Profile|x86.ActiveCfg = Debug|Win32
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Profile|x86.Build.0 = Debug|Win32
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Release|ARM64.ActiveCfg = Release|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Release|ARM64.Build.0 = Release|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Release|Itanium.ActiveCfg = Release|Itanium
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Release|Itanium.Build.0 = Release|Itanium
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Release|x64.ActiveCfg = Release|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Release|x64.Build.0 = Release|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Release|x86.ActiveCfg = Release|Win32
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.Release|x86.Build.0 = Release|Win32
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.ReleaseWithoutAsm|ARM64.ActiveCfg = ReleaseWithoutAsm|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.ReleaseWithoutAsm|ARM64.Build.0 = ReleaseWithoutAsm|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.ReleaseWithoutAsm|Itanium.ActiveCfg = ReleaseWithoutAsm|Itanium
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.ReleaseWithoutAsm|Itanium.Build.0 = ReleaseWithoutAsm|Itanium
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.ReleaseWithoutAsm|x64.ActiveCfg = ReleaseWithoutAsm|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.ReleaseWithoutAsm|x64.Build.0 = ReleaseWithoutAsm|x64
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.ReleaseWithoutAsm|x86.ActiveCfg = ReleaseWithoutAsm|Win32
-		{8FD826F8-3739-44E6-8CC8-997122E53B8D}.ReleaseWithoutAsm|x86.Build.0 = ReleaseWithoutAsm|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
