@@ -1073,7 +1073,7 @@ void SWGMainObject::storeObject(const std::string& path)
 				for (auto& listIterator : ModelCopy)
 				{
 					//std::vector<Animated_mesh> listIterator = ModelCopy[0];
-					for each (Animated_mesh meshIterator in listIterator)
+					for (Animated_mesh meshIterator : listIterator)
 					{
 						if (meshIterator.get_object_name() == item.first)
 						{

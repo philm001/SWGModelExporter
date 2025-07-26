@@ -52,9 +52,9 @@
 
 // FBX SDK
 //#pragma comment(lib, "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2016.1.2\\lib\\vs2015\\x64\\debug\\libfbxsdk-mt.lib")
-//#include "C:\Program Files\Autodesk\FBX\FBX SDK\2016.1.2\include\fbxsdk.h"
-#pragma comment(lib, "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2020.0.1\\lib\\vs2017\\x64\\debug\\libfbxsdk-mt.lib")
-#include "C:\Program Files\Autodesk\FBX\FBX SDK\2020.0.1\include\fbxsdk.h"
+////#include "C:\Program Files\Autodesk\FBX\FBX SDK\2016.1.2\include\fbxsdk.h"
+//#pragma comment(lib, "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2020.0.1\\lib\\vs2017\\x64\\debug\\libfbxsdk-mt.lib")
+#include "C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include\fbxsdk.h"
 
 // DirectXTex
 #include <DirectXTex.h>

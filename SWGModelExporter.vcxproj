@@ -22,7 +22,7 @@
     <ProjectGuid>{302EF9DD-828A-4143-9583-80399281CAE5}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>SWGModelExporter</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -75,7 +75,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProgramFiles)\\Autodesk\FBX\FBX SDK\2020.1\lib\vs2017\x64\debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\debug;$(SolutionDir)zlib\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -106,17 +106,17 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;FBXSDK_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.0.1\include;$(SolutionDir)..\..\DirectXTex\DirectXTex;$(ProjectDir);$(SolutionDir)Boost\;$(SolutionDir)..\DirectXTex\DirectXTex;$(SolutionDir)zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.3.7\include;$(ProjectDir);$(SolutionDir)Boost\;$(SolutionDir)..\DirectXTex\DirectXTex;$(SolutionDir)zlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Debug;$(SolutionDir)lib\Debug;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.0.1\lib\vs2017\x64\debug;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.1\lib\vs2017\x64\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Debug;$(SolutionDir)lib\Debug;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\debug;$(SolutionDir)zlib\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>DirectXTex.lib;zdll.lib;libfbxsdk-mt.lib;wininet.lib;libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -149,7 +149,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;FBXSDK_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\FBX\FBX SDK\2020.0.1\include;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex;$(ProjectDir);C:\Users\Phillip\source\repos\SWGModelExporter-master\Boost;$(ProjectDir)Boost\;$(SolutionDir)..\DirectXTex\DirectXTex;$(SolutionDir)zlib;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include;C:\Users\Phillip\source\repos\DirectXTex\DirectXTex;$(ProjectDir);C:\Users\Phillip\source\repos\SWGModelExporter-master\Boost;$(ProjectDir)Boost\;$(SolutionDir)..\DirectXTex\DirectXTex;$(SolutionDir)zlib;$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -162,7 +162,7 @@
       </EnableCOMDATFolding>
       <OptimizeReferences>
       </OptimizeReferences>
-      <AdditionalLibraryDirectories>$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.0.1\lib\vs2017\x64\release;$(SolutionDir)lib\Release;$(SolutionDir)..\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProgramFiles)\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\release;$(SolutionDir)lib\Release;$(SolutionDir)..\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>DirectXTex.lib;zdll.lib;libfbxsdk-mt.lib;wininet.lib;libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration />
     </Link>
@@ -448,26 +448,7 @@
     <ClInclude Include="Boost\boost\archive\detail\register_archive.hpp" />
     <ClInclude Include="Boost\boost\archive\detail\utf8_codecvt_facet.hpp" />
     <ClInclude Include="Boost\boost\archive\dinkumware.hpp" />
-    <ClInclude Include="Boost\boost\archive\impl\archive_serializer_map.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_binary_iarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_binary_iprimitive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_binary_oarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_binary_oprimitive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_text_iarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_text_iprimitive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_text_oarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_text_oprimitive.ipp" />
     <ClInclude Include="Boost\boost\archive\impl\basic_xml_grammar.hpp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_xml_iarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_xml_oarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\text_iarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\text_oarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\text_wiarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\text_woarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\xml_iarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\xml_oarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\xml_wiarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\xml_woarchive_impl.ipp" />
     <ClInclude Include="Boost\boost\archive\iterators\base64_exception.hpp" />
     <ClInclude Include="Boost\boost\archive\iterators\base64_from_binary.hpp" />
     <ClInclude Include="Boost\boost\archive\iterators\binary_from_base64.hpp" />
@@ -611,63 +592,16 @@
     <ClInclude Include="Boost\boost\asio\detail\handler_type_requirements.hpp" />
     <ClInclude Include="Boost\boost\asio\detail\handler_work.hpp" />
     <ClInclude Include="Boost\boost\asio\detail\hash_map.hpp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\buffer_sequence_adapter.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\descriptor_ops.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\dev_poll_reactor.hpp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\dev_poll_reactor.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\epoll_reactor.hpp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\epoll_reactor.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\eventfd_select_interrupter.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\handler_tracking.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\io_uring_descriptor_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\io_uring_file_service.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\io_uring_service.hpp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\io_uring_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\io_uring_socket_service_base.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\kqueue_reactor.hpp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\kqueue_reactor.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\null_event.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\pipe_select_interrupter.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\posix_event.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\posix_mutex.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\posix_serial_port_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\posix_thread.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\posix_tss_ptr.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\reactive_descriptor_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\reactive_socket_service_base.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\resolver_service_base.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\scheduler.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\select_reactor.hpp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\select_reactor.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\service_registry.hpp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\service_registry.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\signal_set_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\socket_ops.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\socket_select_interrupter.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\strand_executor_service.hpp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\strand_executor_service.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\strand_service.hpp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\strand_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\thread_context.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\throw_error.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\timer_queue_ptime.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\timer_queue_set.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\winrt_ssocket_service_base.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\winrt_timer_scheduler.hpp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\winrt_timer_scheduler.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\winsock_init.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_event.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_file_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_handle_service.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_io_context.hpp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_io_context.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_serial_port_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_socket_service_base.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_mutex.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_object_handle_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_static_mutex.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_thread.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_tss_ptr.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\io_control.hpp" />
     <ClInclude Include="Boost\boost\asio\detail\io_object_impl.hpp" />
     <ClInclude Include="Boost\boost\asio\detail\io_uring_descriptor_read_at_op.hpp" />
@@ -863,8 +797,6 @@
     <ClInclude Include="Boost\boost\asio\execution\detail\void_receiver.hpp" />
     <ClInclude Include="Boost\boost\asio\execution\execute.hpp" />
     <ClInclude Include="Boost\boost\asio\execution\executor.hpp" />
-    <ClInclude Include="Boost\boost\asio\execution\impl\bad_executor.ipp" />
-    <ClInclude Include="Boost\boost\asio\execution\impl\receiver_invocation_error.ipp" />
     <ClInclude Include="Boost\boost\asio\execution\invocable_archetype.hpp" />
     <ClInclude Include="Boost\boost\asio\execution\mapping.hpp" />
     <ClInclude Include="Boost\boost\asio\execution\occupancy.hpp" />
@@ -916,7 +848,6 @@
     <ClInclude Include="Boost\boost\asio\experimental\impl\append.hpp" />
     <ClInclude Include="Boost\boost\asio\experimental\impl\as_single.hpp" />
     <ClInclude Include="Boost\boost\asio\experimental\impl\as_tuple.hpp" />
-    <ClInclude Include="Boost\boost\asio\experimental\impl\channel_error.ipp" />
     <ClInclude Include="Boost\boost\asio\experimental\impl\coro.hpp" />
     <ClInclude Include="Boost\boost\asio\experimental\impl\deferred.hpp" />
     <ClInclude Include="Boost\boost\asio\experimental\impl\parallel_group.hpp" />
@@ -931,7 +862,6 @@
     <ClInclude Include="Boost\boost\asio\generic\basic_endpoint.hpp" />
     <ClInclude Include="Boost\boost\asio\generic\datagram_protocol.hpp" />
     <ClInclude Include="Boost\boost\asio\generic\detail\endpoint.hpp" />
-    <ClInclude Include="Boost\boost\asio\generic\detail\impl\endpoint.ipp" />
     <ClInclude Include="Boost\boost\asio\generic\raw_protocol.hpp" />
     <ClInclude Include="Boost\boost\asio\generic\seq_packet_protocol.hpp" />
     <ClInclude Include="Boost\boost\asio\generic\stream_protocol.hpp" />
@@ -939,42 +869,30 @@
     <ClInclude Include="Boost\boost\asio\handler_continuation_hook.hpp" />
     <ClInclude Include="Boost\boost\asio\handler_invoke_hook.hpp" />
     <ClInclude Include="Boost\boost\asio\high_resolution_timer.hpp" />
-    <ClInclude Include="Boost\boost\asio\impl\any_io_executor.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\awaitable.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\buffered_read_stream.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\buffered_write_stream.hpp" />
-    <ClInclude Include="Boost\boost\asio\impl\cancellation_signal.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\compose.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\connect.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\connect_pipe.hpp" />
-    <ClInclude Include="Boost\boost\asio\impl\connect_pipe.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\co_spawn.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\defer.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\detached.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\dispatch.hpp" />
-    <ClInclude Include="Boost\boost\asio\impl\error.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\execution_context.hpp" />
-    <ClInclude Include="Boost\boost\asio\impl\execution_context.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\executor.hpp" />
-    <ClInclude Include="Boost\boost\asio\impl\executor.ipp" />
-    <ClInclude Include="Boost\boost\asio\impl\handler_alloc_hook.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\io_context.hpp" />
-    <ClInclude Include="Boost\boost\asio\impl\io_context.ipp" />
-    <ClInclude Include="Boost\boost\asio\impl\multiple_exceptions.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\post.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\read.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\read_at.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\read_until.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\redirect_error.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\serial_port_base.hpp" />
-    <ClInclude Include="Boost\boost\asio\impl\serial_port_base.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\spawn.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\src.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\system_context.hpp" />
-    <ClInclude Include="Boost\boost\asio\impl\system_context.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\system_executor.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\thread_pool.hpp" />
-    <ClInclude Include="Boost\boost\asio\impl\thread_pool.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\use_awaitable.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\use_future.hpp" />
     <ClInclude Include="Boost\boost\asio\impl\write.hpp" />
@@ -998,22 +916,15 @@
     <ClInclude Include="Boost\boost\asio\ip\basic_resolver_query.hpp" />
     <ClInclude Include="Boost\boost\asio\ip\basic_resolver_results.hpp" />
     <ClInclude Include="Boost\boost\asio\ip\detail\endpoint.hpp" />
-    <ClInclude Include="Boost\boost\asio\ip\detail\impl\endpoint.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\detail\socket_option.hpp" />
     <ClInclude Include="Boost\boost\asio\ip\host_name.hpp" />
     <ClInclude Include="Boost\boost\asio\ip\icmp.hpp" />
     <ClInclude Include="Boost\boost\asio\ip\impl\address.hpp" />
-    <ClInclude Include="Boost\boost\asio\ip\impl\address.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\impl\address_v4.hpp" />
-    <ClInclude Include="Boost\boost\asio\ip\impl\address_v4.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\impl\address_v6.hpp" />
-    <ClInclude Include="Boost\boost\asio\ip\impl\address_v6.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\impl\basic_endpoint.hpp" />
-    <ClInclude Include="Boost\boost\asio\ip\impl\host_name.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\impl\network_v4.hpp" />
-    <ClInclude Include="Boost\boost\asio\ip\impl\network_v4.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\impl\network_v6.hpp" />
-    <ClInclude Include="Boost\boost\asio\ip\impl\network_v6.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\multicast.hpp" />
     <ClInclude Include="Boost\boost\asio\ip\network_v4.hpp" />
     <ClInclude Include="Boost\boost\asio\ip\network_v6.hpp" />
@@ -1031,7 +942,6 @@
     <ClInclude Include="Boost\boost\asio\local\connect_pair.hpp" />
     <ClInclude Include="Boost\boost\asio\local\datagram_protocol.hpp" />
     <ClInclude Include="Boost\boost\asio\local\detail\endpoint.hpp" />
-    <ClInclude Include="Boost\boost\asio\local\detail\impl\endpoint.ipp" />
     <ClInclude Include="Boost\boost\asio\local\stream_protocol.hpp" />
     <ClInclude Include="Boost\boost\asio\multiple_exceptions.hpp" />
     <ClInclude Include="Boost\boost\asio\packaged_task.hpp" />
@@ -1064,8 +974,6 @@
     <ClInclude Include="Boost\boost\asio\ssl\detail\buffered_handshake_op.hpp" />
     <ClInclude Include="Boost\boost\asio\ssl\detail\engine.hpp" />
     <ClInclude Include="Boost\boost\asio\ssl\detail\handshake_op.hpp" />
-    <ClInclude Include="Boost\boost\asio\ssl\detail\impl\engine.ipp" />
-    <ClInclude Include="Boost\boost\asio\ssl\detail\impl\openssl_init.ipp" />
     <ClInclude Include="Boost\boost\asio\ssl\detail\io.hpp" />
     <ClInclude Include="Boost\boost\asio\ssl\detail\openssl_init.hpp" />
     <ClInclude Include="Boost\boost\asio\ssl\detail\openssl_types.hpp" />
@@ -1078,10 +986,6 @@
     <ClInclude Include="Boost\boost\asio\ssl\error.hpp" />
     <ClInclude Include="Boost\boost\asio\ssl\host_name_verification.hpp" />
     <ClInclude Include="Boost\boost\asio\ssl\impl\context.hpp" />
-    <ClInclude Include="Boost\boost\asio\ssl\impl\context.ipp" />
-    <ClInclude Include="Boost\boost\asio\ssl\impl\error.ipp" />
-    <ClInclude Include="Boost\boost\asio\ssl\impl\host_name_verification.ipp" />
-    <ClInclude Include="Boost\boost\asio\ssl\impl\rfc2818_verification.ipp" />
     <ClInclude Include="Boost\boost\asio\ssl\impl\src.hpp" />
     <ClInclude Include="Boost\boost\asio\ssl\rfc2818_verification.hpp" />
     <ClInclude Include="Boost\boost\asio\ssl\stream.hpp" />
@@ -1335,7 +1239,6 @@
     <ClInclude Include="Boost\boost\beast\core\detail\allocator.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\async_base.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\base64.hpp" />
-    <ClInclude Include="Boost\boost\beast\core\detail\base64.ipp" />
     <ClInclude Include="Boost\boost\beast\core\detail\bind_continuation.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\bind_default_executor.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\bind_handler.hpp" />
@@ -1352,7 +1255,6 @@
     <ClInclude Include="Boost\boost\beast\core\detail\flat_stream.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\get_io_context.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\impl\read.hpp" />
-    <ClInclude Include="Boost\boost\beast\core\detail\impl\temporary_buffer.ipp" />
     <ClInclude Include="Boost\boost\beast\core\detail\is_invocable.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\ostream.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\pcg.hpp" />
@@ -1360,7 +1262,6 @@
     <ClInclude Include="Boost\boost\beast\core\detail\remap_post_to_defer.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\service_base.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\sha1.hpp" />
-    <ClInclude Include="Boost\boost\beast\core\detail\sha1.ipp" />
     <ClInclude Include="Boost\boost\beast\core\detail\static_const.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\static_ostream.hpp" />
     <ClInclude Include="Boost\boost\beast\core\detail\static_string.hpp" />
@@ -1392,22 +1293,14 @@
     <ClInclude Include="Boost\boost\beast\core\impl\buffers_prefix.hpp" />
     <ClInclude Include="Boost\boost\beast\core\impl\buffers_suffix.hpp" />
     <ClInclude Include="Boost\boost\beast\core\impl\error.hpp" />
-    <ClInclude Include="Boost\boost\beast\core\impl\error.ipp" />
-    <ClInclude Include="Boost\boost\beast\core\impl\file_posix.ipp" />
-    <ClInclude Include="Boost\boost\beast\core\impl\file_stdio.ipp" />
-    <ClInclude Include="Boost\boost\beast\core\impl\file_win32.ipp" />
     <ClInclude Include="Boost\boost\beast\core\impl\flat_buffer.hpp" />
     <ClInclude Include="Boost\boost\beast\core\impl\flat_static_buffer.hpp" />
-    <ClInclude Include="Boost\boost\beast\core\impl\flat_static_buffer.ipp" />
     <ClInclude Include="Boost\boost\beast\core\impl\flat_stream.hpp" />
     <ClInclude Include="Boost\boost\beast\core\impl\multi_buffer.hpp" />
     <ClInclude Include="Boost\boost\beast\core\impl\read_size.hpp" />
     <ClInclude Include="Boost\boost\beast\core\impl\saved_handler.hpp" />
-    <ClInclude Include="Boost\boost\beast\core\impl\saved_handler.ipp" />
     <ClInclude Include="Boost\boost\beast\core\impl\static_buffer.hpp" />
-    <ClInclude Include="Boost\boost\beast\core\impl\static_buffer.ipp" />
     <ClInclude Include="Boost\boost\beast\core\impl\static_string.hpp" />
-    <ClInclude Include="Boost\boost\beast\core\impl\string.ipp" />
     <ClInclude Include="Boost\boost\beast\core\impl\string_param.hpp" />
     <ClInclude Include="Boost\boost\beast\core\make_printable.hpp" />
     <ClInclude Include="Boost\boost\beast\core\multi_buffer.hpp" />
@@ -1432,10 +1325,8 @@
     <ClInclude Include="Boost\boost\beast\http\chunk_encode.hpp" />
     <ClInclude Include="Boost\boost\beast\http\detail\basic_parsed_list.hpp" />
     <ClInclude Include="Boost\boost\beast\http\detail\basic_parser.hpp" />
-    <ClInclude Include="Boost\boost\beast\http\detail\basic_parser.ipp" />
     <ClInclude Include="Boost\boost\beast\http\detail\chunk_encode.hpp" />
     <ClInclude Include="Boost\boost\beast\http\detail\rfc7230.hpp" />
-    <ClInclude Include="Boost\boost\beast\http\detail\rfc7230.ipp" />
     <ClInclude Include="Boost\boost\beast\http\detail\type_traits.hpp" />
     <ClInclude Include="Boost\boost\beast\http\dynamic_body.hpp" />
     <ClInclude Include="Boost\boost\beast\http\empty_body.hpp" />
@@ -1444,22 +1335,15 @@
     <ClInclude Include="Boost\boost\beast\http\fields.hpp" />
     <ClInclude Include="Boost\boost\beast\http\file_body.hpp" />
     <ClInclude Include="Boost\boost\beast\http\impl\basic_parser.hpp" />
-    <ClInclude Include="Boost\boost\beast\http\impl\basic_parser.ipp" />
     <ClInclude Include="Boost\boost\beast\http\impl\chunk_encode.hpp" />
     <ClInclude Include="Boost\boost\beast\http\impl\error.hpp" />
-    <ClInclude Include="Boost\boost\beast\http\impl\error.ipp" />
-    <ClInclude Include="Boost\boost\beast\http\impl\field.ipp" />
     <ClInclude Include="Boost\boost\beast\http\impl\fields.hpp" />
-    <ClInclude Include="Boost\boost\beast\http\impl\fields.ipp" />
     <ClInclude Include="Boost\boost\beast\http\impl\file_body_win32.hpp" />
     <ClInclude Include="Boost\boost\beast\http\impl\message.hpp" />
     <ClInclude Include="Boost\boost\beast\http\impl\parser.hpp" />
     <ClInclude Include="Boost\boost\beast\http\impl\read.hpp" />
     <ClInclude Include="Boost\boost\beast\http\impl\rfc7230.hpp" />
-    <ClInclude Include="Boost\boost\beast\http\impl\rfc7230.ipp" />
     <ClInclude Include="Boost\boost\beast\http\impl\serializer.hpp" />
-    <ClInclude Include="Boost\boost\beast\http\impl\status.ipp" />
-    <ClInclude Include="Boost\boost\beast\http\impl\verb.ipp" />
     <ClInclude Include="Boost\boost\beast\http\impl\write.hpp" />
     <ClInclude Include="Boost\boost\beast\http\message.hpp" />
     <ClInclude Include="Boost\boost\beast\http\parser.hpp" />
@@ -1481,25 +1365,18 @@
     <ClInclude Include="Boost\boost\beast\websocket\detail\decorator.hpp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\frame.hpp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\hybi13.hpp" />
-    <ClInclude Include="Boost\boost\beast\websocket\detail\hybi13.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\impl_base.hpp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\mask.hpp" />
-    <ClInclude Include="Boost\boost\beast\websocket\detail\mask.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\pmd_extension.hpp" />
-    <ClInclude Include="Boost\boost\beast\websocket\detail\pmd_extension.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\prng.hpp" />
-    <ClInclude Include="Boost\boost\beast\websocket\detail\prng.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\service.hpp" />
-    <ClInclude Include="Boost\boost\beast\websocket\detail\service.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\soft_mutex.hpp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\type_traits.hpp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\utf8_checker.hpp" />
-    <ClInclude Include="Boost\boost\beast\websocket\detail\utf8_checker.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\error.hpp" />
     <ClInclude Include="Boost\boost\beast\websocket\impl\accept.hpp" />
     <ClInclude Include="Boost\boost\beast\websocket\impl\close.hpp" />
     <ClInclude Include="Boost\boost\beast\websocket\impl\error.hpp" />
-    <ClInclude Include="Boost\boost\beast\websocket\impl\error.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\impl\handshake.hpp" />
     <ClInclude Include="Boost\boost\beast\websocket\impl\ping.hpp" />
     <ClInclude Include="Boost\boost\beast\websocket\impl\read.hpp" />
@@ -1520,35 +1397,27 @@
     <ClInclude Include="Boost\boost\beast\zlib\deflate_stream.hpp" />
     <ClInclude Include="Boost\boost\beast\zlib\detail\bitstream.hpp" />
     <ClInclude Include="Boost\boost\beast\zlib\detail\deflate_stream.hpp" />
-    <ClInclude Include="Boost\boost\beast\zlib\detail\deflate_stream.ipp" />
     <ClInclude Include="Boost\boost\beast\zlib\detail\inflate_stream.hpp" />
-    <ClInclude Include="Boost\boost\beast\zlib\detail\inflate_stream.ipp" />
     <ClInclude Include="Boost\boost\beast\zlib\detail\ranges.hpp" />
     <ClInclude Include="Boost\boost\beast\zlib\detail\window.hpp" />
     <ClInclude Include="Boost\boost\beast\zlib\error.hpp" />
     <ClInclude Include="Boost\boost\beast\zlib\impl\error.hpp" />
-    <ClInclude Include="Boost\boost\beast\zlib\impl\error.ipp" />
     <ClInclude Include="Boost\boost\beast\zlib\inflate_stream.hpp" />
     <ClInclude Include="Boost\boost\beast\zlib\zlib.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\http\icy_stream.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\http\impl\icy_stream.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\test\detail\stream_state.hpp" />
-    <ClInclude Include="Boost\boost\beast\_experimental\test\detail\stream_state.ipp" />
     <ClInclude Include="Boost\boost\beast\_experimental\test\error.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\test\fail_count.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\test\handler.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\test\impl\error.hpp" />
-    <ClInclude Include="Boost\boost\beast\_experimental\test\impl\error.ipp" />
-    <ClInclude Include="Boost\boost\beast\_experimental\test\impl\fail_count.ipp" />
     <ClInclude Include="Boost\boost\beast\_experimental\test\impl\stream.hpp" />
-    <ClInclude Include="Boost\boost\beast\_experimental\test\impl\stream.ipp" />
     <ClInclude Include="Boost\boost\beast\_experimental\test\stream.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\test\tcp.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\unit_test\amount.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\unit_test\detail\const_container.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\unit_test\dstream.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\unit_test\global_suites.hpp" />
-    <ClInclude Include="Boost\boost\beast\_experimental\unit_test\main.ipp" />
     <ClInclude Include="Boost\boost\beast\_experimental\unit_test\match.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\unit_test\recorder.hpp" />
     <ClInclude Include="Boost\boost\beast\_experimental\unit_test\reporter.hpp" />
@@ -2476,17 +2345,12 @@
     <ClInclude Include="Boost\boost\coroutine2\coroutine.hpp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\config.hpp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\coroutine.hpp" />
-    <ClInclude Include="Boost\boost\coroutine2\detail\create_control_block.ipp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\decay_copy.hpp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\disable_overload.hpp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\pull_control_block_cc.hpp" />
-    <ClInclude Include="Boost\boost\coroutine2\detail\pull_control_block_cc.ipp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\pull_coroutine.hpp" />
-    <ClInclude Include="Boost\boost\coroutine2\detail\pull_coroutine.ipp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\push_control_block_cc.hpp" />
-    <ClInclude Include="Boost\boost\coroutine2\detail\push_control_block_cc.ipp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\push_coroutine.hpp" />
-    <ClInclude Include="Boost\boost\coroutine2\detail\push_coroutine.ipp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\state.hpp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\wrap.hpp" />
     <ClInclude Include="Boost\boost\coroutine2\fixedsize_stack.hpp" />
@@ -2583,7 +2447,6 @@
     <ClInclude Include="Boost\boost\date_time\gregorian\greg_ymd.hpp" />
     <ClInclude Include="Boost\boost\date_time\gregorian\parsers.hpp" />
     <ClInclude Include="Boost\boost\date_time\gregorian_calendar.hpp" />
-    <ClInclude Include="Boost\boost\date_time\gregorian_calendar.ipp" />
     <ClInclude Include="Boost\boost\date_time\int_adapter.hpp" />
     <ClInclude Include="Boost\boost\date_time\iso_format.hpp" />
     <ClInclude Include="Boost\boost\date_time\locale_config.hpp" />
@@ -2698,7 +2561,6 @@
     <ClInclude Include="Boost\boost\detail\sp_typeinfo.hpp" />
     <ClInclude Include="Boost\boost\detail\templated_streams.hpp" />
     <ClInclude Include="Boost\boost\detail\utf8_codecvt_facet.hpp" />
-    <ClInclude Include="Boost\boost\detail\utf8_codecvt_facet.ipp" />
     <ClInclude Include="Boost\boost\detail\winapi\access_rights.hpp" />
     <ClInclude Include="Boost\boost\detail\winapi\apc.hpp" />
     <ClInclude Include="Boost\boost\detail\winapi\basic_types.hpp" />
@@ -5495,8 +5357,6 @@
     <ClInclude Include="Boost\boost\graph\distributed\depth_first_search.hpp" />
     <ClInclude Include="Boost\boost\graph\distributed\detail\dijkstra_shortest_paths.hpp" />
     <ClInclude Include="Boost\boost\graph\distributed\detail\filtered_queue.hpp" />
-    <ClInclude Include="Boost\boost\graph\distributed\detail\mpi_process_group.ipp" />
-    <ClInclude Include="Boost\boost\graph\distributed\detail\queue.ipp" />
     <ClInclude Include="Boost\boost\graph\distributed\detail\remote_update_set.hpp" />
     <ClInclude Include="Boost\boost\graph\distributed\detail\tag_allocator.hpp" />
     <ClInclude Include="Boost\boost\graph\distributed\dijkstra_shortest_paths.hpp" />
@@ -6851,13 +6711,6 @@
     <ClInclude Include="Boost\boost\json\detail\handler.hpp" />
     <ClInclude Include="Boost\boost\json\detail\hash_combine.hpp" />
     <ClInclude Include="Boost\boost\json\detail\impl\array.hpp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\default_resource.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\except.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\format.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\handler.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\shared_resource.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\stack.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\string_impl.ipp" />
     <ClInclude Include="Boost\boost\json\detail\index_sequence.hpp" />
     <ClInclude Include="Boost\boost\json\detail\object.hpp" />
     <ClInclude Include="Boost\boost\json\detail\ryu\detail\common.hpp" />
@@ -6865,7 +6718,6 @@
     <ClInclude Include="Boost\boost\json\detail\ryu\detail\d2s_full_table.hpp" />
     <ClInclude Include="Boost\boost\json\detail\ryu\detail\d2s_intrinsics.hpp" />
     <ClInclude Include="Boost\boost\json\detail\ryu\detail\digit_table.hpp" />
-    <ClInclude Include="Boost\boost\json\detail\ryu\impl\d2s.ipp" />
     <ClInclude Include="Boost\boost\json\detail\ryu\ryu.hpp" />
     <ClInclude Include="Boost\boost\json\detail\shared_resource.hpp" />
     <ClInclude Include="Boost\boost\json\detail\sse2.hpp" />
@@ -6880,26 +6732,10 @@
     <ClInclude Include="Boost\boost\json\error.hpp" />
     <ClInclude Include="Boost\boost\json\fwd.hpp" />
     <ClInclude Include="Boost\boost\json\impl\array.hpp" />
-    <ClInclude Include="Boost\boost\json\impl\array.ipp" />
     <ClInclude Include="Boost\boost\json\impl\error.hpp" />
-    <ClInclude Include="Boost\boost\json\impl\error.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\kind.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\monotonic_resource.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\null_resource.ipp" />
     <ClInclude Include="Boost\boost\json\impl\object.hpp" />
-    <ClInclude Include="Boost\boost\json\impl\object.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\parse.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\parser.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\serialize.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\serializer.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\static_resource.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\stream_parser.ipp" />
     <ClInclude Include="Boost\boost\json\impl\string.hpp" />
-    <ClInclude Include="Boost\boost\json\impl\string.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\value.ipp" />
     <ClInclude Include="Boost\boost\json\impl\value_ref.hpp" />
-    <ClInclude Include="Boost\boost\json\impl\value_ref.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\value_stack.ipp" />
     <ClInclude Include="Boost\boost\json\impl\visit.hpp" />
     <ClInclude Include="Boost\boost\json\kind.hpp" />
     <ClInclude Include="Boost\boost\json\memory_resource.hpp" />
@@ -7564,7 +7400,6 @@
     <ClInclude Include="Boost\boost\math\special_functions\detail\iconv.hpp" />
     <ClInclude Include="Boost\boost\math\special_functions\detail\igamma_inverse.hpp" />
     <ClInclude Include="Boost\boost\math\special_functions\detail\igamma_large.hpp" />
-    <ClInclude Include="Boost\boost\math\special_functions\detail\lambert_w_lookup_table.ipp" />
     <ClInclude Include="Boost\boost\math\special_functions\detail\lanczos_sse2.hpp" />
     <ClInclude Include="Boost\boost\math\special_functions\detail\lgamma_small.hpp" />
     <ClInclude Include="Boost\boost\math\special_functions\detail\polygamma.hpp" />
@@ -7804,7 +7639,6 @@
     <ClInclude Include="Boost\boost\math\tools\user.hpp" />
     <ClInclude Include="Boost\boost\math\tools\workaround.hpp" />
     <ClInclude Include="Boost\boost\math\tr1.hpp" />
-    <ClInclude Include="Boost\boost\math\tr1_c_macros.ipp" />
     <ClInclude Include="Boost\boost\math_fwd.hpp" />
     <ClInclude Include="Boost\boost\memory_order.hpp" />
     <ClInclude Include="Boost\boost\mem_fn.hpp" />
@@ -9354,9 +9188,6 @@
     <ClInclude Include="Boost\boost\msm\mpl_graph\adjacency_list_graph.hpp" />
     <ClInclude Include="Boost\boost\msm\mpl_graph\breadth_first_search.hpp" />
     <ClInclude Include="Boost\boost\msm\mpl_graph\depth_first_search.hpp" />
-    <ClInclude Include="Boost\boost\msm\mpl_graph\detail\adjacency_list_graph.ipp" />
-    <ClInclude Include="Boost\boost\msm\mpl_graph\detail\graph_implementation_interface.ipp" />
-    <ClInclude Include="Boost\boost\msm\mpl_graph\detail\incidence_list_graph.ipp" />
     <ClInclude Include="Boost\boost\msm\mpl_graph\incidence_list_graph.hpp" />
     <ClInclude Include="Boost\boost\msm\mpl_graph\mpl_graph.hpp" />
     <ClInclude Include="Boost\boost\msm\mpl_graph\mpl_utils.hpp" />
@@ -9920,7 +9751,6 @@
     <ClInclude Include="Boost\boost\outcome\detail\basic_result_final.hpp" />
     <ClInclude Include="Boost\boost\outcome\detail\basic_result_storage.hpp" />
     <ClInclude Include="Boost\boost\outcome\detail\basic_result_value_observers.hpp" />
-    <ClInclude Include="Boost\boost\outcome\detail\coroutine_support.ipp" />
     <ClInclude Include="Boost\boost\outcome\detail\revision.hpp" />
     <ClInclude Include="Boost\boost\outcome\detail\trait_std_error_code.hpp" />
     <ClInclude Include="Boost\boost\outcome\detail\trait_std_exception.hpp" />
@@ -9930,9 +9760,6 @@
     <ClInclude Include="Boost\boost\outcome\experimental\result.h" />
     <ClInclude Include="Boost\boost\outcome\experimental\status-code\com_code.hpp" />
     <ClInclude Include="Boost\boost\outcome\experimental\status-code\config.hpp" />
-    <ClInclude Include="Boost\boost\outcome\experimental\status-code\detail\nt_code_to_generic_code.ipp" />
-    <ClInclude Include="Boost\boost\outcome\experimental\status-code\detail\nt_code_to_win32_code.ipp" />
-    <ClInclude Include="Boost\boost\outcome\experimental\status-code\detail\win32_code_to_generic_code.ipp" />
     <ClInclude Include="Boost\boost\outcome\experimental\status-code\error.hpp" />
     <ClInclude Include="Boost\boost\outcome\experimental\status-code\errored_status_code.hpp" />
     <ClInclude Include="Boost\boost\outcome\experimental\status-code\generic_code.hpp" />
@@ -10564,8 +10391,6 @@
     <ClInclude Include="Boost\boost\poly_collection\function_collection_fwd.hpp" />
     <ClInclude Include="Boost\boost\pool\detail\guard.hpp" />
     <ClInclude Include="Boost\boost\pool\detail\mutex.hpp" />
-    <ClInclude Include="Boost\boost\pool\detail\pool_construct.ipp" />
-    <ClInclude Include="Boost\boost\pool\detail\pool_construct_simple.ipp" />
     <ClInclude Include="Boost\boost\pool\object_pool.hpp" />
     <ClInclude Include="Boost\boost\pool\pool.hpp" />
     <ClInclude Include="Boost\boost\pool\poolfwd.hpp" />
@@ -11264,7 +11089,6 @@
     <ClInclude Include="Boost\boost\property_map\parallel\detail\untracked_pair.hpp" />
     <ClInclude Include="Boost\boost\property_map\parallel\distributed_property_map.hpp" />
     <ClInclude Include="Boost\boost\property_map\parallel\global_index_map.hpp" />
-    <ClInclude Include="Boost\boost\property_map\parallel\impl\distributed_property_map.ipp" />
     <ClInclude Include="Boost\boost\property_map\parallel\local_property_map.hpp" />
     <ClInclude Include="Boost\boost\property_map\parallel\parallel_property_maps.hpp" />
     <ClInclude Include="Boost\boost\property_map\parallel\process_group.hpp" />
@@ -11828,7 +11652,6 @@
     <ClInclude Include="Boost\boost\random\detail\int_float_pair.hpp" />
     <ClInclude Include="Boost\boost\random\detail\iterator_mixin.hpp" />
     <ClInclude Include="Boost\boost\random\detail\large_arithmetic.hpp" />
-    <ClInclude Include="Boost\boost\random\detail\mixmax_skip_N17.ipp" />
     <ClInclude Include="Boost\boost\random\detail\niederreiter_base2_table.hpp" />
     <ClInclude Include="Boost\boost\random\detail\operators.hpp" />
     <ClInclude Include="Boost\boost\random\detail\polynomial.hpp" />
@@ -12512,18 +12335,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\directives.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\epsilon.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\exclusive_or.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\alternative.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\difference.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\directives.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\exclusive_or.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\intersection.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\kleene_star.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\list.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\optional.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\positive.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\sequence.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\sequential_and.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\sequential_or.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\intersection.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\kleene_star.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\list.hpp" />
@@ -12535,30 +12346,20 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\sequential_and.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\sequential_or.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\config.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\impl\match.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\impl\match_attr_traits.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\impl\parser.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\match.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\nil.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\grammar.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\impl\grammar.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\impl\object_with_id.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\impl\rule.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\impl\static.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\impl\subrule.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\parser_context.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\parser_id.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\rule.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\subrule.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\subrule_fwd.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\parser.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\primitives\impl\numerics.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\primitives\impl\primitives.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\primitives\numerics.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\primitives\numerics_fwd.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\primitives\primitives.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\safe_bool.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\scanner\impl\skipper.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\scanner\scanner.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\scanner\scanner_fwd.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\scanner\skipper.hpp" />
@@ -12566,16 +12367,12 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\core\typeof.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\debug.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\debug\debug_node.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\debug\impl\parser_names.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\debug\minimal.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\debug\parser_names.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\debug\typeof.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\dynamic.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\for.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\if.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\impl\conditions.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\impl\select.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\impl\switch.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\lazy.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\rule_alias.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\select.hpp" />
@@ -12587,14 +12384,11 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\error_handling.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\error_handling\exceptions.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\error_handling\exceptions_fwd.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\error_handling\impl\exceptions.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\error_handling\typeof.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\iterator.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\iterator\file_iterator.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\iterator\file_iterator_fwd.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\iterator\fixed_size_queue.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\iterator\impl\file_iterator.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\iterator\impl\position_iterator.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\iterator\multi_pass.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\iterator\multi_pass_fwd.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\iterator\position_iterator.hpp" />
@@ -12603,10 +12397,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\meta.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\meta\as_parser.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\meta\fundamental.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\meta\impl\fundamental.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\meta\impl\parser_traits.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\meta\impl\refactoring.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\meta\impl\traverse.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\meta\parser_traits.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\meta\refactoring.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\meta\traverse.hpp" />
@@ -12626,8 +12416,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\phoenix\tuples.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\phoenix\tuple_helpers.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\symbols.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\symbols\impl\symbols.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\symbols\impl\tst.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\symbols\symbols.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\symbols\symbols_fwd.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\symbols\typeof.hpp" />
@@ -12635,8 +12423,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\tree\ast_fwd.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\tree\common.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\tree\common_fwd.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\tree\impl\parse_tree_utils.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\tree\impl\tree_to_xml.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\tree\parse_tree.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\tree\parse_tree_fwd.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\tree\parse_tree_utils.hpp" />
@@ -12655,16 +12441,8 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\utility\functor_parser.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\utility\grammar_def.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\utility\grammar_def_fwd.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset\basic_chset.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset\basic_chset.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset\range_run.hpp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset\range_run.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset_operators.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\confix.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\escape_char.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\lists.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\regex.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\utility\lists.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\utility\lists_fwd.hpp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\utility\loops.hpp" />
@@ -13532,20 +13310,11 @@
     <ClInclude Include="Boost\boost\spirit\version.hpp" />
     <ClInclude Include="Boost\boost\stacktrace.hpp" />
     <ClInclude Include="Boost\boost\stacktrace\detail\addr2line_impls.hpp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\collect_msvc.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\collect_noop.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\collect_unwind.ipp" />
     <ClInclude Include="Boost\boost\stacktrace\detail\frame_decl.hpp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\frame_msvc.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\frame_noop.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\frame_unwind.ipp" />
     <ClInclude Include="Boost\boost\stacktrace\detail\libbacktrace_impls.hpp" />
     <ClInclude Include="Boost\boost\stacktrace\detail\location_from_symbol.hpp" />
     <ClInclude Include="Boost\boost\stacktrace\detail\pop_options.h" />
     <ClInclude Include="Boost\boost\stacktrace\detail\push_options.h" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\safe_dump_noop.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\safe_dump_posix.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\safe_dump_win.ipp" />
     <ClInclude Include="Boost\boost\stacktrace\detail\to_dec_array.hpp" />
     <ClInclude Include="Boost\boost\stacktrace\detail\to_hex_array.hpp" />
     <ClInclude Include="Boost\boost\stacktrace\detail\try_dec_convert.hpp" />
@@ -13668,27 +13437,6 @@
     <ClInclude Include="Boost\boost\test\execution_monitor.hpp" />
     <ClInclude Include="Boost\boost\test\floating_point_comparison.hpp" />
     <ClInclude Include="Boost\boost\test\framework.hpp" />
-    <ClInclude Include="Boost\boost\test\impl\compiler_log_formatter.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\cpp_main.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\debug.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\decorator.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\execution_monitor.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\framework.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\junit_log_formatter.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\plain_report_formatter.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\progress_monitor.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\results_collector.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\results_reporter.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\test_framework_init_observer.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\test_main.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\test_tools.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\test_tree.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\unit_test_log.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\unit_test_main.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\unit_test_monitor.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\unit_test_parameters.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\xml_log_formatter.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\xml_report_formatter.ipp" />
     <ClInclude Include="Boost\boost\test\included\execution_monitor.hpp" />
     <ClInclude Include="Boost\boost\test\included\prg_exec_monitor.hpp" />
     <ClInclude Include="Boost\boost\test\included\test_exec_monitor.hpp" />
@@ -14705,17 +14453,9 @@
     <ClInclude Include="Boost\boost\uuid\detail\config.hpp" />
     <ClInclude Include="Boost\boost\uuid\detail\md5.hpp" />
     <ClInclude Include="Boost\boost\uuid\detail\random_provider.hpp" />
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_arc4random.ipp" />
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_bcrypt.ipp" />
     <ClInclude Include="Boost\boost\uuid\detail\random_provider_detect_platform.hpp" />
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_getentropy.ipp" />
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_getrandom.ipp" />
     <ClInclude Include="Boost\boost\uuid\detail\random_provider_include_platform.hpp" />
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_posix.ipp" />
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_wincrypt.ipp" />
     <ClInclude Include="Boost\boost\uuid\detail\sha1.hpp" />
-    <ClInclude Include="Boost\boost\uuid\detail\uuid_generic.ipp" />
-    <ClInclude Include="Boost\boost\uuid\detail\uuid_x86.ipp" />
     <ClInclude Include="Boost\boost\uuid\entropy_error.hpp" />
     <ClInclude Include="Boost\boost\uuid\name_generator.hpp" />
     <ClInclude Include="Boost\boost\uuid\name_generator_md5.hpp" />
@@ -15133,10 +14873,8 @@
     <ClInclude Include="Boost\boost\xpressive\detail\utility\any.hpp" />
     <ClInclude Include="Boost\boost\xpressive\detail\utility\boyer_moore.hpp" />
     <ClInclude Include="Boost\boost\xpressive\detail\utility\chset\basic_chset.hpp" />
-    <ClInclude Include="Boost\boost\xpressive\detail\utility\chset\basic_chset.ipp" />
     <ClInclude Include="Boost\boost\xpressive\detail\utility\chset\chset.hpp" />
     <ClInclude Include="Boost\boost\xpressive\detail\utility\chset\range_run.hpp" />
-    <ClInclude Include="Boost\boost\xpressive\detail\utility\chset\range_run.ipp" />
     <ClInclude Include="Boost\boost\xpressive\detail\utility\cons.hpp" />
     <ClInclude Include="Boost\boost\xpressive\detail\utility\counted_base.hpp" />
     <ClInclude Include="Boost\boost\xpressive\detail\utility\dont_care.hpp" />
@@ -15235,30 +14973,18 @@
     <ClCompile Include="UncompressQuaternion.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="libfbxsdk.dll">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
-    </Library>
     <None Include="boost.7z" />
     <None Include="Boost\boost\wave\cpplexer\re2clex\cpp_re.inc" />
     <None Include="Boost\boost\wave\cpplexer\re2clex\strict_cpp_re.inc" />
     <None Include="DirectXTex-main.zip" />
     <None Include="lib.7z" />
-    <None Include="packages.config" />
+    <None Include="lib\Debug\zlibwapi.dll">
+      <DeploymentContent>true</DeploymentContent>
+      <FileType>Resx</FileType>
+    </None>
     <None Include="README.md" />
     <None Include="Scene.fbx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="packages\zlib-msvc14-x64.1.2.11.7795\build\native\zlib-msvc14-x64.targets" Condition="Exists('packages\zlib-msvc14-x64.1.2.11.7795\build\native\zlib-msvc14-x64.targets')" />
-  </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('packages\zlib-msvc14-x64.1.2.11.7795\build\native\zlib-msvc14-x64.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\zlib-msvc14-x64.1.2.11.7795\build\native\zlib-msvc14-x64.targets'))" />
-  </Target>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

@@ -19,6 +19,9 @@
     <Filter Include="Source Files\objects">
       <UniqueIdentifier>{b0968ef4-1374-4463-9350-6dfde7470208}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Debug">
+      <UniqueIdentifier>{86e3d6df-946e-4eb2-b2d8-6c99b2d29916}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -855,28 +858,9 @@
     <ClInclude Include="Boost\boost\archive\detail\utf8_codecvt_facet.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\archive\impl\archive_serializer_map.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_binary_iarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_binary_iprimitive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_binary_oarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_binary_oprimitive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_text_iarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_text_iprimitive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_text_oarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_text_oprimitive.ipp" />
     <ClInclude Include="Boost\boost\archive\impl\basic_xml_grammar.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\archive\impl\basic_xml_iarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\basic_xml_oarchive.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\text_iarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\text_oarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\text_wiarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\text_woarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\xml_iarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\xml_oarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\xml_wiarchive_impl.ipp" />
-    <ClInclude Include="Boost\boost\archive\impl\xml_woarchive_impl.ipp" />
     <ClInclude Include="Boost\boost\archive\iterators\base64_exception.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1063,83 +1047,36 @@
     <ClInclude Include="Boost\boost\archive\xml_woarchive.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\detail\impl\buffer_sequence_adapter.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\descriptor_ops.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\dev_poll_reactor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\detail\impl\dev_poll_reactor.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\epoll_reactor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\detail\impl\epoll_reactor.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\eventfd_select_interrupter.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\handler_tracking.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\io_uring_descriptor_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\io_uring_file_service.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\io_uring_service.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\detail\impl\io_uring_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\io_uring_socket_service_base.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\kqueue_reactor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\detail\impl\kqueue_reactor.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\null_event.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\pipe_select_interrupter.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\posix_event.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\posix_mutex.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\posix_serial_port_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\posix_thread.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\posix_tss_ptr.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\reactive_descriptor_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\reactive_socket_service_base.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\resolver_service_base.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\scheduler.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\select_reactor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\detail\impl\select_reactor.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\service_registry.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\detail\impl\service_registry.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\signal_set_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\socket_ops.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\socket_select_interrupter.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\strand_executor_service.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\detail\impl\strand_executor_service.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\strand_service.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\detail\impl\strand_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\thread_context.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\throw_error.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\timer_queue_ptime.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\timer_queue_set.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_event.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_file_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_handle_service.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_io_context.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_io_context.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_serial_port_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_iocp_socket_service_base.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_mutex.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_object_handle_service.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_static_mutex.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_thread.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\win_tss_ptr.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\winrt_ssocket_service_base.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\impl\winrt_timer_scheduler.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\detail\impl\winrt_timer_scheduler.ipp" />
-    <ClInclude Include="Boost\boost\asio\detail\impl\winsock_init.ipp" />
     <ClInclude Include="Boost\boost\asio\detail\array.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1833,8 +1770,6 @@
     <ClInclude Include="Boost\boost\asio\execution\detail\void_receiver.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\execution\impl\bad_executor.ipp" />
-    <ClInclude Include="Boost\boost\asio\execution\impl\receiver_invocation_error.ipp" />
     <ClInclude Include="Boost\boost\asio\execution\allocator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1970,7 +1905,6 @@
     <ClInclude Include="Boost\boost\asio\experimental\impl\as_tuple.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\experimental\impl\channel_error.ipp" />
     <ClInclude Include="Boost\boost\asio\experimental\impl\coro.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2046,7 +1980,6 @@
     <ClInclude Include="Boost\boost\asio\experimental\use_coro.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\generic\detail\impl\endpoint.ipp" />
     <ClInclude Include="Boost\boost\asio\generic\detail\endpoint.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2065,7 +1998,6 @@
     <ClInclude Include="Boost\boost\asio\generic\stream_protocol.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\impl\any_io_executor.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\awaitable.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2075,7 +2007,6 @@
     <ClInclude Include="Boost\boost\asio\impl\buffered_write_stream.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\impl\cancellation_signal.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\co_spawn.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2088,7 +2019,6 @@
     <ClInclude Include="Boost\boost\asio\impl\connect_pipe.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\impl\connect_pipe.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\defer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2098,21 +2028,15 @@
     <ClInclude Include="Boost\boost\asio\impl\dispatch.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\impl\error.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\execution_context.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\impl\execution_context.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\executor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\impl\executor.ipp" />
-    <ClInclude Include="Boost\boost\asio\impl\handler_alloc_hook.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\io_context.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\impl\io_context.ipp" />
-    <ClInclude Include="Boost\boost\asio\impl\multiple_exceptions.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\post.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2131,7 +2055,6 @@
     <ClInclude Include="Boost\boost\asio\impl\serial_port_base.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\impl\serial_port_base.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\spawn.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2141,14 +2064,12 @@
     <ClInclude Include="Boost\boost\asio\impl\system_context.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\impl\system_context.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\system_executor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Boost\boost\asio\impl\thread_pool.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\impl\thread_pool.ipp" />
     <ClInclude Include="Boost\boost\asio\impl\use_awaitable.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2161,7 +2082,6 @@
     <ClInclude Include="Boost\boost\asio\impl\write_at.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\ip\detail\impl\endpoint.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\detail\endpoint.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2171,27 +2091,21 @@
     <ClInclude Include="Boost\boost\asio\ip\impl\address.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\ip\impl\address.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\impl\address_v4.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\ip\impl\address_v4.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\impl\address_v6.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\ip\impl\address_v6.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\impl\basic_endpoint.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\ip\impl\host_name.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\impl\network_v4.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\ip\impl\network_v4.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\impl\network_v6.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\ip\impl\network_v6.ipp" />
     <ClInclude Include="Boost\boost\asio\ip\address.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2267,7 +2181,6 @@
     <ClInclude Include="Boost\boost\asio\ip\v6_only.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\local\detail\impl\endpoint.ipp" />
     <ClInclude Include="Boost\boost\asio\local\detail\endpoint.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2298,8 +2211,6 @@
     <ClInclude Include="Boost\boost\asio\posix\stream_descriptor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\ssl\detail\impl\engine.ipp" />
-    <ClInclude Include="Boost\boost\asio\ssl\detail\impl\openssl_init.ipp" />
     <ClInclude Include="Boost\boost\asio\ssl\detail\buffered_handshake_op.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2339,10 +2250,6 @@
     <ClInclude Include="Boost\boost\asio\ssl\impl\context.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\asio\ssl\impl\context.ipp" />
-    <ClInclude Include="Boost\boost\asio\ssl\impl\error.ipp" />
-    <ClInclude Include="Boost\boost\asio\ssl\impl\host_name_verification.ipp" />
-    <ClInclude Include="Boost\boost\asio\ssl\impl\rfc2818_verification.ipp" />
     <ClInclude Include="Boost\boost\asio\ssl\impl\src.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3336,16 +3243,12 @@
     <ClInclude Include="Boost\boost\beast\_experimental\test\detail\stream_state.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\_experimental\test\detail\stream_state.ipp" />
     <ClInclude Include="Boost\boost\beast\_experimental\test\impl\error.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\_experimental\test\impl\error.ipp" />
-    <ClInclude Include="Boost\boost\beast\_experimental\test\impl\fail_count.ipp" />
     <ClInclude Include="Boost\boost\beast\_experimental\test\impl\stream.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\_experimental\test\impl\stream.ipp" />
     <ClInclude Include="Boost\boost\beast\_experimental\test\error.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3373,7 +3276,6 @@
     <ClInclude Include="Boost\boost\beast\_experimental\unit_test\global_suites.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\_experimental\unit_test\main.ipp" />
     <ClInclude Include="Boost\boost\beast\_experimental\unit_test\match.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3401,7 +3303,6 @@
     <ClInclude Include="Boost\boost\beast\core\detail\impl\read.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\core\detail\impl\temporary_buffer.ipp" />
     <ClInclude Include="Boost\boost\beast\core\detail\allocator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3411,7 +3312,6 @@
     <ClInclude Include="Boost\boost\beast\core\detail\base64.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\core\detail\base64.ipp" />
     <ClInclude Include="Boost\boost\beast\core\detail\bind_continuation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3478,7 +3378,6 @@
     <ClInclude Include="Boost\boost\beast\core\detail\sha1.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\core\detail\sha1.ipp" />
     <ClInclude Include="Boost\boost\beast\core\detail\static_const.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3542,17 +3441,12 @@
     <ClInclude Include="Boost\boost\beast\core\impl\error.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\core\impl\error.ipp" />
-    <ClInclude Include="Boost\boost\beast\core\impl\file_posix.ipp" />
-    <ClInclude Include="Boost\boost\beast\core\impl\file_stdio.ipp" />
-    <ClInclude Include="Boost\boost\beast\core\impl\file_win32.ipp" />
     <ClInclude Include="Boost\boost\beast\core\impl\flat_buffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Boost\boost\beast\core\impl\flat_static_buffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\core\impl\flat_static_buffer.ipp" />
     <ClInclude Include="Boost\boost\beast\core\impl\flat_stream.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3565,15 +3459,12 @@
     <ClInclude Include="Boost\boost\beast\core\impl\saved_handler.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\core\impl\saved_handler.ipp" />
     <ClInclude Include="Boost\boost\beast\core\impl\static_buffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\core\impl\static_buffer.ipp" />
     <ClInclude Include="Boost\boost\beast\core\impl\static_string.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\core\impl\string.ipp" />
     <ClInclude Include="Boost\boost\beast\core\impl\string_param.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3691,33 +3582,27 @@
     <ClInclude Include="Boost\boost\beast\http\detail\basic_parser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\http\detail\basic_parser.ipp" />
     <ClInclude Include="Boost\boost\beast\http\detail\chunk_encode.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Boost\boost\beast\http\detail\rfc7230.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\http\detail\rfc7230.ipp" />
     <ClInclude Include="Boost\boost\beast\http\detail\type_traits.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Boost\boost\beast\http\impl\basic_parser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\http\impl\basic_parser.ipp" />
     <ClInclude Include="Boost\boost\beast\http\impl\chunk_encode.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Boost\boost\beast\http\impl\error.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\http\impl\error.ipp" />
-    <ClInclude Include="Boost\boost\beast\http\impl\field.ipp" />
     <ClInclude Include="Boost\boost\beast\http\impl\fields.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\http\impl\fields.ipp" />
     <ClInclude Include="Boost\boost\beast\http\impl\file_body_win32.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3733,12 +3618,9 @@
     <ClInclude Include="Boost\boost\beast\http\impl\rfc7230.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\http\impl\rfc7230.ipp" />
     <ClInclude Include="Boost\boost\beast\http\impl\serializer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\http\impl\status.ipp" />
-    <ClInclude Include="Boost\boost\beast\http\impl\verb.ipp" />
     <ClInclude Include="Boost\boost\beast\http\impl\write.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3823,26 +3705,21 @@
     <ClInclude Include="Boost\boost\beast\websocket\detail\hybi13.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\websocket\detail\hybi13.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\impl_base.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Boost\boost\beast\websocket\detail\mask.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\websocket\detail\mask.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\pmd_extension.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\websocket\detail\pmd_extension.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\prng.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\websocket\detail\prng.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\service.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\websocket\detail\service.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\detail\soft_mutex.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3852,7 +3729,6 @@
     <ClInclude Include="Boost\boost\beast\websocket\detail\utf8_checker.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\websocket\detail\utf8_checker.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\impl\accept.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3862,7 +3738,6 @@
     <ClInclude Include="Boost\boost\beast\websocket\impl\error.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\websocket\impl\error.ipp" />
     <ClInclude Include="Boost\boost\beast\websocket\impl\handshake.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3920,11 +3795,9 @@
     <ClInclude Include="Boost\boost\beast\zlib\detail\deflate_stream.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\zlib\detail\deflate_stream.ipp" />
     <ClInclude Include="Boost\boost\beast\zlib\detail\inflate_stream.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\zlib\detail\inflate_stream.ipp" />
     <ClInclude Include="Boost\boost\beast\zlib\detail\ranges.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3934,7 +3807,6 @@
     <ClInclude Include="Boost\boost\beast\zlib\impl\error.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\beast\zlib\impl\error.ipp" />
     <ClInclude Include="Boost\boost\beast\zlib\deflate_stream.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -6767,7 +6639,6 @@
     <ClInclude Include="Boost\boost\coroutine2\detail\coroutine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\coroutine2\detail\create_control_block.ipp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\decay_copy.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -6777,19 +6648,15 @@
     <ClInclude Include="Boost\boost\coroutine2\detail\pull_control_block_cc.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\coroutine2\detail\pull_control_block_cc.ipp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\pull_coroutine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\coroutine2\detail\pull_coroutine.ipp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\push_control_block_cc.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\coroutine2\detail\push_control_block_cc.ipp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\push_coroutine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\coroutine2\detail\push_coroutine.ipp" />
     <ClInclude Include="Boost\boost\coroutine2\detail\state.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -7027,7 +6894,6 @@
     <ClInclude Include="Boost\boost\date_time\gregorian_calendar.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\date_time\gregorian_calendar.ipp" />
     <ClInclude Include="Boost\boost\date_time\int_adapter.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -7463,7 +7329,6 @@
     <ClInclude Include="Boost\boost\detail\utf8_codecvt_facet.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\detail\utf8_codecvt_facet.ipp" />
     <ClInclude Include="Boost\boost\detail\workaround.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -15480,8 +15345,6 @@
     <ClInclude Include="Boost\boost\graph\distributed\detail\filtered_queue.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\graph\distributed\detail\mpi_process_group.ipp" />
-    <ClInclude Include="Boost\boost\graph\distributed\detail\queue.ipp" />
     <ClInclude Include="Boost\boost\graph\distributed\detail\remote_update_set.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -19607,13 +19470,6 @@
     <ClInclude Include="Boost\boost\json\detail\impl\array.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\json\detail\impl\default_resource.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\except.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\format.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\handler.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\shared_resource.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\stack.ipp" />
-    <ClInclude Include="Boost\boost\json\detail\impl\string_impl.ipp" />
     <ClInclude Include="Boost\boost\json\detail\ryu\detail\common.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -19629,7 +19485,6 @@
     <ClInclude Include="Boost\boost\json\detail\ryu\detail\digit_table.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\json\detail\ryu\impl\d2s.ipp" />
     <ClInclude Include="Boost\boost\json\detail\ryu\ryu.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -19702,34 +19557,18 @@
     <ClInclude Include="Boost\boost\json\impl\array.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\json\impl\array.ipp" />
     <ClInclude Include="Boost\boost\json\impl\error.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\json\impl\error.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\kind.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\monotonic_resource.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\null_resource.ipp" />
     <ClInclude Include="Boost\boost\json\impl\object.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\json\impl\object.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\parse.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\parser.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\serialize.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\serializer.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\static_resource.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\stream_parser.ipp" />
     <ClInclude Include="Boost\boost\json\impl\string.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\json\impl\string.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\value.ipp" />
     <ClInclude Include="Boost\boost\json\impl\value_ref.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\json\impl\value_ref.ipp" />
-    <ClInclude Include="Boost\boost\json\impl\value_stack.ipp" />
     <ClInclude Include="Boost\boost\json\impl\visit.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -21635,7 +21474,6 @@
     <ClInclude Include="Boost\boost\math\special_functions\detail\igamma_large.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\math\special_functions\detail\lambert_w_lookup_table.ipp" />
     <ClInclude Include="Boost\boost\math\special_functions\detail\lanczos_sse2.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -22428,7 +22266,6 @@
     <ClInclude Include="Boost\boost\math\tr1.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\math\tr1_c_macros.ipp" />
     <ClInclude Include="Boost\boost\metaparse\error\digit_expected.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -27040,9 +26877,6 @@
     <ClInclude Include="Boost\boost\msm\front\states.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\msm\mpl_graph\detail\adjacency_list_graph.ipp" />
-    <ClInclude Include="Boost\boost\msm\mpl_graph\detail\graph_implementation_interface.ipp" />
-    <ClInclude Include="Boost\boost\msm\mpl_graph\detail\incidence_list_graph.ipp" />
     <ClInclude Include="Boost\boost\msm\mpl_graph\adjacency_list_graph.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -28687,7 +28521,6 @@
     <ClInclude Include="Boost\boost\outcome\detail\basic_result_value_observers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\outcome\detail\coroutine_support.ipp" />
     <ClInclude Include="Boost\boost\outcome\detail\revision.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -28703,9 +28536,6 @@
     <ClInclude Include="Boost\boost\outcome\detail\version.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\outcome\experimental\status-code\detail\nt_code_to_generic_code.ipp" />
-    <ClInclude Include="Boost\boost\outcome\experimental\status-code\detail\nt_code_to_win32_code.ipp" />
-    <ClInclude Include="Boost\boost\outcome\experimental\status-code\detail\win32_code_to_generic_code.ipp" />
     <ClInclude Include="Boost\boost\outcome\experimental\status-code\com_code.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -30611,8 +30441,6 @@
     <ClInclude Include="Boost\boost\pool\detail\mutex.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\pool\detail\pool_construct.ipp" />
-    <ClInclude Include="Boost\boost\pool\detail\pool_construct_simple.ipp" />
     <ClInclude Include="Boost\boost\pool\object_pool.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -32671,7 +32499,6 @@
     <ClInclude Include="Boost\boost\property_map\parallel\detail\untracked_pair.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\property_map\parallel\impl\distributed_property_map.ipp" />
     <ClInclude Include="Boost\boost\property_map\parallel\basic_reduce.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -34352,7 +34179,6 @@
     <ClInclude Include="Boost\boost\random\detail\large_arithmetic.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\random\detail\mixmax_skip_N17.ipp" />
     <ClInclude Include="Boost\boost\random\detail\niederreiter_base2_table.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36336,18 +36162,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\attribute\typeof.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\alternative.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\difference.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\directives.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\exclusive_or.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\intersection.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\kleene_star.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\list.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\optional.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\positive.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\sequence.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\sequential_and.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\impl\sequential_or.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\actions.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36399,16 +36213,9 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\core\composite\sequential_or.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\impl\match.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\impl\match_attr_traits.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\impl\parser.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\impl\grammar.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\impl\object_with_id.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\impl\rule.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\impl\static.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\impl\subrule.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\grammar.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36427,8 +36234,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\core\non_terminal\subrule_fwd.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\primitives\impl\numerics.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\primitives\impl\primitives.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\primitives\numerics.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36438,7 +36243,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\core\primitives\primitives.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\core\scanner\impl\skipper.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\core\scanner\scanner.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36472,7 +36276,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\core\typeof.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\debug\impl\parser_names.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\debug\debug_node.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36485,9 +36288,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\debug\typeof.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\impl\conditions.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\impl\select.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\impl\switch.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\for.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36518,7 +36318,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\dynamic\while.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\error_handling\impl\exceptions.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\error_handling\exceptions.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36528,8 +36327,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\error_handling\typeof.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\iterator\impl\file_iterator.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\iterator\impl\position_iterator.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\iterator\file_iterator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36554,10 +36351,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\iterator\typeof.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\meta\impl\fundamental.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\meta\impl\parser_traits.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\meta\impl\refactoring.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\meta\impl\traverse.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\meta\as_parser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36612,8 +36405,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\phoenix\tuples.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\symbols\impl\symbols.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\symbols\impl\tst.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\symbols\symbols.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36623,8 +36414,6 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\symbols\typeof.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\tree\impl\parse_tree_utils.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\tree\impl\tree_to_xml.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\tree\ast.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36655,17 +36444,9 @@
     <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset\basic_chset.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset\basic_chset.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset\range_run.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset\range_run.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\chset_operators.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\confix.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\escape_char.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\lists.ipp" />
-    <ClInclude Include="Boost\boost\spirit\home\classic\utility\impl\regex.ipp" />
     <ClInclude Include="Boost\boost\spirit\home\classic\utility\chset.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -39339,15 +39120,9 @@
     <ClInclude Include="Boost\boost\stacktrace\detail\addr2line_impls.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\stacktrace\detail\collect_msvc.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\collect_noop.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\collect_unwind.ipp" />
     <ClInclude Include="Boost\boost\stacktrace\detail\frame_decl.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\stacktrace\detail\frame_msvc.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\frame_noop.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\frame_unwind.ipp" />
     <ClInclude Include="Boost\boost\stacktrace\detail\libbacktrace_impls.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -39360,9 +39135,6 @@
     <ClInclude Include="Boost\boost\stacktrace\detail\push_options.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\stacktrace\detail\safe_dump_noop.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\safe_dump_posix.ipp" />
-    <ClInclude Include="Boost\boost\stacktrace\detail\safe_dump_win.ipp" />
     <ClInclude Include="Boost\boost\stacktrace\detail\to_dec_array.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -39699,27 +39471,6 @@
     <ClInclude Include="Boost\boost\test\detail\throw_exception.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\test\impl\compiler_log_formatter.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\cpp_main.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\debug.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\decorator.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\execution_monitor.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\framework.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\junit_log_formatter.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\plain_report_formatter.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\progress_monitor.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\results_collector.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\results_reporter.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\test_framework_init_observer.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\test_main.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\test_tools.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\test_tree.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\unit_test_log.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\unit_test_main.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\unit_test_monitor.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\unit_test_parameters.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\xml_log_formatter.ipp" />
-    <ClInclude Include="Boost\boost\test\impl\xml_report_formatter.ipp" />
     <ClInclude Include="Boost\boost\test\included\execution_monitor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -42747,23 +42498,15 @@
     <ClInclude Include="Boost\boost\uuid\detail\random_provider.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_arc4random.ipp" />
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_bcrypt.ipp" />
     <ClInclude Include="Boost\boost\uuid\detail\random_provider_detect_platform.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_getentropy.ipp" />
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_getrandom.ipp" />
     <ClInclude Include="Boost\boost\uuid\detail\random_provider_include_platform.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_posix.ipp" />
-    <ClInclude Include="Boost\boost\uuid\detail\random_provider_wincrypt.ipp" />
     <ClInclude Include="Boost\boost\uuid\detail\sha1.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\uuid\detail\uuid_generic.ipp" />
-    <ClInclude Include="Boost\boost\uuid\detail\uuid_x86.ipp" />
     <ClInclude Include="Boost\boost\uuid\basic_name_generator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -43985,14 +43728,12 @@
     <ClInclude Include="Boost\boost\xpressive\detail\utility\chset\basic_chset.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\xpressive\detail\utility\chset\basic_chset.ipp" />
     <ClInclude Include="Boost\boost\xpressive\detail\utility\chset\chset.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Boost\boost\xpressive\detail\utility\chset\range_run.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Boost\boost\xpressive\detail\utility\chset\range_run.ipp" />
     <ClInclude Include="Boost\boost\xpressive\detail\utility\algorithm.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -44667,7 +44408,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Scene.fbx" />
-    <None Include="packages.config" />
     <None Include="DirectXTex-main.zip" />
     <None Include="boost.7z" />
     <None Include="README.md" />
@@ -44678,8 +44418,8 @@
     <None Include="Boost\boost\wave\cpplexer\re2clex\strict_cpp_re.inc">
       <Filter>Header Files</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="libfbxsdk.dll" />
+    <None Include="lib\Debug\zlibwapi.dll">
+      <Filter>Debug</Filter>
+    </None>
   </ItemGroup>
 </Project>
