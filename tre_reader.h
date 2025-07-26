@@ -8,6 +8,7 @@ namespace Tre_navigator
   {
   public:
     Tre_reader(const std::string &filename);
+    ~Tre_reader(); // Explicit destructor for proper cleanup
 
     const std::string& get_archive_name() { return m_filename; }
     uint32_t get_resource_count() { return m_header.resource_count; }

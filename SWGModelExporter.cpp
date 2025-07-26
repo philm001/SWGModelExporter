@@ -42,6 +42,41 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::string output_pathname;
 	bool overwriteResult = true;
 
+#ifdef _DEBUG
+	// Debug mode: Use hardcoded values for development
+	swg_path = "C:\\SWG";
+	output_pathname = "C:\\extraction";
+	
+	// Uncomment one of these lines for testing different objects:
+	/* These animations have known bugs and will not export correctly */
+	//object_name = "dress_s06_f.sat";// bug here
+	//object_name = "bikini_s01_f.sat";// This one still has issue
+	
+	/* These animations export. However, the animations themselves have a couple of minor bugs (all animations do) */
+	//object_name = "bageraset.sat";
+	//object_name = "acklay.sat";
+	//object_name = "krayt_dragon.sat";
+	//object_name = "bantha_hue.sat"; // bone rotation 4th one
+	
+	/* For testing static meshes, test each of these 3 */
+	object_name = "asteroid_acid_large_s01.apt"; // For apt parsing
+	//object_name = "asteroid_acid_large_s01_l0.msh"; // Simple case
+	//object_name = "bunker_mine_car_s01_l0.msh"; // Has multiple shaders + DOT3
+	//object_name = "door_jabba_backdoor.msh"; // Has multiple shaders + DOT3 + 32 bit indicies for index
+	
+	/* Test for pob */
+	//object_name = "thm_corl_skyskraper_s01.pob";
+
+	/* Example for batch mode */
+	//object_name = "batch:pob";
+	
+	std::cout << "Debug Mode - Using hardcoded values:" << std::endl;
+	std::cout << "SWG Path: " << swg_path << std::endl;
+	std::cout << "Output Path: " << output_pathname << std::endl;
+	std::cout << "Object: " << object_name << std::endl;
+	std::cout << std::endl;
+#else
+	// Release mode: Use command line arguments
 	po::options_description flags("Program options");
 	flags.add_options()
 		("help", "get this help message")
@@ -53,33 +88,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	try
 	{
 		po::variables_map vm;
-		po::store(po::parse_command_line(argc, argv, flags), vm); // For development, it is recommened to comment this line out
-
-		//swg_path = "C:\\swg\\SWGEmu"; // For developing, delete the comment here and manually add in the location of SWG
-
-		/* These animations have known bugs and will not export correctly */
-		//object_name = "dress_s06_f.sat";// bug here
-		//object_name = "bikini_s01_f.sat";// This one still has issue
-		
-		/* These animations export. However, the animations themselves have a couple of minor bugs (all animations do) */
-		//object_name = "bageraset.sat";
-		//object_name = "acklay.sat";
-		//object_name = "krayt_dragon.sat";
-		//object_name = "bantha_hue.sat"; // bone rotation 4th one
-		
-		/* For testing static meshes, test each of these 3 */
-		//object_name = "asteroid_acid_large_s01.apt"; // For apt parsing
-		//object_name = "asteroid_acid_large_s01_l0.msh"; // Simple case
-		//object_name = "bunker_mine_car_s01_l0.msh"; // Has multiple shaders + DOT3
-		//object_name = "door_jabba_backdoor.msh"; // Has multiple shaders + DOT3 + 32 bit indicies for index
-		
-		/* Test for pob */
-		//object_name = "thm_corl_skyskraper_s01.pob";
-
-		/* Example for batch mode */
-		//object_name = "batch:pob";
-
-		//output_pathname = "C:\\extraction\\test2"; // For developing, delete the comment here and manually add in the location of output file
+		po::store(po::parse_command_line(argc, argv, flags), vm);
 		po::notify(vm);
 	}
 	catch (...)
@@ -87,6 +96,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::cout << flags << std::endl;
 		return -1;
 	}
+#endif
 
 	CoInitialize(NULL);
 
