@@ -112,8 +112,6 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	queue<queue<std::string>> objects_to_process;
 
-	Context context;
-
 	// check if we in batch mode by given object name special look
 	boost::char_separator<char> separators(":");
 	boost::tokenizer<boost::char_separator<char>> object_name_tokens(object_name, separators);
@@ -131,7 +129,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		vector<string> selected_objects;
 		if (library->select_objects_by_ext(filetype, selected_objects))
 		{
-			context.batch_mode = true;
+			//context.batch_mode = true;
 			for (const auto& obj_name : selected_objects)
 			{
 				queue<std::string> singleVector;
@@ -178,31 +176,6 @@ int _tmain(int argc, _TCHAR* argv[])
 		SWGObject.resolveDependecies();
 		SWGObject.storeObject(output_pathname);
 	}
-
-	std::cout << "Resolve dependencies..." << endl;
-	std::for_each(context.object_list.begin(), context.object_list.end(),
-		[&context](const pair<string, shared_ptr<Base_object>>& item)
-		{
-			std::cout << "Object : " << item.first;
-			item.second->resolve_dependencies(context);
-			std::cout << " done." << endl;
-		});
-
-	std::cout << "Store objects..." << endl;
-	std::for_each(context.object_list.begin(), context.object_list.end(),
-		[&output_pathname, &context](const pair<string, shared_ptr<Base_object>>& item)
-		{
-			if (item.second->get_object_name().find("ans") == std::string::npos)
-			{
-				std::cout << "Object : " << item.first;
-				item.second->store(output_pathname, context);
-				std::cout << " done." << endl;
-			}
-			else
-			{
-				std::cout << "Does not support saving directly" << endl;
-			}
-		});
 
 	CoUninitialize();
 	return 0;
