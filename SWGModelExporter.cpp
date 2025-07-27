@@ -54,12 +54,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	
 	/* These animations export. However, the animations themselves have a couple of minor bugs (all animations do) */
 	//object_name = "bageraset.sat";
-	//object_name = "acklay.sat";
+	object_name = "acklay.sat";
 	//object_name = "krayt_dragon.sat";
 	//object_name = "bantha_hue.sat"; // bone rotation 4th one
 	
 	/* For testing static meshes, test each of these 3 */
-	object_name = "asteroid_acid_large_s01.apt"; // For apt parsing
+	//object_name = "asteroid_acid_large_s01.apt"; // For apt parsing
 	//object_name = "asteroid_acid_large_s01_l0.msh"; // Simple case
 	//object_name = "bunker_mine_car_s01_l0.msh"; // Has multiple shaders + DOT3
 	//object_name = "door_jabba_backdoor.msh"; // Has multiple shaders + DOT3 + 32 bit indicies for index

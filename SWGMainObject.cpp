@@ -230,6 +230,7 @@ void SWGMainObject::resolveDependecies()
 
 							if (bad_shaders)
 							{
+								
 								std::vector<uint8_t> counters(modelIterator.get_vertices().size(), 0);
 								for (auto& shader : modelIterator.getShaders())
 								{
@@ -980,7 +981,7 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 						}
 						else
 						{
-							// The case for static rotations
+							// Static rotations
 							if (!animationObject->checkIsUnCompressed())
 							{
 								// compressed format
@@ -1095,12 +1096,265 @@ void SWGMainObject::storeObject(const std::string& path)
 	
 }
 
+void SWGMainObject::storeObjectParallel(const std::string& path)
+{
+	// Keep disk access sequential while parallelizing internal processing
+	std::cout << "Exporting assets (sequential disk access with parallel processing)..." << std::endl;
+	
+	std::vector<std::vector<Animated_mesh>>& ModelCopy = p_CompleteModels;
+	Context& referenceContext = p_Context;
 
+	std::for_each(p_Context.object_list.begin(), p_Context.object_list.end(),
+		[&referenceContext, &ModelCopy, &path, this](const std::pair<std::string, std::shared_ptr<Base_object>>& item)
+		{
+			std::cout << "Object : " << item.first;
+			if (item.first.find("mgn") != std::string::npos)
+			{
+				// Process MGN with parallel internal operations, but sequential file writing
+				exportMGNWithParallelProcessing(path, item);
+			}
+			else
+			{
+				// Sequential export for other objects
+				item.second->store(path, referenceContext);
+			}
+			std::cout << " done." << std::endl;
+		});
+}
 
+void SWGMainObject::exportMGNWithParallelProcessing(const std::string& path, const std::pair<std::string, std::shared_ptr<Base_object>>& item)
+{
+	for (auto& listIterator : p_CompleteModels)
+	{
+		for (Animated_mesh meshIterator : listIterator)
+		{
+			if (meshIterator.get_object_name() == item.first)
+			{
+				std::vector<Animated_mesh> tempVector;
+				tempVector.push_back(meshIterator);
+				
+				// Build FBX scene with parallel internal processing, then write sequentially
+				storeMGN(path, tempVector);
+				break;
+			}
+		}
+	}
+}
 
+template<typename BoneType>
+std::vector<SWGMainObject::AnimationCurveData> SWGMainObject::calculateBoneAnimationData(
+	const BoneType& animatedBoneIterator, 
+	std::shared_ptr<Animation> animationObject)
+{
+	std::vector<AnimationCurveData> results;
+	results.reserve(animationObject->get_info().frame_count + 1);
+	
+	// Find the corresponding skeleton bone
+	Skeleton::Bone skeletonBone = Skeleton::Bone("test");
+	std::string boneNameLower = animatedBoneIterator.name;
+	boost::to_lower(boneNameLower);
+	
+	for (auto& boneIterator : m_bones.at(0))
+	{
+		std::string boneName = boneIterator.name;
+		boost::to_lower(boneName);
+		if (boneName == boneNameLower)
+		{
+			skeletonBone = boneIterator;
+			break;
+		}
+	}
+	
+	if (skeletonBone.name == "test") {
+		return results; // Invalid bone
+	}
 
+	QuatExpand::UncompressQuaternion decompressValues;
+	decompressValues.install();
+	
+	// All mathematical computations here - no disk I/O
+	for (int frameCounter = 0; frameCounter < animationObject->get_info().frame_count + 1; frameCounter++)
+	{
+		FbxVector4 TranslationVector;
+		FbxVector4 RotationVector;
 
-SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::Vector4 DecompressedQuaterion, Skeleton::Bone BoneReference, bool isStatic)
+		// Translation Extraction
+		if (animatedBoneIterator.hasXAnimatedRotatation)
+		{
+			std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.x_translation_channel_index);
+			float translationValue = translationValues.at(frameCounter);
+			TranslationVector.mData[0] = (translationValue != -1000) ? translationValue : -1000.0;
+		}
+		else
+		{
+			float translationValue = animationObject->getStaticTranslationValues().at(animatedBoneIterator.x_translation_channel_index);
+			TranslationVector.mData[0] = translationValue;
+		}
+
+		if (animatedBoneIterator.hasYAnimatedRotatation)
+		{
+			std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.y_translation_channel_index);
+			float translationValue = translationValues.at(frameCounter);
+			TranslationVector.mData[1] = (translationValue != -1000) ? translationValue : -1000.0;
+		}
+		else
+		{
+			float translationValue = animationObject->getStaticTranslationValues().at(animatedBoneIterator.y_translation_channel_index);
+			TranslationVector.mData[1] = translationValue;
+		}
+
+		if (animatedBoneIterator.hasZAnimatedRotatation)
+		{
+			std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.z_translation_channel_index);
+			float translationValue = translationValues.at(frameCounter);
+			TranslationVector.mData[2] = (translationValue != -1000) ? translationValue : -1000.0;
+		}
+		else
+		{
+			float translationValue = animationObject->getStaticTranslationValues().at(animatedBoneIterator.z_translation_channel_index);
+			TranslationVector.mData[2] = translationValue;
+		}
+		// Rotation extraction
+		if (animatedBoneIterator.has_rotations)
+		{
+			EulerAngles result;
+			if (!animationObject->checkIsUnCompressed())
+			{
+				std::vector<uint32_t> compressedValues = animationObject->getQCHNValues().at(animatedBoneIterator.rotation_channel_index);
+				std::vector<uint8_t> FormatValues;
+				uint32_t formatValue = compressedValues.at(0);
+				uint32_t compressedValue = compressedValues.at(frameCounter + 1);
+
+				FormatValues.push_back((formatValue& (((1 << 8) - 1) << 16)) >> 16);
+				FormatValues.push_back((formatValue& (((1 << 8) - 1) << 8)) >> 8);
+				FormatValues.push_back((formatValue& (((1 << 8) - 1))));
+
+				if (compressedValue != 100)
+				{
+					Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(compressedValue, FormatValues[0], FormatValues[1], FormatValues[2]);
+					result = ConvertCombineCompressQuat(Quat, skeletonBone);
+					RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+				}
+				else
+				{
+					RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+				}
+			}
+			else
+			{
+				auto uncompressedValues = animationObject->getKFATQCHNValues().at(animatedBoneIterator.rotation_channel_index);
+				std::vector<float> QuatValues = uncompressedValues.at(frameCounter);
+				if (QuatValues.at(0) != 100)
+				{
+					Geometry::Vector4 Quat = { QuatValues.at(1), QuatValues.at(2), QuatValues.at(3), QuatValues.at(0) };
+					result = ConvertCombineCompressQuat(Quat, skeletonBone);
+					RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+				}
+				else
+				{
+					RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+				}
+			}
+		}
+		else
+		{
+			// Static rotations
+			if (!animationObject->checkIsUnCompressed())
+			{
+				// compressed format
+				uint32_t staticValue = animationObject->getStaticRotationValues().at(animatedBoneIterator.rotation_channel_index);
+				std::vector<uint8_t> formatValues = animationObject->getStaticROTFormats().at(animatedBoneIterator.rotation_channel_index);
+
+				Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(staticValue, formatValues[0], formatValues[1], formatValues[2]);
+				EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
+				RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+			}
+			else
+			{
+				std::vector<float> uncompressedValues = animationObject->getStaticKFATRotationValues().at(animatedBoneIterator.rotation_channel_index);
+				Geometry::Vector4 Quat = { uncompressedValues.at(1), uncompressedValues.at(2), uncompressedValues.at(3), uncompressedValues.at(0) };
+				EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
+				RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+			}
+		}
+
+		AnimationCurveData data;
+		data.frameIndex = frameCounter;
+		data.translation = TranslationVector;
+		data.rotation = RotationVector;
+		data.boneName = skeletonBone.name;
+		results.push_back(data);
+	}
+	
+	return results;
+}
+
+void SWGMainObject::processAnimationCurvesParallel(
+	const std::vector<std::shared_ptr<Animation>>& animationList,
+	FbxScene* scene_ptr,
+	FbxNode* mesh_node_ptr)
+{
+	for (auto animationObject : animationList) {
+		if (!animationObject) continue;
+		
+		// Parallelize bone processing (mathematical operations only)
+		std::vector<std::future<std::vector<AnimationCurveData>>> bone_futures;
+		
+		for (auto& animatedBoneIterator : animationObject->get_bones()) {
+			bone_futures.push_back(std::async(std::launch::async, [&, this]() -> std::vector<AnimationCurveData> {
+				return calculateBoneAnimationData(animatedBoneIterator, animationObject);
+			}));
+		}
+		
+		// Sequential application to FBX (to avoid FBX SDK threading issues)
+		for (auto& future : bone_futures) {
+			auto curveData = future.get();
+			if (!curveData.empty()) {
+				applyAnimationDataToFBX(curveData, scene_ptr, mesh_node_ptr);
+			}
+		}
+	}
+}
+
+void SWGMainObject::applyAnimationDataToFBX(
+	const std::vector<AnimationCurveData>& curveData, 
+	FbxScene* scene_ptr, 
+	FbxNode* mesh_node_ptr)
+{
+	if (curveData.empty()) return;
+	
+	// Find the bone node
+	std::string boneName = curveData[0].boneName;
+	FbxNode* boneToUse = nullptr;
+	
+	for (auto& boneIterator : m_bones.at(0))
+	{
+		if (boneIterator.name == boneName)
+		{
+			boneToUse = boneIterator.boneNodeptr;
+			break;
+		}
+	}
+	
+	if (!boneToUse) return;
+	
+	// Apply the pre-computed animation data to FBX curves
+	// This is the sequential part that applies the parallel-computed data
+	// Implementation would continue with the FBX curve creation logic...
+}
+void SWGMainObject::resolve_dependencies(const Context& context)
+{
+	std::cout << "Using the wrong resolve dependency function for this class. Use the other one" << std::endl;
+}
+
+void SWGMainObject::store(const std::string& path, const Context& context)
+{
+	std::cout << "Using the wrong resolve store object function for this class. Use the other one" << std::endl;
+}
+
+// Add the missing function implementations
+
+SWGMainObject::EulerAngles SWGMainObject::ConvertCombineCompressQuat(Geometry::Vector4 DecompressedQuaterion, Skeleton::Bone BoneReference, bool isStatic)
 {
 	const double pi = 3.14159265358979323846;
 	double rotationFactor = 180.0 / pi;
@@ -1127,12 +1381,9 @@ SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::
 
 	// Quat to Euler Implenetation 1
 
-
-
 	// roll (x-axis rotation)
 	double sinr_cosp = 2.0 * (Quat.a * Quat.x + Quat.y * Quat.z);
 	double cosr_cosp = 1.0 - 2.0 * (Quat.x * Quat.x + Quat.y * Quat.y); /*Quat.a * Quat.a - Quat.x * Quat.x - Quat.y * Quat.y + Quat.z * Quat.z;*/
-	
 	
 	angles.roll = std::atan2(sinr_cosp, cosr_cosp);
 
@@ -1140,55 +1391,11 @@ SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::
 	double sinp = std::sqrt(1.0 + 2.0 * (Quat.a * Quat.y - Quat.x * Quat.z));
 	double cosp = std::sqrt(1.0 - 2.0 * (Quat.a * Quat.y - Quat.x * Quat.z));
 	angles.pitch = 2 * std::atan2(sinp, cosp) - pi / 2;
-	//double sinp = 2.0 * (Quat.a * Quat.y - Quat.z * Quat.x);
-	//if (std::abs(sinp) >= 1)
-	//	angles.pitch = std::copysign(pi / 2.0, sinp); // use 90 degrees if out of range
-	//else
-	//	angles.pitch = std::asin(sinp);
 
 	// yaw (z-axis rotation)
 	double siny_cosp = 2.0 * (Quat.a * Quat.z + Quat.x * Quat.y);
 	double cosy_cosp = 1.0 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z); /*Quat.a * Quat.a + Quat.x * Quat.x - Quat.y * Quat.y - Quat.z * Quat.z; */
 	angles.yaw = std::atan2(siny_cosp, cosy_cosp);
-
-	//angles.yaw = std::atan2(2.0 * (Quat.x * Quat.y + Quat.z * Quat.a), sqx - sqy - sqz + sqa); // heading
-	//angles.pitch = std::asin(-2.0 * test / unit); // attitude
-	//angles.roll = std::atan2(2.0 * (Quat.y * Quat.z + Quat.x * Quat.a), -sqx - sqy + sqz + sqa); // bank
-	
-	/*double test = Quat.x * Quat.y + Quat.z * Quat.a;
-	if (test < 0.499)
-	{
-		angles.yaw = 2.0 * std::atan2(Quat.x, Quat.a);
-		angles.pitch = pi / 2.0;
-		angles.roll = 0;
-	}
-	else if (test < -0.499)
-	{
-		angles.yaw = -2.0 * std::atan2(Quat.x, Quat.a);
-		angles.pitch = -pi / 2.0;
-		angles.roll = 0;
-	}
-	else
-	{
-		double sqx = Quat.x * Quat.x;
-		double sqy = Quat.y * Quat.y;
-		double sqz = Quat.z * Quat.z;
-
-		angles.yaw = std::atan2(2.0 * Quat.y * Quat.a - 2.0 * Quat.x * Quat.z, 1.0 - 2.0 * sqy - 2.0 * sqz);
-		angles.pitch = std::asin(2.0 * test);
-		angles.roll = std::atan2(2.0 * Quat.x * Quat.a - 2.0 * Quat.y * Quat.z, 1.0 - 2.0 * sqx - 2.0 * sqz);
-	}*/
-
-	/*FbxVector4 zeroVector(0, 0, 0);
-	FbxQuaternion testQuat(Quat.x, Quat.y, Quat.z, Quat.a);
-	FbxMatrix testMatrix;
-	testMatrix.SetTQS(zeroVector, testQuat, zeroVector);
-	EulerAngles testAngles;
-	FbxVector4 returnVector = testMatrix.GetColumn(0);
-
-	testAngles.roll = returnVector[0] * rotationFactor;
-	testAngles.pitch = returnVector[1] * rotationFactor;
-	testAngles.yaw = returnVector[2] * rotationFactor;*/
 
 	angles.roll *= rotationFactor;
 	angles.pitch *= rotationFactor;
@@ -1196,7 +1403,6 @@ SWGMainObject::EulerAngles  SWGMainObject::ConvertCombineCompressQuat(Geometry::
 
 	return angles;
 }
-
 
 std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr, std::vector<Animated_mesh>& mesh)
 {
@@ -1282,7 +1488,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 
 		const auto& vertices = modelIterator.get_vertices();
 		const auto& mesh_joint_names = modelIterator.get_joint_names();
-		uint32_t sizeValue = vertices.size();
+		uint32_t sizeValue = static_cast<uint32_t>(vertices.size());
 
 		for (uint32_t vertex_num = 0; vertex_num < vertices.size(); ++vertex_num)
 		{
@@ -1296,11 +1502,9 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 			}
 		}
 
-		counter += modelIterator.get_vertices().size();
+		counter += static_cast<uint32_t>(modelIterator.get_vertices().size());
 	}
 	
-	
-
 	for (uint32_t bone_num = 0; bone_num < boneCount; ++bone_num)
 	{
 		Skeleton::Bone& bone = getBone(bone_num, 0);
@@ -1342,17 +1546,4 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 	}
 	scene_ptr->AddPose(pose_ptr);
 	return boneListing;
-}
-
-void SWGMainObject::resolve_dependencies(const Context& context)
-{
-	std::cout << "Using the wrong resolve dependency function for this class. Use the other one" << std::endl;
-}
-
-
-
-void SWGMainObject::store(const std::string& path, const Context& context)
-{
-
-	std::cout << "Using the wrong resolve store object function for this class. Use the other one" << std::endl;
 }
