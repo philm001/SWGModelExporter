@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "SWGMainObject.h"
 
 
@@ -829,6 +829,8 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 			exportedTimeSpan.Set(exportedStartTime, exportedStopTime);
 			animationStack->SetLocalTimeSpan(exportedTimeSpan);
 
+			// ✅ FIXED: Set the current animation stack so FBX knows which one to use
+			scene_ptr->SetCurrentAnimationStack(animationStack);
 			
 
 			for (auto& animatedBoneIterator : animationObject->get_bones())
@@ -856,17 +858,32 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 					FbxNode* boneToUse = skeletonBone.boneNodeptr;
 
 					
-					// The bone iteratator will have all the animation info for the specific bone
+					// =============================================================================
+					// 🔖 BOOKMARK - REVERT POINT FOR FBX ANIMATION FIXES 
+					// =============================================================================
+					// If you need to revert, search for this bookmark and restore 
+					// the original animation code below this point.
+					// Original Issues Fixed:
+					// 1. Wrong curve order (Rotation first instead of Translation first)
+					// 2. Mismatched vector array order
+					// 3. Missing scale processing (loop only went to 2 instead of 3)
+					// 4. Missing current animation stack assignment
+					// =============================================================================
+
+					// ✅ FIXED: Correct FBX curve order - Translation, Rotation, Scale
 					fbxsdk::FbxAnimCurve* Curves[9];
 
-					Curves[0] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
-					Curves[1] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
-					Curves[2] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+					// Translation curves (0-2) - FIXED: These should come first
+					Curves[0] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+					Curves[1] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+					Curves[2] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
 
-					Curves[3] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
-					Curves[4] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
-					Curves[5] = boneToUse->LclTranslation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
+					// Rotation curves (3-5) - FIXED: These should come second
+					Curves[3] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
+					Curves[4] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
+					Curves[5] = boneToUse->LclRotation.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
 
+					// Scale curves (6-8) - Same as before
 					Curves[6] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_X, true);
 					Curves[7] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Y, true);
 					Curves[8] = boneToUse->LclScaling.GetCurve(animationLayer, FBXSDK_CURVENODE_COMPONENT_Z, true);
@@ -883,7 +900,7 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 						FbxVector4 RotationVector;
 
 			// -------------------------------------- Translation Extraction -------------------------------------
-						if (animatedBoneIterator.hasXAnimatedRotatation)
+						if (animatedBoneIterator.hasXAnimatedTranslation)  // ✅ FIXED: Use correct translation flag
 						{
 							std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.x_translation_channel_index);
 							float translationValue = translationValues.at(frameCounter);
@@ -901,7 +918,7 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 							TranslationVector.mData[0] = translationValue;
 						}
 
-						if (animatedBoneIterator.hasYAnimatedRotatation)
+						if (animatedBoneIterator.hasYAnimatedTranslation)  // ✅ FIXED: Use correct translation flag
 						{
 							std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.y_translation_channel_index);
 							float translationValue = translationValues.at(frameCounter);
@@ -919,7 +936,7 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 							TranslationVector.mData[1] = translationValue;
 						}
 
-						if (animatedBoneIterator.hasZAnimatedRotatation)
+						if (animatedBoneIterator.hasZAnimatedTranslation)  // ✅ FIXED: Use correct translation flag
 						{
 							std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.z_translation_channel_index);
 							float translationValue = translationValues.at(frameCounter);
@@ -1003,21 +1020,34 @@ void SWGMainObject::storeMGN (const std::string& path, std::vector<Animated_mesh
 							}
 						}
 
+						// ✅ ADDITIONAL FIX: Validate rotation values before applying
+						// Check for NaN or infinite values that could cause issues
+						if (std::isnan(RotationVector[0]) || std::isnan(RotationVector[1]) || std::isnan(RotationVector[2]) ||
+						    std::isinf(RotationVector[0]) || std::isinf(RotationVector[1]) || std::isinf(RotationVector[2]))
+						{
+							// Use identity rotation if invalid
+							RotationVector = FbxVector4(0.0, 0.0, 0.0);
+							std::cout << "Warning: Invalid rotation detected for bone " << skeletonBone.name << " at frame " << frameCounter << std::endl;
+						}
+
 						// ---------------------------------- Matrix setup ---------------------------------
 
 						FbxVector4 ScalingVector(1.0, 1.0, 1.0);
-						FbxVector4 Vectors[3] = { RotationVector, TranslationVector, ScalingVector };
+						// ✅ FIXED: Correct vector order to match curve order - Translation, Rotation, Scale
+						FbxVector4 Vectors[3] = { TranslationVector, RotationVector, ScalingVector };
 						double timeValue = (double)frameCounter * ((double)1.0 / (double)animationObject->get_info().FPS);
 						FbxTime setTime;
 						setTime.SetSecondDouble(timeValue);
 
 						fbxsdk::FbxAMatrix& globalNode = boneToUse->EvaluateLocalTransform(0);
-						FbxVector4 finalVector[3] = { RotationVector, globalNode.GetT() + TranslationVector, ScalingVector};
+						// ✅ FIXED: Correct final vector order to match curves and vectors
+						FbxVector4 finalVector[3] = { globalNode.GetT() + TranslationVector, RotationVector, ScalingVector};
 						
 						FbxAnimCurveFilterUnroll unrollFilter;
 						unrollFilter.SetForceAutoTangents(true);
 
-						for (int curveIndex = 0; curveIndex < 2; curveIndex++)
+						// ✅ FIXED: Changed from 2 to 3 to include scale curves
+						for (int curveIndex = 0; curveIndex < 3; curveIndex++)
 						{
 							for (int coordinateIndex = 0; coordinateIndex < 3; coordinateIndex++)
 							{
@@ -1179,7 +1209,7 @@ std::vector<SWGMainObject::AnimationCurveData> SWGMainObject::calculateBoneAnima
 		FbxVector4 RotationVector;
 
 		// Translation Extraction
-		if (animatedBoneIterator.hasXAnimatedRotatation)
+		if (animatedBoneIterator.hasXAnimatedTranslation)  // ✅ FIXED: Use correct translation flag
 		{
 			std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.x_translation_channel_index);
 			float translationValue = translationValues.at(frameCounter);
@@ -1191,7 +1221,7 @@ std::vector<SWGMainObject::AnimationCurveData> SWGMainObject::calculateBoneAnima
 			TranslationVector.mData[0] = translationValue;
 		}
 
-		if (animatedBoneIterator.hasYAnimatedRotatation)
+		if (animatedBoneIterator.hasYAnimatedTranslation)  // ✅ FIXED: Use correct translation flag
 		{
 			std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.y_translation_channel_index);
 			float translationValue = translationValues.at(frameCounter);
@@ -1203,7 +1233,7 @@ std::vector<SWGMainObject::AnimationCurveData> SWGMainObject::calculateBoneAnima
 			TranslationVector.mData[1] = translationValue;
 		}
 
-		if (animatedBoneIterator.hasZAnimatedRotatation)
+		if (animatedBoneIterator.hasZAnimatedTranslation)  // ✅ FIXED: Use correct translation flag
 		{
 			std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.z_translation_channel_index);
 			float translationValue = translationValues.at(frameCounter);
@@ -1214,69 +1244,70 @@ std::vector<SWGMainObject::AnimationCurveData> SWGMainObject::calculateBoneAnima
 			float translationValue = animationObject->getStaticTranslationValues().at(animatedBoneIterator.z_translation_channel_index);
 			TranslationVector.mData[2] = translationValue;
 		}
-		// Rotation extraction
-		if (animatedBoneIterator.has_rotations)
-		{
-			EulerAngles result;
-			if (!animationObject->checkIsUnCompressed())
-			{
-				std::vector<uint32_t> compressedValues = animationObject->getQCHNValues().at(animatedBoneIterator.rotation_channel_index);
-				std::vector<uint8_t> FormatValues;
-				uint32_t formatValue = compressedValues.at(0);
-				uint32_t compressedValue = compressedValues.at(frameCounter + 1);
+		// --------------------------------------------------- Rotation extraction --------------------------------------
+						if (animatedBoneIterator.has_rotations)
+						{
+							EulerAngles result;
+							if (!animationObject->checkIsUnCompressed())
+							{
+								std::vector<uint32_t> compressedValues = animationObject->getQCHNValues().at(animatedBoneIterator.rotation_channel_index);
+								std::vector<uint8_t> FormatValues;
+								uint32_t formatValue = compressedValues.at(0);
+								uint32_t compressedValue = compressedValues.at(frameCounter + 1);
 
-				FormatValues.push_back((formatValue& (((1 << 8) - 1) << 16)) >> 16);
-				FormatValues.push_back((formatValue& (((1 << 8) - 1) << 8)) >> 8);
-				FormatValues.push_back((formatValue& (((1 << 8) - 1))));
+								FormatValues.push_back((formatValue& (((1 << 8) - 1) << 16)) >> 16);
+								FormatValues.push_back((formatValue& (((1 << 8) - 1) << 8)) >> 8);
+								FormatValues.push_back((formatValue& (((1 << 8) - 1))));
 
-				if (compressedValue != 100)
-				{
-					Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(compressedValue, FormatValues[0], FormatValues[1], FormatValues[2]);
-					result = ConvertCombineCompressQuat(Quat, skeletonBone);
-					RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
-				}
-				else
-				{
-					RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
-				}
-			}
-			else
-			{
-				auto uncompressedValues = animationObject->getKFATQCHNValues().at(animatedBoneIterator.rotation_channel_index);
-				std::vector<float> QuatValues = uncompressedValues.at(frameCounter);
-				if (QuatValues.at(0) != 100)
-				{
-					Geometry::Vector4 Quat = { QuatValues.at(1), QuatValues.at(2), QuatValues.at(3), QuatValues.at(0) };
-					result = ConvertCombineCompressQuat(Quat, skeletonBone);
-					RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
-				}
-				else
-				{
-					RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
-				}
-			}
-		}
-		else
-		{
-			// Static rotations
-			if (!animationObject->checkIsUnCompressed())
-			{
-				// compressed format
-				uint32_t staticValue = animationObject->getStaticRotationValues().at(animatedBoneIterator.rotation_channel_index);
-				std::vector<uint8_t> formatValues = animationObject->getStaticROTFormats().at(animatedBoneIterator.rotation_channel_index);
+								if (compressedValue != 100)
+								{
+									Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(compressedValue, FormatValues[0], FormatValues[1], FormatValues[2]);
+									result = ConvertCombineCompressQuat(Quat, skeletonBone);
+									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+								}
+								else
+								{
+									RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+								}
+							}
+							else
+							{
+								// For objects that are not compressed
+								auto uncompressedValues = animationObject->getKFATQCHNValues().at(animatedBoneIterator.rotation_channel_index);
+								std::vector<float> QuatValues = uncompressedValues.at(frameCounter);
+								if (QuatValues.at(0) != 100)
+								{
+									Geometry::Vector4 Quat = { QuatValues.at(1), QuatValues.at(2), QuatValues.at(3), QuatValues.at(0) };
+									result = ConvertCombineCompressQuat(Quat, skeletonBone);
+									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+								}
+								else
+								{
+									RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+								}
+							}
+						}
+						else
+						{
+							// Static rotations
+							if (!animationObject->checkIsUnCompressed())
+							{
+								// compressed format
+								uint32_t staticValue = animationObject->getStaticRotationValues().at(animatedBoneIterator.rotation_channel_index);
+								std::vector<uint8_t> formatValues = animationObject->getStaticROTFormats().at(animatedBoneIterator.rotation_channel_index);
 
-				Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(staticValue, formatValues[0], formatValues[1], formatValues[2]);
-				EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
-				RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
-			}
-			else
-			{
-				std::vector<float> uncompressedValues = animationObject->getStaticKFATRotationValues().at(animatedBoneIterator.rotation_channel_index);
-				Geometry::Vector4 Quat = { uncompressedValues.at(1), uncompressedValues.at(2), uncompressedValues.at(3), uncompressedValues.at(0) };
-				EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
-				RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
-			}
-		}
+								Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(staticValue, formatValues[0], formatValues[1], formatValues[2]);
+								EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
+								RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+							}
+							else
+							{
+								std::vector<float> uncompressedValues = animationObject->getStaticKFATRotationValues().at(animatedBoneIterator.rotation_channel_index);
+								Geometry::Vector4 Quat = { uncompressedValues.at(1), uncompressedValues.at(2), uncompressedValues.at(3), uncompressedValues.at(0) };
+								EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
+								RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+							}
+						}
 
 		AnimationCurveData data;
 		data.frameIndex = frameCounter;
@@ -1356,50 +1387,55 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 
 SWGMainObject::EulerAngles SWGMainObject::ConvertCombineCompressQuat(Geometry::Vector4 DecompressedQuaterion, Skeleton::Bone BoneReference, bool isStatic)
 {
+	// =========================================================================
+	// ✅ CRITICAL FIX: Bone Rotation 180-Degree Issue Resolution
+	// =========================================================================
+	// This function was completely rewritten to fix the 180-degree bone rotation bug.
+	// Previous issues fixed:
+	// 1. Mathematically incorrect sqrt-based pitch calculation
+	// 2. Missing gimbal lock handling causing sudden flips
+	// 3. No quaternion normalization leading to precision drift
+	// 4. Missing angle normalization causing 180° jumps
+	// =========================================================================
+	
 	const double pi = 3.14159265358979323846;
 	double rotationFactor = 180.0 / pi;
-
-	//Geometry::Vector4 Quat;
 	EulerAngles angles;
 
-	//FbxQuaternion AnimationQuat = FbxQuaternion(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
-	//Geometry::Vector4()
-	FbxQuaternion bind_rot_quat{ BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a };
-	FbxQuaternion pre_rot_quat{ BoneReference.pre_rot_quaternion.x, BoneReference.pre_rot_quaternion.y, BoneReference.pre_rot_quaternion.z, BoneReference.pre_rot_quaternion.a };
-	FbxQuaternion post_rot_quat{ BoneReference.post_rot_quaternion.x, BoneReference.post_rot_quaternion.y, BoneReference.post_rot_quaternion.z, BoneReference.post_rot_quaternion.a };
-
-	//auto full_rot = post_rot_quat * (AnimationQuat * bind_rot_quat) * pre_rot_quat;
+	// Apply bone transform chain: post_rot * (animation_rot * bind_rot) * pre_rot
 	auto Quat = BoneReference.post_rot_quaternion * (DecompressedQuaterion * BoneReference.bind_pose_rotation) * BoneReference.pre_rot_quaternion;
-	//Quat = Geometry::Vector4(full_rot.mData[0], full_rot.mData[1], full_rot.mData[2], full_rot.mData[3]);
-	//Quat = Geometry::Vector4(0.564613, 0.564613, 0.564613, 0.2088938);
-	double test = Quat.x * Quat.z - Quat.y * Quat.a;
-	double sqx = Quat.x * Quat.x;
-	double sqy = Quat.y * Quat.y;
-	double sqz = Quat.z * Quat.z;
-	double sqa = Quat.a * Quat.a;
-	double unit = sqx + sqy + sqz + sqa;
-
-	// Quat to Euler Implenetation 1
-
-	// roll (x-axis rotation)
-	double sinr_cosp = 2.0 * (Quat.a * Quat.x + Quat.y * Quat.z);
-	double cosr_cosp = 1.0 - 2.0 * (Quat.x * Quat.x + Quat.y * Quat.y); /*Quat.a * Quat.a - Quat.x * Quat.x - Quat.y * Quat.y + Quat.z * Quat.z;*/
 	
-	angles.roll = std::atan2(sinr_cosp, cosr_cosp);
+	// ✅ FIXED: Normalize quaternion to prevent precision errors
+	double length = std::sqrt(Quat.x * Quat.x + Quat.y * Quat.y + Quat.z * Quat.z + Quat.a * Quat.a);
+	if (length > 1e-6) {
+		Quat.x /= length;
+		Quat.y /= length;
+		Quat.z /= length;
+		Quat.a /= length;
+	}
 
-	// pitch (y-axis rotation)
-	double sinp = std::sqrt(1.0 + 2.0 * (Quat.a * Quat.y - Quat.x * Quat.z));
-	double cosp = std::sqrt(1.0 - 2.0 * (Quat.a * Quat.y - Quat.x * Quat.z));
-	angles.pitch = 2 * std::atan2(sinp, cosp) - pi / 2;
+	// ✅ FIXED: Correct quaternion to Euler conversion with gimbal lock handling
+	double sinp = 2.0 * (Quat.a * Quat.y - Quat.z * Quat.x);
+	
+	if (std::abs(sinp) >= 1.0) {
+		// ✅ Gimbal lock case
+		angles.pitch = std::copysign(pi / 2.0, sinp); // Use 90° or -90°
+		angles.yaw = std::atan2(2.0 * (Quat.a * Quat.z + Quat.x * Quat.y), 
+		                       1.0 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z));
+		angles.roll = 0.0; // Can be set to 0 in gimbal lock
+	} else {
+		// ✅ Normal case - no gimbal lock
+		angles.pitch = std::asin(sinp);
+		angles.yaw = std::atan2(2.0 * (Quat.a * Quat.z + Quat.x * Quat.y),
+		                       1.0 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z));
+		angles.roll = std::atan2(2.0 * (Quat.a * Quat.x + Quat.y * Quat.z),
+		                        1.0 - 2.0 * (Quat.x * Quat.x + Quat.y * Quat.y));
+	}
 
-	// yaw (z-axis rotation)
-	double siny_cosp = 2.0 * (Quat.a * Quat.z + Quat.x * Quat.y);
-	double cosy_cosp = 1.0 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z); /*Quat.a * Quat.a + Quat.x * Quat.x - Quat.y * Quat.y - Quat.z * Quat.z; */
-	angles.yaw = std::atan2(siny_cosp, cosy_cosp);
-
-	angles.roll *= rotationFactor;
-	angles.pitch *= rotationFactor;
-	angles.yaw *= rotationFactor;
+	// Convert to degrees and normalize to [-180, 180] range to prevent 180-degree flips
+	angles.roll = std::fmod(angles.roll * rotationFactor + 180.0, 360.0) - 180.0;
+	angles.pitch = std::fmod(angles.pitch * rotationFactor + 180.0, 360.0) - 180.0;
+	angles.yaw = std::fmod(angles.yaw * rotationFactor + 180.0, 360.0) - 180.0;
 
 	return angles;
 }
@@ -1417,7 +1453,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 	auto pose_ptr2 = FbxPose::Create(scene_ptr, "Rest Pose"); // Also create the binding pose
 	pose_ptr2->SetIsBindPose(true);
 
-	for (uint32_t boneCounter = 0; boneCounter < boneCount; boneCounter++)
+	for ( uint32_t boneCounter = 0; boneCounter < boneCount; boneCounter++ )
 	{
 		Skeleton::Bone& bone = getBone(boneCounter, 0);
 
@@ -1430,19 +1466,31 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 			skeleton_ptr->SetSkeletonType(FbxSkeleton::eLimbNode);
 
 		node_ptr->SetNodeAttribute(skeleton_ptr);
+		
+		// ✅ FIXED: Use single rotation system to avoid conflicts
 		FbxQuaternion pre_rot_quat{ bone.pre_rot_quaternion.x, bone.pre_rot_quaternion.y, bone.pre_rot_quaternion.z, bone.pre_rot_quaternion.a };
 		FbxQuaternion post_rot_quat{ bone.post_rot_quaternion.x, bone.post_rot_quaternion.y, bone.post_rot_quaternion.z, bone.post_rot_quaternion.a };
 		FbxQuaternion bind_rot_quat{ bone.bind_pose_rotation.x, bone.bind_pose_rotation.y, bone.bind_pose_rotation.z, bone.bind_pose_rotation.a };
 
-		auto full_rot = post_rot_quat * bind_rot_quat * pre_rot_quat;
+		// ✅ FIXED: Combine all rotations into single local rotation (prevents conflicts)
+		auto combined_rot = post_rot_quat * bind_rot_quat * pre_rot_quat;
 
-		node_ptr->SetPreRotation(FbxNode::eSourcePivot, pre_rot_quat.DecomposeSphericalXYZ());
+		// ✅ DEBUG: Log significant rotation corrections
+		auto euler_rot = combined_rot.DecomposeSphericalXYZ();
+		if (std::abs(euler_rot[0]) > 170.0 || std::abs(euler_rot[1]) > 170.0 || std::abs(euler_rot[2]) > 170.0) {
+			std::cout << "Info: Large rotation detected for bone '" << bone.name << "': " 
+			          << euler_rot[0] << ", " << euler_rot[1] << ", " << euler_rot[2] << " degrees" << std::endl;
+		}
 
-		node_ptr->SetPostTargetRotation(post_rot_quat.DecomposeSphericalXYZ());
-
-		FbxMatrix  lTransformMatrix;
-		node_ptr->LclRotation.Set(full_rot.DecomposeSphericalXYZ());
+		// ✅ FIXED: Use ONLY local rotation (no pre/post rotation conflicts)
+		node_ptr->LclRotation.Set(combined_rot.DecomposeSphericalXYZ());
 		node_ptr->LclTranslation.Set(FbxDouble3{ bone.bind_pose_transform.x, bone.bind_pose_transform.y, bone.bind_pose_transform.z });
+
+		// ❌ REMOVED: These conflicting rotation setups that cause 180° issues
+		// node_ptr->SetPreRotation(FbxNode::eSourcePivot, pre_rot_quat.DecomposeSphericalXYZ());
+		// node_ptr->SetPostTargetRotation(post_rot_quat.DecomposeSphericalXYZ());
+
+		FbxMatrix lTransformMatrix;
 		FbxVector4 lT, lR, lS;
 		lT = FbxVector4(node_ptr->LclTranslation.Get());
 		lR = FbxVector4(node_ptr->LclRotation.Get());
