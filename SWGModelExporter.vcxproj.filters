@@ -44421,5 +44421,6 @@
     <None Include="lib\Debug\zlibwapi.dll">
       <Filter>Debug</Filter>
     </None>
+    <None Include="PROJECT_SUMMARY.md" />
   </ItemGroup>
 </Project>

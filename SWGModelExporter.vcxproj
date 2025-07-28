@@ -14982,6 +14982,7 @@
       <DeploymentContent>true</DeploymentContent>
       <FileType>Resx</FileType>
     </None>
+    <None Include="PROJECT_SUMMARY.md" />
     <None Include="README.md" />
     <None Include="Scene.fbx" />
   </ItemGroup>
