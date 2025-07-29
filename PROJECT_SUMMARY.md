@@ -34,6 +34,44 @@ The **SWG Model Exporter** is a C++20 application designed to extract and conver
   - **Animation Processing**: Converts SWG animations to FBX animation curves
   - **Dependency Resolution**: Manages object dependencies and references
   - **Bone System**: Advanced skeletal animation support with proper bone hierarchies
+  - **Template Methods**: Includes template functions for flexible bone animation processing
+
+### Modular Processing Files (Recent Refactoring)
+
+#### `SWGAnimationParsing.cpp` - Animation Export Logic
+- **Purpose**: Handles the complete FBX animation export process
+- **Key Features**:
+  - **FBX Animation Stacks**: Creates properly structured animation stacks and layers
+  - **Bone Animation Curves**: Processes translation and rotation curves for each bone
+  - **Quaternion Decompression**: Handles SWG's compressed quaternion animation data
+  - **Frame Rate Management**: Supports various animation frame rates and time modes
+  - **Euler Angle Conversion**: Converts quaternions to Euler angles with gimbal lock handling
+  - **Animation Validation**: Includes NaN and infinite value checking to prevent corruption
+
+#### `SWGSkeletonExport.cpp` - Skeleton & Bind Pose Management  
+- **Purpose**: Manages skeleton creation, bone hierarchies, and FBX bind poses
+- **Key Features**:
+  - **Single Rotation System**: Combines pre/post/bind rotations to prevent conflicts
+  - **FBX Skin Clusters**: Proper vertex weight assignment to bones
+  - **Bind Pose Creation**: Correctly structured bind poses for FBX compatibility
+  - **Template Animation Data**: Contains `calculateBoneAnimationData<T>` template function
+  - **Explicit Template Instantiation**: Resolves linker issues with template specialization
+
+#### `SWGDependencyResolver.cpp` - Asset Dependency Management
+- **Purpose**: Resolves dependencies between assets (shaders, textures, etc.)
+- **Features**:
+  - **Shader Resolution**: Links mesh objects to their material definitions
+  - **Object Reference Tracking**: Manages complex asset interdependencies
+  - **Validation**: Detects and reports missing or invalid shader references
+
+#### `SWGFileAccess.cpp` - File I/O Operations
+- **Purpose**: Manages file access and export operations
+- **Features**:
+  - **Sequential Export**: Ensures thread-safe file writing operations
+  - **Parallel Processing**: Internal computations parallelized while maintaining sequential disk access
+  - **MGN Export**: Specialized handling for mesh geometry files
+
+### Archive & Library System
 
 #### `tre_library.cpp/.h` - Game Asset Archive Reader
 - **Purpose**: Reads and manages SWG's TRE (game archive) files
@@ -90,40 +128,86 @@ The **SWG Model Exporter** is a C++20 application designed to extract and conver
 
 ---
 
-## Current Issues Being Addressed
+## Recent Major Improvements & Fixes
 
-### ?? Primary Issue: Bind Pose Problems
+### ? **Resolved: Template Linker Errors (Latest Fix)**
 
-The project has been experiencing **bind pose issues** in exported FBX files, where skeletal meshes appear incorrectly positioned or deformed when imported into 3D software.
+**Issue**: Unresolved external symbol for template function `calculateBoneAnimationData<Animation::Bone_info>`
+- **Root Cause**: Template function declared in header but implemented in .cpp file without explicit instantiation
+- **Solution**: Added explicit template instantiation in `SWGSkeletonExport.cpp`:
+  ```cpp
+  template std::vector<SWGMainObject::AnimationCurveData> 
+  SWGMainObject::calculateBoneAnimationData<Animation::Bone_info>(
+      const Animation::Bone_info& animatedBoneIterator,
+      std::shared_ptr<Animation> animationObject);
+  ```
 
-#### Root Causes Identified:
-1. **Duplicate Skeleton Generation**: The `storeMGN()` function was calling `generateSkeletonInScene()` twice, causing conflicts
-2. **FBX Bind Pose Setup**: Missing proper mesh node inclusion in bind pose data
-3. **Transform Matrix Issues**: Incorrect calculation of bone transform matrices
-4. **Memory Management**: Bone node pointers not being preserved correctly
+### ? **Resolved: Project Build Issues**
 
-#### Fixes Implemented:
-- ? **Removed duplicate skeleton generation calls**
-- ? **Fixed bind pose creation** by adding mesh node first (FBX SDK requirement)
-- ? **Enhanced cluster setup** with proper skin deformation settings
-- ? **Added extensive debug logging** for troubleshooting bone data integrity
-- ? **Improved bone validation** with position and hierarchy checks
+**Issue**: Build failed due to missing source files referenced in project
+- **Root Cause**: Empty .cpp files were removed but still referenced in vcxproj
+- **Solution**: Cleaned up project file by removing references to:
+  - `SWGAssetParser.cpp` (empty file)
+  - `SWGFBXSceneBuilder.cpp` (empty file) 
+  - `SWGMainObject_New.cpp` (empty file)
+  - `SWGMainObject_Refactored.cpp` (empty file)
 
-### ?? Animation System Fixes (Previously Resolved)
+### ? **Resolved: Animation System Fixes (Previously Fixed)**
 
-The animation system had several critical bugs that were successfully fixed:
+The animation system had several critical bugs that were successfully resolved:
 
 #### Issues Fixed:
 1. **180-Degree Bone Rotation Bug**: Mathematical errors in quaternion to Euler conversion
 2. **FBX Curve Order**: Wrong curve assignment (Translation/Rotation/Scale order)
 3. **Gimbal Lock**: Missing gimbal lock handling causing animation flips
 4. **Quaternion Normalization**: Precision drift from unnormalized quaternions
+5. **Animation Curve Processing**: Corrected vector order and frame processing
 
 #### Solutions Applied:
 - ? **Rewrote quaternion conversion** with proper gimbal lock handling
-- ? **Fixed FBX curve order** to match FBX SDK expectations
+- ? **Fixed FBX curve order** to match FBX SDK expectations (Translation, Rotation, Scale)
 - ? **Added quaternion normalization** to prevent precision errors
 - ? **Improved angle normalization** to prevent 180° jumps
+- ? **Enhanced frame validation** with NaN and infinite value checking
+
+### ? **Resolved: Bind Pose Problems (Previously Fixed)**
+
+**Issue**: Skeletal meshes appeared incorrectly positioned or deformed in exported FBX files
+
+#### Root Causes Identified:
+1. **Duplicate Skeleton Generation**: The `storeMGN()` function was calling `generateSkeletonInScene()` twice
+2. **FBX Bind Pose Setup**: Missing proper mesh node inclusion in bind pose data
+3. **Transform Matrix Issues**: Incorrect calculation of bone transform matrices
+4. **Rotation Conflicts**: Pre/post rotation conflicts causing 180° bone issues
+
+#### Fixes Implemented:
+- ? **Removed duplicate skeleton generation calls**
+- ? **Fixed bind pose creation** by adding mesh node first (FBX SDK requirement)
+- ? **Enhanced cluster setup** with proper skin deformation settings
+- ? **Implemented single rotation system** combining pre/post/bind rotations
+- ? **Added extensive debug logging** for troubleshooting bone data integrity
+
+---
+
+## Code Architecture Improvements
+
+### **Modular Refactoring**
+The project has been refactored into a more modular structure:
+
+- **`SWGAnimationParsing.cpp`**: All animation-related FBX export logic
+- **`SWGSkeletonExport.cpp`**: Skeleton creation and bind pose management
+- **`SWGDependencyResolver.cpp`**: Asset dependency resolution
+- **`SWGFileAccess.cpp`**: File I/O and export coordination
+
+### **Template System Enhancement**
+- Added robust template support for flexible bone animation processing
+- Implemented explicit template instantiation to resolve linker issues
+- Enhanced type safety with template parameter validation
+
+### **Threading Architecture**
+- **Parallel Processing**: Internal mathematical computations parallelized
+- **Sequential File Access**: Disk operations remain sequential for stability
+- **Thread-Safe Operations**: Proper mutex usage for shared data structures
 
 ---
 
@@ -135,6 +219,7 @@ The animation system had several critical bugs that were successfully fixed:
 3. **Multi-threading**: Balancing performance with FBX SDK thread safety limitations
 4. **Memory Management**: Large meshes and animations require careful resource handling
 5. **Coordinate System Conversion**: Transforming from SWG's coordinate system to FBX standards
+6. **Template Instantiation**: C++ template linking across compilation units
 
 ### Performance Optimizations:
 - **Parallel Dependency Resolution**: Multi-threaded shader and skeleton processing
@@ -161,23 +246,28 @@ The animation system had several critical bugs that were successfully fixed:
 
 ## Current Status
 
-### ? Working Features:
+### ? **Fully Working Features**:
 - TRE archive reading and object extraction
-- Static mesh export (MSH files)
+- Static mesh export (MSH files)  
 - Texture conversion (DDS to TGA)
 - Animation export with proper bone rotations
 - Batch processing capabilities
 - Multi-threaded performance optimizations
+- Template-based animation processing
+- Modular code architecture
 
-### ?? Recently Fixed:
-- Animation 180-degree rotation bug
-- FBX curve ordering issues
-- Bind pose generation problems
-- Duplicate skeleton creation
+### ? **Recently Fixed**:
+- **Template linker errors** - Explicit instantiation resolved
+- **Project build issues** - Cleaned up empty file references
+- **Animation 180-degree rotation bug** - Mathematical fixes applied
+- **FBX curve ordering issues** - Proper Translation/Rotation/Scale order
+- **Bind pose generation problems** - Single rotation system implemented
+- **Duplicate skeleton creation** - Removed redundant calls
 
-### ?? Under Investigation:
-- Final bind pose validation and testing
-- Performance optimization for large batches
+### ?? **Current Development**:
+- Performance optimization for large batch processing
 - Memory usage optimization for complex models
+- Additional template specializations for different bone types
+- Enhanced error handling and logging
 
-The project represents a significant reverse-engineering effort to preserve and convert assets from Star Wars Galaxies, enabling continued use of these 3D assets in modern development workflows.
+The project represents a significant reverse-engineering effort to preserve and convert assets from Star Wars Galaxies, enabling continued use of these 3D assets in modern development workflows. The recent modular refactoring and bug fixes have significantly improved the stability and maintainability of the codebase.
