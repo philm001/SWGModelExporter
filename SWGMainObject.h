@@ -100,10 +100,12 @@ private:
 	std::vector<AnimationCurveData> calculateBoneAnimationData(
 		const BoneType& animatedBoneIterator, 
 		std::shared_ptr<Animation> animationObject);
+
 	void processAnimationCurvesParallel(
 		const std::vector<std::shared_ptr<Animation>>& animationList,
 		FbxScene* scene_ptr,
 		FbxNode* mesh_node_ptr);
+
 	void applyAnimationDataToFBX(
 		const std::vector<AnimationCurveData>& curveData, 
 		FbxScene* scene_ptr, 

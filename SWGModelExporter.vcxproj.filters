@@ -84,9 +84,6 @@
     <ClInclude Include="defines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SWGMainObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="mesh_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -44340,6 +44337,9 @@
     <ClInclude Include="Boost\boost\weak_ptr.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SWGMainObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -44405,6 +44405,18 @@
     <ClCompile Include="parsers\latt_parser.cpp">
       <Filter>Source Files\parsers</Filter>
     </ClCompile>
+    <ClCompile Include="SWGDependencyResolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SWGAnimationParsing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SWGFileAccess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SWGSkeletonExport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Scene.fbx" />
@@ -44422,5 +44434,7 @@
       <Filter>Debug</Filter>
     </None>
     <None Include="PROJECT_SUMMARY.md" />
+    <None Include="REFACTORING_COMPLETION_REPORT.md" />
+    <None Include="REFACTORING_SUMMARY.md" />
   </ItemGroup>
 </Project>
