@@ -44434,7 +44434,5 @@
       <Filter>Debug</Filter>
     </None>
     <None Include="PROJECT_SUMMARY.md" />
-    <None Include="REFACTORING_COMPLETION_REPORT.md" />
-    <None Include="REFACTORING_SUMMARY.md" />
   </ItemGroup>
 </Project>

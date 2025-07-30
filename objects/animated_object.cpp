@@ -95,13 +95,48 @@ Animated_mesh::EulerAngles Animated_mesh::ConvertCombineCompressQuat(Geometry::V
 	Geometry::Vector4 Quat;
 	EulerAngles angles;
 
+	// ?? DEBUG: Track quaternion transformation for target bones
+	std::string boneName = BoneReference.name;
+	boost::to_lower(boneName);
+	bool isTargetBone = (boneName == "r_f_leg" || boneName == "r_f_leg2" || boneName == "r_f_leg3");
+	
+	if (isTargetBone) {
+		std::cout << "\n--- ConvertCombineCompressQuat DEBUG: " << BoneReference.name << " ---\n";
+		std::cout << "Input decompressed quaternion: (" << DecompressedQuaterion.x << ", " << DecompressedQuaterion.y 
+			<< ", " << DecompressedQuaterion.z << ", " << DecompressedQuaterion.a << ")\n";
+		std::cout << "Is static: " << (isStatic ? "YES" : "NO") << "\n";
+	}
+
 	FbxQuaternion AnimationQuat = FbxQuaternion(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
 	FbxQuaternion bind_rot_quat{ BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a };
 	FbxQuaternion pre_rot_quat{ BoneReference.pre_rot_quaternion.x, BoneReference.pre_rot_quaternion.y, BoneReference.pre_rot_quaternion.z, BoneReference.pre_rot_quaternion.a };
 	FbxQuaternion post_rot_quat{ BoneReference.post_rot_quaternion.x, BoneReference.post_rot_quaternion.y, BoneReference.post_rot_quaternion.z, BoneReference.post_rot_quaternion.a };
 
+	if (isTargetBone) {
+		std::cout << "Animation quaternion (FBX): (" << AnimationQuat.mData[0] << ", " << AnimationQuat.mData[1] 
+			<< ", " << AnimationQuat.mData[2] << ", " << AnimationQuat.mData[3] << ")\n";
+		std::cout << "Bind pose quaternion: (" << bind_rot_quat.mData[0] << ", " << bind_rot_quat.mData[1] 
+			<< ", " << bind_rot_quat.mData[2] << ", " << bind_rot_quat.mData[3] << ")\n";
+		std::cout << "Pre-rotation quaternion: (" << pre_rot_quat.mData[0] << ", " << pre_rot_quat.mData[1] 
+			<< ", " << pre_rot_quat.mData[2] << ", " << pre_rot_quat.mData[3] << ")\n";
+		std::cout << "Post-rotation quaternion: (" << post_rot_quat.mData[0] << ", " << post_rot_quat.mData[1] 
+			<< ", " << post_rot_quat.mData[2] << ", " << post_rot_quat.mData[3] << ")\n";
+	}
+
 	auto full_rot = post_rot_quat * (AnimationQuat * bind_rot_quat) * pre_rot_quat;
 	Quat = Geometry::Vector4(full_rot.mData[0], full_rot.mData[1], full_rot.mData[2], full_rot.mData[3]);
+
+	if (isTargetBone) {
+		std::cout << "Combined rotation quaternion: (" << Quat.x << ", " << Quat.y << ", " << Quat.z << ", " << Quat.a << ")\n";
+		
+		// Check quaternion normality
+		double magnitude = sqrt(Quat.x * Quat.x + Quat.y * Quat.y + Quat.z * Quat.z + Quat.a * Quat.a);
+		std::cout << "Quaternion magnitude: " << magnitude << " (should be ~1.0)\n";
+		
+		if (std::abs(magnitude - 1.0) > 0.01) {
+			std::cout << "WARNING: Quaternion is not normalized!\n";
+		}
+	}
 
 	double test = Quat.x * Quat.z - Quat.y * Quat.a;
 	double sqx = Quat.x * Quat.x;
@@ -110,9 +145,28 @@ Animated_mesh::EulerAngles Animated_mesh::ConvertCombineCompressQuat(Geometry::V
 	double sqa = Quat.a * Quat.a;
 	double unit = sqx + sqy + sqz + sqa;
 
+	if (isTargetBone) {
+		std::cout << "Conversion variables:\n";
+		std::cout << "  test = x*z - y*a = " << test << "\n";
+		std::cout << "  unit = x²+y²+z²+a² = " << unit << "\n";
+		std::cout << "  sqx=" << sqx << ", sqy=" << sqy << ", sqz=" << sqz << ", sqa=" << sqa << "\n";
+	}
+
 	angles.yaw = std::atan2(2.0 * (Quat.x * Quat.y + Quat.z * Quat.a), sqx - sqy - sqz + sqa); // heading
 	angles.pitch = std::asin(-2.0 * test / unit); // attitude
 	angles.roll = std::atan2(2.0 * (Quat.y * Quat.z + Quat.x * Quat.a), -sqx - sqy + sqz + sqa); // bank
+
+	if (isTargetBone) {
+		std::cout << "Raw Euler angles (radians):\n";
+		std::cout << "  yaw (heading) = " << angles.yaw << "\n";
+		std::cout << "  pitch (attitude) = " << angles.pitch << "\n";
+		std::cout << "  roll (bank) = " << angles.roll << "\n";
+		
+		// Check for potential gimbal lock or extreme values
+		if (std::abs(angles.pitch) > (pi / 2.0 - 0.01)) {
+			std::cout << "WARNING: Near gimbal lock detected! |pitch| = " << std::abs(angles.pitch) << "\n";
+		}
+	}
 
 	/*double test = Quat.x * Quat.y + Quat.z * Quat.a;
 	if (test < 0.499)
@@ -142,6 +196,20 @@ Animated_mesh::EulerAngles Animated_mesh::ConvertCombineCompressQuat(Geometry::V
 	angles.roll *= rotationFactor;
 	angles.pitch *= rotationFactor;
 	angles.yaw *= rotationFactor;
+
+	if (isTargetBone) {
+		std::cout << "Final Euler angles (degrees):\n";
+		std::cout << "  yaw = " << angles.yaw << "°\n";
+		std::cout << "  pitch = " << angles.pitch << "°\n";
+		std::cout << "  roll = " << angles.roll << "°\n";
+		
+		// Check for problematic angles
+		if (std::abs(angles.roll) > 170.0 || std::abs(angles.pitch) > 170.0 || std::abs(angles.yaw) > 170.0) {
+			std::cout << "WARNING: Large rotation detected - potential 180° issue!\n";
+		}
+		
+		std::cout << "--- END ConvertCombineCompressQuat DEBUG ---\n\n";
+	}
 
 	return angles;
 }
@@ -1077,16 +1145,41 @@ std::vector<Skeleton::Bone> Skeleton::generate_skeleton_in_scene(FbxScene* scene
 		FbxQuaternion post_rot_quat{ bone.post_rot_quaternion.x, bone.post_rot_quaternion.y, bone.post_rot_quaternion.z, bone.post_rot_quaternion.a };
 		FbxQuaternion bind_rot_quat{ bone.bind_pose_rotation.x, bone.bind_pose_rotation.y, bone.bind_pose_rotation.z, bone.bind_pose_rotation.a };
 
-		auto full_rot = post_rot_quat * bind_rot_quat * pre_rot_quat;
+		// ? CRITICAL FIX: Use proper quaternion normalization and combination to match the new system
+		// Normalize all quaternions to prevent accumulation errors
+		pre_rot_quat.Normalize();
+		post_rot_quat.Normalize();
+		bind_rot_quat.Normalize();
 		
-		node_ptr->SetPreRotation(FbxNode::eSourcePivot, pre_rot_quat.DecomposeSphericalXYZ());
-
-		node_ptr->SetPostTargetRotation(post_rot_quat.DecomposeSphericalXYZ());
+		auto full_rot = post_rot_quat * bind_rot_quat * pre_rot_quat;
+		full_rot.Normalize(); // Ensure final result is normalized
+		
+		// ? CRITICAL FIX: Handle quaternion sign ambiguity for large rotations
+		// Check if we should use the flipped version for smaller Euler angles
+		auto test_euler = full_rot.DecomposeSphericalXYZ();
+		auto flipped_rot = FbxQuaternion(-full_rot.mData[0], -full_rot.mData[1], -full_rot.mData[2], -full_rot.mData[3]);
+		auto flipped_euler = flipped_rot.DecomposeSphericalXYZ();
+		
+		// Calculate magnitude of rotation angles
+		double original_magnitude = sqrt(test_euler[0]*test_euler[0] + test_euler[1]*test_euler[1] + test_euler[2]*test_euler[2]);
+		double flipped_magnitude = sqrt(flipped_euler[0]*flipped_euler[0] + flipped_euler[1]*flipped_euler[1] + flipped_euler[2]*flipped_euler[2]);
+		
+		// Apply quaternion sign correction to ALL bones with large rotations
+		if (flipped_magnitude < original_magnitude) {
+			full_rot = flipped_rot;
+		}
+		
+		// ? FIXED: Use ONLY local rotation (no pre/post rotation conflicts)
+		// This matches the new system in SWGSkeletonExport.cpp
+		node_ptr->LclRotation.Set(full_rot.DecomposeSphericalXYZ());
+		node_ptr->LclTranslation.Set(FbxDouble3{ bone.bind_pose_transform.x, bone.bind_pose_transform.y, bone.bind_pose_transform.z });
+		
+		// ? REMOVED: These conflicting rotation setups that cause 180° issues
+		// node_ptr->SetPreRotation(FbxNode::eSourcePivot, pre_rot_quat.DecomposeSphericalXYZ());
+		// node_ptr->SetPostTargetRotation(post_rot_quat.DecomposeSphericalXYZ());
 		
 		FbxMatrix  lTransformMatrix;
 
-		node_ptr->LclRotation.Set(full_rot.DecomposeSphericalXYZ());
-		node_ptr->LclTranslation.Set(FbxDouble3{ bone.bind_pose_transform.x, bone.bind_pose_transform.y, bone.bind_pose_transform.z });
 		FbxVector4 lT, lR, lS;
 		lT = FbxVector4(node_ptr->LclTranslation.Get());
 		lR = FbxVector4(node_ptr->LclRotation.Get());

@@ -14988,8 +14988,6 @@
     </None>
     <None Include="PROJECT_SUMMARY.md" />
     <None Include="README.md" />
-    <None Include="REFACTORING_COMPLETION_REPORT.md" />
-    <None Include="REFACTORING_SUMMARY.md" />
     <None Include="Scene.fbx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

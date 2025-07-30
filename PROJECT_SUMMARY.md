@@ -130,144 +130,62 @@ The **SWG Model Exporter** is a C++20 application designed to extract and conver
 
 ## Recent Major Improvements & Fixes
 
-### ? **Resolved: Template Linker Errors (Latest Fix)**
+### ? **Active Investigation: Skeleton Rotation Issues (Current Problem)**
 
-**Issue**: Unresolved external symbol for template function `calculateBoneAnimationData<Animation::Bone_info>`
-- **Root Cause**: Template function declared in header but implemented in .cpp file without explicit instantiation
-- **Solution**: Added explicit template instantiation in `SWGSkeletonExport.cpp`:
-  ```cpp
-  template std::vector<SWGMainObject::AnimationCurveData> 
-  SWGMainObject::calculateBoneAnimationData<Animation::Bone_info>(
-      const Animation::Bone_info& animatedBoneIterator,
-      std::shared_ptr<Animation> animationObject);
-  ```
+**Issue**: Acklay creature model shows severe mesh spiral distortion due to incorrect bone rotations during skeleton generation
+- **Symptoms**: 
+  - Mesh vertices appear twisted in spiral patterns
+  - Large discrepancies between expected and actual bone rotations (up to 279° difference)
+  - Bones `r_f_leg3` and `r_f_leg_finger` showing critical rotation errors
+- **Target Model**: Acklay creature (`appearance/mesh/acklay_l0.mgn`) used for debugging
 
-### ? **Resolved: Project Build Issues**
+#### **Investigation Progress & Findings:**
 
-**Issue**: Build failed due to missing source files referenced in project
-- **Root Cause**: Empty .cpp files were removed but still referenced in vcxproj
-- **Solution**: Cleaned up project file by removing references to:
-  - `SWGAssetParser.cpp` (empty file)
-  - `SWGFBXSceneBuilder.cpp` (empty file) 
-  - `SWGMainObject_New.cpp` (empty file)
-  - `SWGMainObject_Refactored.cpp` (empty file)
+##### **? Root Cause Identified:**
+- **Euler Angle Ambiguity**: FBX's `DecomposeSphericalXYZ()` produces large angles when smaller equivalent representations exist
+- **Mathematical Accuracy Confirmed**: All quaternion operations are mathematically correct
+- **FBX Representation Issue**: Same rotation represented as (192°, -108°, -128°) vs (-168°, 72°, 52°) - both valid but FBX chooses problematic larger angles
 
-### ? **Resolved: Animation System Fixes (Previously Fixed)**
+##### **? Comprehensive Debug Infrastructure:**
+- **Advanced Logging**: Detailed quaternion, Euler angle, and matrix analysis with magnitude tracking
+- **Target Bone Focus**: Specialized debugging for problematic leg bones (`r_f_leg`, `l_f_leg`, `l_m_leg` series)
+- **Matrix Validation**: Transform matrix determinant checking and parent-relative transform verification
+- **Euler Correction Tracking**: `EULER CORRECTION CHECK` logging implemented for bones >100° rotations
 
-The animation system had several critical bugs that were successfully resolved:
+##### **? Failed Solution Attempts:**
+1. **Quaternion Sign Correction**: Failed because `q` and `-q` produce identical Euler angle magnitudes
+2. **Quaternion Order Variations**: Different multiplication orders don't resolve Euler representation issues  
+3. **Pre/Post Rotation Systems**: Created conflicts and inconsistencies
 
-#### Issues Fixed:
-1. **180-Degree Bone Rotation Bug**: Mathematical errors in quaternion to Euler conversion
-2. **FBX Curve Order**: Wrong curve assignment (Translation/Rotation/Scale order)
-3. **Gimbal Lock**: Missing gimbal lock handling causing animation flips
-4. **Quaternion Normalization**: Precision drift from unnormalized quaternions
-5. **Animation Curve Processing**: Corrected vector order and frame processing
+##### **?? Current Issue - Euler Correction Not Triggering:**
+- **Logic Implemented**: Euler angle normalization code exists in `SWGSkeletonExport.cpp`
+- **Detection Working**: System correctly identifies bones with large rotations via `EULER CORRECTION CHECK`
+- **Correction Failing**: No `APPLYING EULER ANGLE CORRECTION` messages appear in debug output
+- **Algorithm Issue**: The normalization condition `std::abs(angle) > 170.0` may be insufficient
 
-#### Solutions Applied:
-- ? **Rewrote quaternion conversion** with proper gimbal lock handling
-- ? **Fixed FBX curve order** to match FBX SDK expectations (Translation, Rotation, Scale)
-- ? **Added quaternion normalization** to prevent precision errors
-- ? **Improved angle normalization** to prevent 180° jumps
-- ? **Enhanced frame validation** with NaN and infinite value checking
+#### **Latest Debug Data Analysis:**
+```cpp
+// Example from r_f_leg3 bone:
+r_f_leg3: Original Euler: (94.6894, -108.141, -128.081) - magnitude: 192.523°
+Expected local rotation: (-85.3106, -71.8594, 51.9194)
+Actual local rotation: (94.6894, -108.141, -128.081)
+Local rotation difference: 257.131 degrees ?? CRITICAL
 
-### ? **Resolved: Bind Pose Problems (Previously Fixed)**
+// Multiple bones showing large rotations detected:
+EULER CORRECTION CHECK for l_f_leg: Original magnitude=173.983
+EULER CORRECTION CHECK for l_f_leg2: Original magnitude=196.234  
+EULER CORRECTION CHECK for r_f_leg2: Original magnitude=196.235
+EULER CORRECTION CHECK for r_f_leg3: Original magnitude=192.523
+```
 
-**Issue**: Skeletal meshes appeared incorrectly positioned or deformed in exported FBX files
+#### **Technical Architecture:**
+- **Dual Skeleton Systems**: Both `SWGSkeletonExport.cpp` (new modular) and `objects/animated_object.cpp` (legacy) handle skeleton generation
+- **Consistent Quaternion Order**: `post_rot_quat * bind_rot_quat * pre_rot_quat` verified in both systems
+- **Single Rotation Approach**: Eliminated pre/post rotation conflicts by combining all rotations into local rotation
 
-#### Root Causes Identified:
-1. **Duplicate Skeleton Generation**: The `storeMGN()` function was calling `generateSkeletonInScene()` twice
-2. **FBX Bind Pose Setup**: Missing proper mesh node inclusion in bind pose data
-3. **Transform Matrix Issues**: Incorrect calculation of bone transform matrices
-4. **Rotation Conflicts**: Pre/post rotation conflicts causing 180° bone issues
+#### **Next Steps Required:**
+1. **Fix Euler Correction Trigger**: Investigate why angle normalization logic doesn't activate
+2. **Enhance Correction Algorithm**: Improve the 170° threshold and correction criteria  
+3. **Matrix Consistency Resolution**: Address the massive rotation discrepancies in global transform matrices
 
-#### Fixes Implemented:
-- ? **Removed duplicate skeleton generation calls**
-- ? **Fixed bind pose creation** by adding mesh node first (FBX SDK requirement)
-- ? **Enhanced cluster setup** with proper skin deformation settings
-- ? **Implemented single rotation system** combining pre/post/bind rotations
-- ? **Added extensive debug logging** for troubleshooting bone data integrity
-
----
-
-## Code Architecture Improvements
-
-### **Modular Refactoring**
-The project has been refactored into a more modular structure:
-
-- **`SWGAnimationParsing.cpp`**: All animation-related FBX export logic
-- **`SWGSkeletonExport.cpp`**: Skeleton creation and bind pose management
-- **`SWGDependencyResolver.cpp`**: Asset dependency resolution
-- **`SWGFileAccess.cpp`**: File I/O and export coordination
-
-### **Template System Enhancement**
-- Added robust template support for flexible bone animation processing
-- Implemented explicit template instantiation to resolve linker issues
-- Enhanced type safety with template parameter validation
-
-### **Threading Architecture**
-- **Parallel Processing**: Internal mathematical computations parallelized
-- **Sequential File Access**: Disk operations remain sequential for stability
-- **Thread-Safe Operations**: Proper mutex usage for shared data structures
-
----
-
-## Technical Challenges
-
-### Complexity Areas:
-1. **Proprietary Format Reverse Engineering**: SWG uses custom binary formats requiring careful parsing
-2. **FBX SDK Integration**: Complex API with strict requirements for bind poses and animation curves  
-3. **Multi-threading**: Balancing performance with FBX SDK thread safety limitations
-4. **Memory Management**: Large meshes and animations require careful resource handling
-5. **Coordinate System Conversion**: Transforming from SWG's coordinate system to FBX standards
-6. **Template Instantiation**: C++ template linking across compilation units
-
-### Performance Optimizations:
-- **Parallel Dependency Resolution**: Multi-threaded shader and skeleton processing
-- **Threaded Animation Processing**: Mathematical computations parallelized
-- **Memory-Efficient Streaming**: Large files processed in chunks
-- **Caching System**: Object lookup optimization for dependency resolution
-
----
-
-## Build Configuration
-
-### Dependencies:
-- **Autodesk FBX SDK 2020.3.7**: For FBX file creation and manipulation
-- **Boost Libraries**: Filesystem, program options, tokenizer, progress display
-- **DirectXTex**: For DDS texture processing and conversion
-- **Windows SDK**: For COM initialization and file operations
-
-### Debug vs Release:
-- **Debug Mode**: Uses hardcoded paths for easy development and testing
-- **Release Mode**: Full command-line interface for production use
-- **Test Objects**: Various SWG assets included for validation (creatures, characters, static meshes)
-
----
-
-## Current Status
-
-### ? **Fully Working Features**:
-- TRE archive reading and object extraction
-- Static mesh export (MSH files)  
-- Texture conversion (DDS to TGA)
-- Animation export with proper bone rotations
-- Batch processing capabilities
-- Multi-threaded performance optimizations
-- Template-based animation processing
-- Modular code architecture
-
-### ? **Recently Fixed**:
-- **Template linker errors** - Explicit instantiation resolved
-- **Project build issues** - Cleaned up empty file references
-- **Animation 180-degree rotation bug** - Mathematical fixes applied
-- **FBX curve ordering issues** - Proper Translation/Rotation/Scale order
-- **Bind pose generation problems** - Single rotation system implemented
-- **Duplicate skeleton creation** - Removed redundant calls
-
-### ?? **Current Development**:
-- Performance optimization for large batch processing
-- Memory usage optimization for complex models
-- Additional template specializations for different bone types
-- Enhanced error handling and logging
-
-The project represents a significant reverse-engineering effort to preserve and convert assets from Star Wars Galaxies, enabling continued use of these 3D assets in modern development workflows. The recent modular refactoring and bug fixes have significantly improved the stability and maintainability of the codebase.
+### ? **Resolved: Template Linker Errors (Previously Fixed)**
