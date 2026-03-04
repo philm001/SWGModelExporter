@@ -85,7 +85,7 @@ private:
 	EulerAngles ConvertCombineCompressQuat(Geometry::Vector4 DecompressedQuaterion, Skeleton::Bone BoneReference, bool isStatic = false);
 
 	// ------ Section that works on the bones -----
-	std::vector<Skeleton::Bone> generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr, std::vector<Animated_mesh>& mesh);
+	std::vector<Skeleton::Bone> generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr, FbxNode* skeleton_parent_ptr, std::vector<Animated_mesh>& mesh);
 	uint32_t get_bones_count(int LODLevel) { return static_cast<uint32_t>(m_bones.at(LODLevel).size()); }
 	Skeleton::Bone& getBone(uint32_t index, int LODLevel) { return m_bones.at(LODLevel).at(index); }
 

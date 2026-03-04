@@ -2,7 +2,7 @@
 #include "SWGMainObject.h"
 #include <iomanip>
 
-std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr, std::vector<Animated_mesh>& mesh)
+std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* scene_ptr, FbxNode* parent_ptr, FbxNode* skeleton_parent_ptr, std::vector<Animated_mesh>& mesh)
 {
 	assert(parent_ptr != nullptr && scene_ptr != nullptr);
 	std::vector<Skeleton::Bone> boneListing;
@@ -17,9 +17,6 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 
 	std::vector<FbxNode*> nodes(boneCount, nullptr);
 	std::vector<FbxCluster*> clusters(boneCount, nullptr);
-
-	auto pose_ptr2 = FbxPose::Create(scene_ptr, "Rest Pose"); // Also create the binding pose
-	pose_ptr2->SetIsBindPose(true);
 
 	for (uint32_t boneCounter = 0; boneCounter < boneCount; boneCounter++)
 	{
@@ -125,14 +122,6 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 				<< (std::abs(verify_dot) > 0.99 ? " [GOOD]" : " [BAD]"));
 		}
 
-		FbxMatrix lTransformMatrix;
-		FbxVector4 lT, lR, lS;
-		lT = FbxVector4(node_ptr->LclTranslation.Get());
-		lR = FbxVector4(node_ptr->LclRotation.Get());
-		lS = FbxVector4(node_ptr->LclScaling.Get());
-
-		lTransformMatrix.SetTRS(lT, lR, lS);
-
 		boneListing.push_back(bone);
 		nodes[boneCounter] = node_ptr;
 		bone.boneNodeptr = node_ptr;
@@ -145,7 +134,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 		auto idx_parent = bone.parent_idx;
 		
 		if (idx_parent == -1)
-			parent_ptr->AddChild(nodes[bone_num]);
+			skeleton_parent_ptr->AddChild(nodes[bone_num]); // child of armature, not mesh_node
 		else
 		{
 			auto& parent = nodes[idx_parent];
@@ -232,8 +221,12 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 	auto pose_ptr = FbxPose::Create(scene_ptr, parent_ptr->GetName());
 	pose_ptr->SetIsBindPose(true);
 
-	// create bind pose - remove verbose debug output
+	// create bind pose
+	// The bind pose must contain the mesh node, the armature node, and every
+	// bone node in the deformation chain.  Do NOT include the FBX scene root.
 	FbxAMatrix matrix;
+	pose_ptr->Add(parent_ptr, parent_ptr->EvaluateGlobalTransform());
+	pose_ptr->Add(skeleton_parent_ptr, skeleton_parent_ptr->EvaluateGlobalTransform());
 	for (uint32_t bone_num = 0; bone_num < boneCount; ++bone_num)
 	{
 		matrix = nodes[bone_num]->EvaluateGlobalTransform();

@@ -50,11 +50,18 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 
 	scene_ptr->GetGlobalSettings().SetSystemUnit(FbxSystemUnit::m);
 	auto scale_factor = scene_ptr->GetGlobalSettings().GetSystemUnit().GetScaleFactor();
-	FbxNode* mesh_node_ptr = FbxNode::Create(scene_ptr, "mesh_node"); //skeleton root?
+	FbxNode* mesh_node_ptr = FbxNode::Create(scene_ptr, "mesh_node");
 	FbxMesh* mesh_ptr = FbxMesh::Create(scene_ptr, "mesh");
 
 	mesh_node_ptr->SetNodeAttribute(mesh_ptr);
 	scene_ptr->GetRootNode()->AddChild(mesh_node_ptr);
+
+	// Create a separate armature node as the skeleton parent.  mesh_node must
+	// NOT be the parent of bones — Blender's FBX importer creates a circular
+	// dependency (OBmesh_node ↔ OBroot) when the mesh node is also the skeleton
+	// root parent.  Using a sibling armature node breaks the cycle.
+	FbxNode* armature_node_ptr = FbxNode::Create(scene_ptr, "Armature");
+	scene_ptr->GetRootNode()->AddChild(armature_node_ptr);
 
 	// prepare vertices
 	uint32_t vertices_num = 0;
@@ -337,7 +344,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 			});
 	}
 
-	BoneInfoList = generateSkeletonInScene(scene_ptr, mesh_node_ptr, mesh);
+	BoneInfoList = generateSkeletonInScene(scene_ptr, mesh_node_ptr, armature_node_ptr, mesh);
 
 	// build morph targets
 	// prepare base vector
@@ -421,7 +428,11 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 			success = blend_shape_ptr->AddBlendShapeChannel(morph_channel);
 		}
 	}
-	mesh_node_ptr->GetGeometry()->AddDeformer(blend_shape_ptr);
+	// Only attach the blend shape deformer when it actually has channels.
+	// An empty FbxBlendShape (0 channels) is invalid and causes FBX Viewer
+	// to report "Animation data is corrupted".
+	if (blend_shape_ptr->GetBlendShapeChannelCount() > 0)
+		mesh_node_ptr->GetGeometry()->AddDeformer(blend_shape_ptr);
 
 	// Build Animations (Note: Not sure if this is the best place to put them. But should be after the skeletons
 	std::vector<std::shared_ptr<Animation>> animationList;
@@ -439,10 +450,21 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 	QuatExpand::UncompressQuaternion decompressValues;
 	decompressValues.install();
 
+	// Axis conversion is applied after ALL scene data is built — see end of function.
 
-	//FbxAxisSystem max; // we desire to convert the scene from Y-Up to Z-Up
-	//max.ConvertScene(scene_ptr);
-	FbxAxisSystem::MayaZUp.ConvertScene(scene_ptr);
+	// Set the scene time mode ONCE before processing any animations.
+	// FbxTime::SetGlobalTimeMode is a global static — calling it per-animation
+	// mid-export changes the SDK-wide time interpretation for already-written
+	// data and corrupts previously stored curve timing.
+	if (!animationList.empty() && animationList.front())
+	{
+		auto firstAnim = animationList.front();
+		FbxTime::EMode computeTimeMode = FbxTime::ConvertFrameRateToTimeMode(firstAnim->get_info().FPS);
+		FbxTime::SetGlobalTimeMode(computeTimeMode, computeTimeMode == FbxTime::eCustom ? firstAnim->get_info().FPS : 0.0);
+		scene_ptr->GetGlobalSettings().SetTimeMode(computeTimeMode);
+		if (computeTimeMode == FbxTime::eCustom)
+			scene_ptr->GetGlobalSettings().SetCustomFrameRate(firstAnim->get_info().FPS);
+	}
 
 	// Next loop through the entire animation list
 	for (int i = 0; i < animationList.size(); i++)// This method is esy for debugging
@@ -487,21 +509,10 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 			fbxsdk::FbxAnimStack* animationStack = fbxsdk::FbxAnimStack::Create(scene_ptr, animationStackName);
 
 			FbxAnimLayer* animationLayer = FbxAnimLayer::Create(scene_ptr, "Base Layer");
-			animationLayer->BlendMode.Set(FbxAnimLayer::eBlendOverride);
 			animationStack->AddMember(animationLayer);
 
-			FbxGlobalSettings& sceneGlobaleSettings = scene_ptr->GetGlobalSettings();
-			double currentFrameRate = FbxTime::GetFrameRate(sceneGlobaleSettings.GetTimeMode());
-			if (animationObject->get_info().FPS != currentFrameRate)
-			{
-				FbxTime::EMode computeTimeMode = FbxTime::ConvertFrameRateToTimeMode(animationObject->get_info().FPS);
-				FbxTime::SetGlobalTimeMode(computeTimeMode, computeTimeMode == FbxTime::eCustom ? animationObject->get_info().FPS : 0.0);
-				sceneGlobaleSettings.SetTimeMode(computeTimeMode);
-				if (computeTimeMode == FbxTime::eCustom)
-				{
-					sceneGlobaleSettings.SetCustomFrameRate(animationObject->get_info().FPS);
-				}
-			}
+			// Time mode already set once before the loop — do not call
+			// SetGlobalTimeMode here as it changes SDK-wide state mid-export.
 
 			FbxTime exportedStartTime, exportedStopTime;
 			exportedStartTime.SetSecondDouble(0.0f);
@@ -509,6 +520,9 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 
 			FbxTimeSpan exportedTimeSpan;
 			exportedTimeSpan.Set(exportedStartTime, exportedStopTime);
+			// Both spans are required by the FBX SDK. SetLocalTimeSpan alone is not
+			// enough — FBX Viewer validates ReferenceTimeSpan and reports
+			// "Animation data is corrupted" when it is left at the default (0,0).
 			animationStack->SetLocalTimeSpan(exportedTimeSpan);
 			animationStack->SetReferenceTimeSpan(exportedTimeSpan);
 
@@ -863,9 +877,9 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 							Curve->KeyModifyEnd();
 						}
 
-						// Apply unroll filter once after all keys are finalized
-						if (unrollFilter.NeedApply(Curves, 9)) {
-							unrollFilter.Apply(Curves, 9);
+						// Apply unroll filter to rotation curves only (indices 3-5)
+						if (unrollFilter.NeedApply(&Curves[3], 3)) {
+							unrollFilter.Apply(&Curves[3], 3);
 							if (DebugConfig::ANIM_DEBUG_LOGGING && isTargetBone && lodLevel == 0) {
 								LOG_ANIMATION("Applied unroll filter to " << skeletonBone.name);
 							}
@@ -883,6 +897,23 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 			}
 		}
 	}
+
+	// -------------------------------------------------------------------------
+	// Axis system — metadata only, no transform.
+	// -------------------------------------------------------------------------
+	// SWG geometry is already stored in Y-up space.  We record MayaYUp as the
+	// scene's coordinate convention so FBX viewers interpret the data correctly.
+	//
+	// Do NOT call ConvertScene here.  ConvertScene physically rotates node
+	// transforms and injects a pre-rotation on mesh_node (typically [90,0,0])
+	// as a side-effect.  That pre-rotation:
+	//   (a) makes the FBX sanitizer report "root object does not have a zero
+	//       rotation", and
+	//   (b) invalidates the bind-pose snapshot matrices, causing FBX Viewer to
+	//       report "Animation data is corrupted".
+	// Setting the axis system via GlobalSettings is sufficient — it writes the
+	// correct metadata without touching any node transforms.
+	scene_ptr->GetGlobalSettings().SetAxisSystem(FbxAxisSystem::MayaYUp);
 
 	exporter_ptr->Export(scene_ptr);
 	// cleanup
