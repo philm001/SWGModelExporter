@@ -250,49 +250,23 @@ SWGMainObject::EulerAngles SWGMainObject::ConvertCombineCompressQuat(Geometry::V
 		boneName.find("leg") != std::string::npos);
 
 	FbxQuaternion anim_quat(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
-	FbxQuaternion bind_rot_quat(BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a);
 	FbxQuaternion pre_rot_quat(BoneReference.pre_rot_quaternion.x, BoneReference.pre_rot_quaternion.y, BoneReference.pre_rot_quaternion.z, BoneReference.pre_rot_quaternion.a);
 	FbxQuaternion post_rot_quat(BoneReference.post_rot_quaternion.x, BoneReference.post_rot_quaternion.y, BoneReference.post_rot_quaternion.z, BoneReference.post_rot_quaternion.a);
 
 	anim_quat.Normalize();
-	bind_rot_quat.Normalize();
 	pre_rot_quat.Normalize();
 	post_rot_quat.Normalize();
 
-	FbxQuaternion combined1 = pre_rot_quat * bind_rot_quat * post_rot_quat;
-	FbxQuaternion combined2 = bind_rot_quat * post_rot_quat * pre_rot_quat;
-	combined1.Normalize();
-	combined2.Normalize();
-
-	// Get expected quaternion from bone node
-	FbxQuaternion expected_quat;
-	if (BoneReference.boneNodeptr) {
-		if (isStatic) {
-			expected_quat = BoneReference.boneNodeptr->EvaluateGlobalTransform().GetQ();
-		} else {
-			expected_quat = BoneReference.boneNodeptr->EvaluateLocalTransform().GetQ();
-		}
-		expected_quat.Normalize();
-	}
-
-	double dot1 = std::abs(combined1.DotProduct(expected_quat));
-	double dot2 = std::abs(combined2.DotProduct(expected_quat));
-
-	FbxQuaternion selected_quat = (dot1 > dot2) ? combined1 : combined2;
-
-	if (selected_quat.DotProduct(expected_quat) < 0)
-	{
+	FbxQuaternion selected_quat = post_rot_quat * anim_quat * pre_rot_quat;
+	selected_quat.Normalize();
+	if (selected_quat[3] < 0)
 		selected_quat = -selected_quat;
-	}
 
 	// 🔍 CONDENSED DEBUG: Only show critical data for target bones
 	if (DebugConfig::BONE_DEBUG_LOGGING && isTargetBone) {
-		double final_dot = selected_quat.DotProduct(expected_quat);
 		std::cout << "[BONE] " << BoneReference.name << (isStatic ? " (static)" : "")
 			<< " | Input: (" << std::fixed << std::setprecision(3) 
 			<< DecompressedQuaterion.x << "," << DecompressedQuaterion.y << "," << DecompressedQuaterion.z << "," << DecompressedQuaterion.a << ")";
-		std::cout << " | Dots: " << std::setprecision(3) << dot1 << "/" << dot2 
-			<< " | Final: " << final_dot;
 	}
 
 	Geometry::Vector4 Quat(selected_quat[0], selected_quat[1], selected_quat[2], selected_quat[3]);
@@ -315,17 +289,7 @@ SWGMainObject::EulerAngles SWGMainObject::ConvertCombineCompressQuat(Geometry::V
 	angles.yaw = std::fmod(angles.yaw * rotationFactor + 180.0, 360.0) - 180.0;
 
 	if (DebugConfig::BONE_DEBUG_LOGGING && isTargetBone) {
-		// Validate round-trip conversion
-		FbxQuaternion test_quat;
-		double round_trip_dot = test_quat.DotProduct(selected_quat);
-		double final_dot = selected_quat.DotProduct(expected_quat);
-		
 		std::cout << " | Euler: (" << std::setprecision(1) << angles.roll << "," << angles.pitch << "," << angles.yaw << ")";
-		std::cout << " | RoundTrip: " << std::setprecision(3) << round_trip_dot;
-		
-		if (std::abs(round_trip_dot) < 0.99 || std::abs(final_dot) < 0.95) {
-			std::cout << " [POOR]";
-		}
 		std::cout << "\n";
 	}
 

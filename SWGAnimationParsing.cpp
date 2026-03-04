@@ -487,6 +487,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 			fbxsdk::FbxAnimStack* animationStack = fbxsdk::FbxAnimStack::Create(scene_ptr, animationStackName);
 
 			FbxAnimLayer* animationLayer = FbxAnimLayer::Create(scene_ptr, "Base Layer");
+			animationLayer->BlendMode.Set(FbxAnimLayer::eBlendOverride);
 			animationStack->AddMember(animationLayer);
 
 			FbxGlobalSettings& sceneGlobaleSettings = scene_ptr->GetGlobalSettings();
@@ -509,6 +510,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 			FbxTimeSpan exportedTimeSpan;
 			exportedTimeSpan.Set(exportedStartTime, exportedStopTime);
 			animationStack->SetLocalTimeSpan(exportedTimeSpan);
+			animationStack->SetReferenceTimeSpan(exportedTimeSpan);
 
 			// ✅ FIXED: Set the current animation stack so FBX knows which one to use
 			scene_ptr->SetCurrentAnimationStack(animationStack);
@@ -573,16 +575,21 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 						Curve->KeyModifyBegin();
 					}
 
+					// Hoist out of frame loop - depends only on bone name, not frame
+					bool isTargetBone = (skeletonBone.name == "r_f_leg3" || skeletonBone.name == "r_f_leg_finger" ||
+						skeletonBone.name == "l_f_leg3" || skeletonBone.name == "l_f_leg_finger" ||
+						skeletonBone.name.find("leg") != std::string::npos);
+
+					// Create once per bone so Apply() has full curve history across all frames
+					FbxAnimCurveFilterUnroll unrollFilter;
+					unrollFilter.SetForceAutoTangents(true);
+
 					for (int frameCounter = 0; frameCounter < animationObject->get_info().frame_count + 1; frameCounter++)
 					{
 						// For each frame, we need to build the translation vector and the rotation vector
 						FbxVector4 TranslationVector;
 						FbxVector4 RotationVector;
 
-						// 🔍 DEBUG: Focus on problematic bones, first animation, first frame, and LOD 0 only
-						bool isTargetBone = (skeletonBone.name == "r_f_leg3" || skeletonBone.name == "r_f_leg_finger" || 
-							skeletonBone.name == "l_f_leg3" || skeletonBone.name == "l_f_leg_finger" ||
-							skeletonBone.name.find("leg") != std::string::npos);
 						bool debugFrame = DebugConfig::ANIM_DEBUG_LOGGING && (i == 0 && frameCounter < 1 && isTargetBone && lodLevel == 0);
 
 						// 🔍 CRITICAL DEBUG: Verify bone node pointer is valid
@@ -810,9 +817,6 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 								<< (std::abs(dot) < 0.95 ? " [MISMATCH]" : ""));
 						}
 
-						FbxAnimCurveFilterUnroll unrollFilter;
-						unrollFilter.SetForceAutoTangents(true);
-
 						// ✅ FIXED: Changed from 2 to 3 to include scale curves
 						for (int curveIndex = 0; curveIndex < 3; curveIndex++)
 						{
@@ -852,19 +856,20 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 							}
 						}
 
-						// Check if unroll filter should be applied
-						if (frameCounter == animationObject->get_info().frame_count && unrollFilter.NeedApply(Curves, 9)) {
+						}
+
+						for (fbxsdk::FbxAnimCurve* Curve : Curves)
+						{
+							Curve->KeyModifyEnd();
+						}
+
+						// Apply unroll filter once after all keys are finalized
+						if (unrollFilter.NeedApply(Curves, 9)) {
 							unrollFilter.Apply(Curves, 9);
-							if (DebugConfig::ANIM_DEBUG_LOGGING && isTargetBone && lodLevel == 0) { // Only log unroll filter for LOD 0
+							if (DebugConfig::ANIM_DEBUG_LOGGING && isTargetBone && lodLevel == 0) {
 								LOG_ANIMATION("Applied unroll filter to " << skeletonBone.name);
 							}
 						}
-					}
-
-					for (fbxsdk::FbxAnimCurve* Curve : Curves)
-					{
-						Curve->KeyModifyEnd();
-					}
 				}
 				else
 				{
