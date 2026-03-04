@@ -44343,6 +44343,9 @@
     <ClInclude Include="Logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DebugConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -44440,6 +44443,5 @@
       <Filter>Debug</Filter>
     </None>
     <None Include="PROJECT_SUMMARY.md" />
-    <None Include="assessment.md" />
   </ItemGroup>
 </Project>

@@ -11,7 +11,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 
 	// 🔍 CONDENSED DEBUG: Only for first animation frame equivalent (skeleton generation happens once)
 	bool isLOD0 = mesh.size() > 0 && mesh[0].getLodLevel() == 0;
-	if (isLOD0) {
+	if (DebugConfig::SKELETON_DEBUG_LOGGING && isLOD0) {
 		LOG_SKELETON("LOD 0 generation with " << boneCount << " bones");
 	}
 
@@ -94,7 +94,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 		}
 
 		// 🔍 CONDENSED DEBUG: Show only critical rotation corrections for target bones
-		if (isLOD0 && isTargetBone && (std::abs(test_euler[0]) > 100.0 || std::abs(test_euler[1]) > 100.0 || std::abs(test_euler[2]) > 100.0)) {
+		if (DebugConfig::SKELETON_DEBUG_LOGGING && isLOD0 && isTargetBone && (std::abs(test_euler[0]) > 100.0 || std::abs(test_euler[1]) > 100.0 || std::abs(test_euler[2]) > 100.0)) {
 			double original_magnitude = sqrt(test_euler[0]*test_euler[0] + test_euler[1]*test_euler[1] + test_euler[2]*test_euler[2]);
 			LOG_SKELETON(bone.name << " | Large rotation magnitude: " << std::fixed << std::setprecision(1) << original_magnitude << "°");
 			if (applied_correction) {
@@ -108,7 +108,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 		node_ptr->LclTranslation.Set(FbxDouble3{ bone.bind_pose_transform.x, bone.bind_pose_transform.y, bone.bind_pose_transform.z });
 
 		// 🔍 BIND POSE DEBUG: Verify rotation application for target bones
-		if (isLOD0 && isTargetBone) {
+		if (DebugConfig::SKELETON_DEBUG_LOGGING && isLOD0 && isTargetBone) {
 			FbxVector4 applied_rotation = node_ptr->LclRotation.Get();
 			FbxVector4 applied_translation = node_ptr->LclTranslation.Get();
 			LOG_SKELETON("🦴 BIND POSE " << bone.name 
@@ -208,7 +208,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 			auto& cluster_vertex_array = cluster_vertices[bone_name];
 			
 			// 🔍 CONDENSED DEBUG: Show cluster info only for target bones with issues
-			if (isLOD0 && isTargetBone && cluster_vertex_array.size() < 5) {
+			if (DebugConfig::SKELETON_DEBUG_LOGGING && isLOD0 && isTargetBone && cluster_vertex_array.size() < 5) {
 				LOG_SKELETON(bone.name << " has only " << cluster_vertex_array.size() << " weighted vertices [LOW]");
 			}
 			
@@ -241,7 +241,7 @@ std::vector<Skeleton::Bone> SWGMainObject::generateSkeletonInScene(FbxScene* sce
 	}
 	scene_ptr->AddPose(pose_ptr);
 	
-	if (isLOD0) {
+	if (DebugConfig::SKELETON_DEBUG_LOGGING && isLOD0) {
 		LOG_SKELETON("Generation complete");
 	}
 	

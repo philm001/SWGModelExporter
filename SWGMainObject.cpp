@@ -286,9 +286,9 @@ SWGMainObject::EulerAngles SWGMainObject::ConvertCombineCompressQuat(Geometry::V
 	}
 
 	// 🔍 CONDENSED DEBUG: Only show critical data for target bones
-	if (isTargetBone) {
+	if (DebugConfig::BONE_DEBUG_LOGGING && isTargetBone) {
 		double final_dot = selected_quat.DotProduct(expected_quat);
-		std::cout << "[BONE] " << BoneReference.name << (isStatic ? " (static)" : "") 
+		std::cout << "[BONE] " << BoneReference.name << (isStatic ? " (static)" : "")
 			<< " | Input: (" << std::fixed << std::setprecision(3) 
 			<< DecompressedQuaterion.x << "," << DecompressedQuaterion.y << "," << DecompressedQuaterion.z << "," << DecompressedQuaterion.a << ")";
 		std::cout << " | Dots: " << std::setprecision(3) << dot1 << "/" << dot2 
@@ -314,10 +314,9 @@ SWGMainObject::EulerAngles SWGMainObject::ConvertCombineCompressQuat(Geometry::V
 	angles.pitch = std::fmod(angles.pitch * rotationFactor + 180.0, 360.0) - 180.0;
 	angles.yaw = std::fmod(angles.yaw * rotationFactor + 180.0, 360.0) - 180.0;
 
-	if (isTargetBone) {
+	if (DebugConfig::BONE_DEBUG_LOGGING && isTargetBone) {
 		// Validate round-trip conversion
 		FbxQuaternion test_quat;
-		test_quat.ComposeSphericalXYZ(FbxVector4(angles.roll, angles.pitch, angles.yaw));
 		double round_trip_dot = test_quat.DotProduct(selected_quat);
 		double final_dot = selected_quat.DotProduct(expected_quat);
 		

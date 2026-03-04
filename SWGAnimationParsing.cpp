@@ -451,24 +451,25 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 
 		if (animationObject)
 		{
-			// 🔍 LOG: Clear identification of which animation is being processed
-			LOG_ANIMATION("================================================================================");
-			LOG_ANIMATION("PROCESSING ANIMATION [" << i << "/" << (animationList.size() - 1) << "]: " << animationObject->get_object_name());
-			LOG_ANIMATION("Animation details: " << animationObject->get_info().frame_count << " frames, " 
-				<< animationObject->get_info().FPS << " FPS, " << animationObject->get_bones().size() << " bones");
-			LOG_ANIMATION("Mesh LOD Level: " << lodLevel << " (debug logs only for LOD 0)");
-			if (i == 0 && lodLevel == 0) {
-				LOG_ANIMATION("📋 DEBUG MODE: First animation + LOD 0 - detailed bone logs will be generated");
-			} else {
-				std::string reason = "";
-				if (i != 0) reason += "animation " + std::to_string(i) + " (not first)";
-				if (lodLevel != 0) {
-					if (!reason.empty()) reason += " + ";
-					reason += "LOD " + std::to_string(lodLevel) + " (not LOD 0)";
+			if (DebugConfig::ANIM_DEBUG_LOGGING) {
+				LOG_ANIMATION("================================================================================");
+				LOG_ANIMATION("PROCESSING ANIMATION [" << i << "/" << (animationList.size() - 1) << "]: " << animationObject->get_object_name());
+				LOG_ANIMATION("Animation details: " << animationObject->get_info().frame_count << " frames, "
+					<< animationObject->get_info().FPS << " FPS, " << animationObject->get_bones().size() << " bones");
+				LOG_ANIMATION("Mesh LOD Level: " << lodLevel << " (debug logs only for LOD 0)");
+				if (i == 0 && lodLevel == 0) {
+					LOG_ANIMATION("📋 DEBUG MODE: First animation + LOD 0 - detailed bone logs will be generated");
+				} else {
+					std::string reason = "";
+					if (i != 0) reason += "animation " + std::to_string(i) + " (not first)";
+					if (lodLevel != 0) {
+						if (!reason.empty()) reason += " + ";
+						reason += "LOD " + std::to_string(lodLevel) + " (not LOD 0)";
+					}
+					LOG_ANIMATION("⏩ SKIPPING detailed logs for " << reason << " (debug mode: first animation + LOD 0 only)");
 				}
-				LOG_ANIMATION("⏩ SKIPPING detailed logs for " << reason << " (debug mode: first animation + LOD 0 only)");
+				LOG_ANIMATION("================================================================================");
 			}
-			LOG_ANIMATION("================================================================================");
 
 			std::string stackName = animationObject->get_object_name();
 			std::string firstErase = "appearance/animation/";
@@ -582,7 +583,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 						bool isTargetBone = (skeletonBone.name == "r_f_leg3" || skeletonBone.name == "r_f_leg_finger" || 
 							skeletonBone.name == "l_f_leg3" || skeletonBone.name == "l_f_leg_finger" ||
 							skeletonBone.name.find("leg") != std::string::npos);
-						bool debugFrame = (i == 0 && frameCounter < 1 && isTargetBone && lodLevel == 0);
+						bool debugFrame = DebugConfig::ANIM_DEBUG_LOGGING && (i == 0 && frameCounter < 1 && isTargetBone && lodLevel == 0);
 
 						// 🔍 CRITICAL DEBUG: Verify bone node pointer is valid
 						if (debugFrame) {
@@ -608,7 +609,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 						}
 
 						// 🔍 LOG: Frame processing confirmation - only log for first animation, first frame, target bones, and LOD 0
-						if (i == 0 && frameCounter < 1 && isTargetBone && lodLevel == 0) {
+						if (debugFrame) {
 							LOG_ANIMATION("FRAME " << frameCounter << " | Animation[" << i << "] | LOD[" << lodLevel << "] | Bone: " << skeletonBone.name 
 								<< " | Total frames: " << animationObject->get_info().frame_count);
 						}
@@ -854,7 +855,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 						// Check if unroll filter should be applied
 						if (frameCounter == animationObject->get_info().frame_count && unrollFilter.NeedApply(Curves, 9)) {
 							unrollFilter.Apply(Curves, 9);
-							if (isTargetBone && lodLevel == 0) { // Only log unroll filter for LOD 0
+							if (DebugConfig::ANIM_DEBUG_LOGGING && isTargetBone && lodLevel == 0) { // Only log unroll filter for LOD 0
 								LOG_ANIMATION("Applied unroll filter to " << skeletonBone.name);
 							}
 						}
@@ -871,8 +872,10 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 				}
 			}
 			
-			// 🔍 LOG: Animation processing completion
-			LOG_ANIMATION("✅ COMPLETED ANIMATION [" << i << "]: " << animationObject->get_object_name());
+			if (DebugConfig::ANIM_DEBUG_LOGGING) {
+				// 🔍 LOG: Animation processing completion
+				LOG_ANIMATION("✅ COMPLETED ANIMATION [" << i << "]: " << animationObject->get_object_name());
+			}
 		}
 	}
 

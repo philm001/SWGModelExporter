@@ -14917,6 +14917,7 @@
     <ClInclude Include="Boost\boost\yap\print.hpp" />
     <ClInclude Include="Boost\boost\yap\user_macros.hpp" />
     <ClInclude Include="Boost\boost\yap\yap.hpp" />
+    <ClInclude Include="DebugConfig.h" />
     <ClInclude Include="defines.h" />
     <ClInclude Include="IFF_file.h" />
     <ClInclude Include="Logger.h" />
@@ -14979,7 +14980,6 @@
     <ClCompile Include="UncompressQuaternion.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assessment.md" />
     <None Include="boost.7z" />
     <None Include="Boost\boost\wave\cpplexer\re2clex\cpp_re.inc" />
     <None Include="Boost\boost\wave\cpplexer\re2clex\strict_cpp_re.inc" />
