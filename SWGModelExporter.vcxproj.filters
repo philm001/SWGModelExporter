@@ -44340,6 +44340,9 @@
     <ClInclude Include="SWGMainObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -44417,6 +44420,9 @@
     <ClCompile Include="SWGSkeletonExport.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Scene.fbx" />
@@ -44434,5 +44440,6 @@
       <Filter>Debug</Filter>
     </None>
     <None Include="PROJECT_SUMMARY.md" />
+    <None Include="assessment.md" />
   </ItemGroup>
 </Project>

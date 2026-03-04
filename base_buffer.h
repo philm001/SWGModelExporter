@@ -36,7 +36,7 @@ public:
   void write_uint32(uint32_t value) { _write<uint32_t>(value); }
   void write_uint64(uint64_t value) { _write<uint64_t>(value); }
   void write_float(float value) { _write<float>(value); }
-  void write_double(float value) { _write<double>(value); }
+  void write_double(double value) { _write<double>(value); }
   void write_string(const std::string& str);
   void write_wstring(const std::wstring& wstr);
 

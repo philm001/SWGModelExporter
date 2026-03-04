@@ -5,7 +5,7 @@
 void cat_parser::reset()
 {
 	m_section_received.reset();
-	m_object == nullptr;
+	m_object = nullptr;
 	m_meshes_count = 0;
 	m_skeletons_count = 0;
 	m_latx_present = false;

@@ -5,7 +5,7 @@
 #include <fbxsdk.h>
 #include <cmath>
 #include <math.h>
-
+#include <iomanip>
 
 using namespace std;
 namespace fs = boost::filesystem;
@@ -95,48 +95,20 @@ Animated_mesh::EulerAngles Animated_mesh::ConvertCombineCompressQuat(Geometry::V
 	Geometry::Vector4 Quat;
 	EulerAngles angles;
 
-	// ?? DEBUG: Track quaternion transformation for target bones
+	// ?? CONDENSED DEBUG: Only show critical data for target bones - MATCHES SWGMainObject.cpp format
 	std::string boneName = BoneReference.name;
 	boost::to_lower(boneName);
-	bool isTargetBone = (boneName == "r_f_leg" || boneName == "r_f_leg2" || boneName == "r_f_leg3");
-	
-	if (isTargetBone) {
-		std::cout << "\n--- ConvertCombineCompressQuat DEBUG: " << BoneReference.name << " ---\n";
-		std::cout << "Input decompressed quaternion: (" << DecompressedQuaterion.x << ", " << DecompressedQuaterion.y 
-			<< ", " << DecompressedQuaterion.z << ", " << DecompressedQuaterion.a << ")\n";
-		std::cout << "Is static: " << (isStatic ? "YES" : "NO") << "\n";
-	}
+	bool isTargetBone = (boneName == "r_f_leg3" || boneName == "r_f_leg_finger" || 
+		boneName == "l_f_leg3" || boneName == "l_f_leg_finger" ||
+		boneName.find("leg") != std::string::npos);
 
 	FbxQuaternion AnimationQuat = FbxQuaternion(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
 	FbxQuaternion bind_rot_quat{ BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a };
 	FbxQuaternion pre_rot_quat{ BoneReference.pre_rot_quaternion.x, BoneReference.pre_rot_quaternion.y, BoneReference.pre_rot_quaternion.z, BoneReference.pre_rot_quaternion.a };
 	FbxQuaternion post_rot_quat{ BoneReference.post_rot_quaternion.x, BoneReference.post_rot_quaternion.y, BoneReference.post_rot_quaternion.z, BoneReference.post_rot_quaternion.a };
 
-	if (isTargetBone) {
-		std::cout << "Animation quaternion (FBX): (" << AnimationQuat.mData[0] << ", " << AnimationQuat.mData[1] 
-			<< ", " << AnimationQuat.mData[2] << ", " << AnimationQuat.mData[3] << ")\n";
-		std::cout << "Bind pose quaternion: (" << bind_rot_quat.mData[0] << ", " << bind_rot_quat.mData[1] 
-			<< ", " << bind_rot_quat.mData[2] << ", " << bind_rot_quat.mData[3] << ")\n";
-		std::cout << "Pre-rotation quaternion: (" << pre_rot_quat.mData[0] << ", " << pre_rot_quat.mData[1] 
-			<< ", " << pre_rot_quat.mData[2] << ", " << pre_rot_quat.mData[3] << ")\n";
-		std::cout << "Post-rotation quaternion: (" << post_rot_quat.mData[0] << ", " << post_rot_quat.mData[1] 
-			<< ", " << post_rot_quat.mData[2] << ", " << post_rot_quat.mData[3] << ")\n";
-	}
-
 	auto full_rot = post_rot_quat * (AnimationQuat * bind_rot_quat) * pre_rot_quat;
 	Quat = Geometry::Vector4(full_rot.mData[0], full_rot.mData[1], full_rot.mData[2], full_rot.mData[3]);
-
-	if (isTargetBone) {
-		std::cout << "Combined rotation quaternion: (" << Quat.x << ", " << Quat.y << ", " << Quat.z << ", " << Quat.a << ")\n";
-		
-		// Check quaternion normality
-		double magnitude = sqrt(Quat.x * Quat.x + Quat.y * Quat.y + Quat.z * Quat.z + Quat.a * Quat.a);
-		std::cout << "Quaternion magnitude: " << magnitude << " (should be ~1.0)\n";
-		
-		if (std::abs(magnitude - 1.0) > 0.01) {
-			std::cout << "WARNING: Quaternion is not normalized!\n";
-		}
-	}
 
 	double test = Quat.x * Quat.z - Quat.y * Quat.a;
 	double sqx = Quat.x * Quat.x;
@@ -145,70 +117,31 @@ Animated_mesh::EulerAngles Animated_mesh::ConvertCombineCompressQuat(Geometry::V
 	double sqa = Quat.a * Quat.a;
 	double unit = sqx + sqy + sqz + sqa;
 
-	if (isTargetBone) {
-		std::cout << "Conversion variables:\n";
-		std::cout << "  test = x*z - y*a = " << test << "\n";
-		std::cout << "  unit = x²+y²+z²+a² = " << unit << "\n";
-		std::cout << "  sqx=" << sqx << ", sqy=" << sqy << ", sqz=" << sqz << ", sqa=" << sqa << "\n";
-	}
-
 	angles.yaw = std::atan2(2.0 * (Quat.x * Quat.y + Quat.z * Quat.a), sqx - sqy - sqz + sqa); // heading
 	angles.pitch = std::asin(-2.0 * test / unit); // attitude
 	angles.roll = std::atan2(2.0 * (Quat.y * Quat.z + Quat.x * Quat.a), -sqx - sqy + sqz + sqa); // bank
-
-	if (isTargetBone) {
-		std::cout << "Raw Euler angles (radians):\n";
-		std::cout << "  yaw (heading) = " << angles.yaw << "\n";
-		std::cout << "  pitch (attitude) = " << angles.pitch << "\n";
-		std::cout << "  roll (bank) = " << angles.roll << "\n";
-		
-		// Check for potential gimbal lock or extreme values
-		if (std::abs(angles.pitch) > (pi / 2.0 - 0.01)) {
-			std::cout << "WARNING: Near gimbal lock detected! |pitch| = " << std::abs(angles.pitch) << "\n";
-		}
-	}
-
-	/*double test = Quat.x * Quat.y + Quat.z * Quat.a;
-	if (test < 0.499)
-	{
-		angles.yaw = 2.0 * std::atan2(Quat.x, Quat.a);
-		angles.pitch = pi / 2.0;
-		angles.roll = 0;
-	}
-	else if (test < -0.499)
-	{
-		angles.yaw = -2.0 * std::atan2(Quat.x, Quat.a);
-		angles.pitch = -pi / 2.0;
-		angles.roll = 0;
-	}
-	else
-	{
-		double sqx = Quat.x * Quat.x;
-		double sqy = Quat.y * Quat.y;
-		double sqz = Quat.z * Quat.z;
-
-		angles.yaw = std::atan2(2.0 * Quat.y * Quat.a - 2.0 * Quat.x * Quat.z, 1.0 - 2.0 * sqy - 2.0 * sqz);
-		angles.pitch = std::asin(2.0 * test);
-		angles.roll = std::atan2(2.0 * Quat.x * Quat.a - 2.0 * Quat.y * Quat.z, 1.0 - 2.0 * sqx - 2.0 * sqz);
-	}*/
-
 
 	angles.roll *= rotationFactor;
 	angles.pitch *= rotationFactor;
 	angles.yaw *= rotationFactor;
 
+	// ?? CONDENSED DEBUG: Only show critical data for target bones - matching SWGMainObject.cpp format
 	if (isTargetBone) {
-		std::cout << "Final Euler angles (degrees):\n";
-		std::cout << "  yaw = " << angles.yaw << "°\n";
-		std::cout << "  pitch = " << angles.pitch << "°\n";
-		std::cout << "  roll = " << angles.roll << "°\n";
+		// Calculate round-trip validation
+		double final_dot = full_rot.DotProduct(AnimationQuat);
 		
-		// Check for problematic angles
-		if (std::abs(angles.roll) > 170.0 || std::abs(angles.pitch) > 170.0 || std::abs(angles.yaw) > 170.0) {
-			std::cout << "WARNING: Large rotation detected - potential 180° issue!\n";
-		}
+		// Validate round-trip conversion
+		FbxQuaternion test_quat;
+		test_quat.ComposeSphericalXYZ(FbxVector4(angles.roll, angles.pitch, angles.yaw));
+		double round_trip_dot = test_quat.DotProduct(full_rot);
 		
-		std::cout << "--- END ConvertCombineCompressQuat DEBUG ---\n\n";
+		LOG_BONE(BoneReference.name << (isStatic ? " (static)" : "") 
+			<< " | Input: (" << std::fixed << std::setprecision(3) 
+			<< DecompressedQuaterion.x << "," << DecompressedQuaterion.y << "," << DecompressedQuaterion.z << "," << DecompressedQuaterion.a << ")"
+			<< " | Final: " << std::setprecision(3) << final_dot
+			<< " | Euler: (" << std::setprecision(1) << angles.roll << "," << angles.pitch << "," << angles.yaw << ")"
+			<< " | RoundTrip: " << std::setprecision(3) << round_trip_dot
+			<< (std::abs(round_trip_dot) < 0.99 ? " [POOR]" : ""));
 	}
 
 	return angles;
@@ -262,7 +195,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 	if (!result)
 	{
 		auto status = exporter_ptr->GetStatus();
-		std::cout << "FBX error: " << status.GetErrorString() << std::endl;
+		LOG_ERROR("FBX error: " << status.GetErrorString());
 		return;
 	}
 	FbxScene* scene_ptr = FbxScene::Create(fbx_manager_ptr, m_object_name.c_str());
@@ -680,7 +613,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 
 								if (translationValues.size() != animationObject->get_info().frame_count + 1)
 								{
-									std::cout << "Mis-match size";
+									LOG_WARNING("Translation values size mismatch for X axis");
 								}
 
 								float translationValue = translationValues.at(frameCounter);
@@ -705,7 +638,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 
 								if (translationValues.size() != animationObject->get_info().frame_count + 1)
 								{
-									std::cout << "Mis-match size";
+									LOG_WARNING("Translation values size mismatch for Y axis");
 								}
 
 								float translationValue = translationValues.at(frameCounter);
@@ -732,7 +665,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 
 								if (translationValues.size() != animationObject->get_info().frame_count + 1)
 								{
-									std::cout << "Mis-match size";
+									LOG_WARNING("Translation values size mismatch for Z axis");
 								}
 
 								float translationValue = translationValues.at(frameCounter);
@@ -767,7 +700,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 
 									if (compressedValues.size() - 1 != animationObject->get_info().frame_count + 1)
 									{
-										std::cout << "Mis-match size";
+										LOG_WARNING("Compressed rotation values size mismatch");
 									}
 
 									uint32_t formatValue = compressedValues.at(0);
@@ -850,7 +783,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 										FbxTime setTime;
 										setTime.SetSecondDouble(timeValue);
 										uint32_t keyIndex = Curves[offsetCurveIndex]->KeyAdd(setTime);
-										Curves[offsetCurveIndex]->KeySet(keyIndex, setTime, finalVector[curveIndex][coordinateIndex], frameCounter == animationObject->get_info().frame_count ? FbxAnimCurveDef::eInterpolationConstant : FbxAnimCurveDef::eInterpolationCubic);
+										Curves[offsetCurveIndex]->KeySet(keyIndex, setTime, static_cast<float>(finalVector[curveIndex][coordinateIndex]), frameCounter == animationObject->get_info().frame_count ? FbxAnimCurveDef::eInterpolationConstant : FbxAnimCurveDef::eInterpolationCubic);
 										if (frameCounter == animationObject->get_info().frame_count)
 										{
 											Curves[offsetCurveIndex]->KeySetConstantMode(keyIndex, FbxAnimCurveDef::eConstantStandard);
@@ -966,7 +899,7 @@ void Animated_mesh::setStaticTranslationAnimation(FbxAnimCurve* linearCurve, dou
 
 		lTime.SetSecondDouble(frameTime);
 		keyIndex = linearCurve->KeyAdd(lTime);
-		linearCurve->KeySetValue(keyIndex, translationValue);
+		linearCurve->KeySetValue(keyIndex, static_cast<float>(translationValue));
 		linearCurve->KeySetInterpolation(keyIndex, FbxAnimCurveDef::eInterpolationLinear);
 	}
 
@@ -1315,7 +1248,7 @@ void Skeleton::join_skeleton_to_point(const string& attach_point, const shared_p
 		{
 			auto& bones_to_join = skel_to_join->m_bones[lod];
 			uint32_t bones_offset = static_cast<uint32_t>(m_bones[lod].size());
-			for (uint32_t idx = 0; idx < bones_to_join.size(); ++idx)
+			for ( int idx = 0; idx < bones_to_join.size(); ++idx)
 			{
 				auto bone = bones_to_join[idx];
 				if (bone.parent_idx == -1)
@@ -1468,5 +1401,1036 @@ std::string Animation::get_object_name() const
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

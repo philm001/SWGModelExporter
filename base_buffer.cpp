@@ -115,7 +115,7 @@ void base_buffer::write_string(const std::string& str)
 {
 	auto new_size = m_position + str.size() + sizeof(uint16_t);
 	if (new_size > m_data.size())
-		_reallocate();
+		_reallocate(new_size);
 
 	write_uint16(static_cast<uint16_t>(str.size()));
 	auto data_ptr = m_data.data() + m_position;
@@ -131,10 +131,10 @@ void base_buffer::write_wstring(const std::wstring& wstr)
 {
 	auto new_size = m_position + wstr.size() * sizeof(wchar_t) + sizeof(uint16_t);
 	if (new_size > m_data.size())
-		_reallocate();
+		_reallocate(new_size);
 
 	write_uint16(static_cast<uint16_t>(wstr.size()));
-	auto data_ptr = reinterpret_cast<wchar_t*>(m_data.size() + m_position);
+	auto data_ptr = reinterpret_cast<wchar_t*>(m_data.data() + m_position);
 	for (auto chr : wstr)
 	{
 		*data_ptr++ = chr;
@@ -193,5 +193,6 @@ void base_buffer::_reallocate(size_t new_size)
 
 		new_size = units * allocation_unit;
 	}
-	m_data.reserve(new_size);
+	// Ensure writes are within vector size, not just capacity
+	m_data.resize(new_size);
 }

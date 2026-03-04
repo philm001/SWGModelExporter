@@ -37,6 +37,9 @@ private:
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	// Initialize logging system - this will delete any existing log file and create a new one
+	INIT_LOGGER("SWGModelExporter_Debug.log");
+
 	std::string swg_path;
 	std::string object_name;
 	std::string output_pathname;
@@ -70,11 +73,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	/* Example for batch mode */
 	//object_name = "batch:pob";
 	
-	std::cout << "Debug Mode - Using hardcoded values:" << std::endl;
-	std::cout << "SWG Path: " << swg_path << std::endl;
-	std::cout << "Output Path: " << output_pathname << std::endl;
-	std::cout << "Object: " << object_name << std::endl;
-	std::cout << std::endl;
+	LOG_INFO("Debug Mode - Using hardcoded values:");
+	LOG_INFO("SWG Path: " + swg_path);
+	LOG_INFO("Output Path: " + output_pathname);
+	LOG_INFO("Object: " + object_name);
+	LOG_INFO("");
 #else
 	// Release mode: Use command line arguments
 	po::options_description flags("Program options");
@@ -90,93 +93,126 @@ int _tmain(int argc, _TCHAR* argv[])
 		po::variables_map vm;
 		po::store(po::parse_command_line(argc, argv, flags), vm);
 		po::notify(vm);
+		
+		LOG_INFO("Release Mode - Using command line arguments:");
+		LOG_INFO("SWG Path: " + swg_path);
+		LOG_INFO("Output Path: " + output_pathname);
+		LOG_INFO("Object: " + object_name);
+		LOG_INFO("Overwrite: " + std::to_string(overwriteResult));
+		LOG_INFO("");
 	}
 	catch (...)
 	{
+		LOG_ERROR("Invalid command line arguments provided");
 		std::cout << flags << std::endl;
 		return -1;
 	}
 #endif
 
-	CoInitialize(NULL);
-
-	fs::path output_path(output_pathname);
-
-	File_read_callback read_callback;
-	std::cout << "Loading TRE library..." << std::endl;
-
-	std::shared_ptr<Tre_library> library = make_shared<Tre_library>(swg_path, &read_callback);
-
-	string full_name;
-	std::cout << "Looking for object" << endl;
-
-	queue<queue<std::string>> objects_to_process;
-
-	// check if we in batch mode by given object name special look
-	boost::char_separator<char> separators(":");
-	boost::tokenizer<boost::char_separator<char>> object_name_tokens(object_name, separators);
-	vector<string> tokens(object_name_tokens.begin(), object_name_tokens.end());
-	if (tokens.size() > 1)
+	try
 	{
-		if (tokens[0] != "batch")
-		{
-			cout << "Incorrect format for batch mode" << endl;
-			return 0;
-		}
+		CoInitialize(NULL);
 
-		auto filetype = tokens[1];
+		fs::path output_path(output_pathname);
 
-		vector<string> selected_objects;
-		if (library->select_objects_by_ext(filetype, selected_objects))
+		File_read_callback read_callback;
+		LOG_INFO("Loading TRE library...");
+
+		std::shared_ptr<Tre_library> library = make_shared<Tre_library>(swg_path, &read_callback);
+
+		string full_name;
+		LOG_INFO("Looking for object: " + object_name);
+
+		queue<queue<std::string>> objects_to_process;
+
+		// check if we in batch mode by given object name special look
+		boost::char_separator<char> separators(":");
+		boost::tokenizer<boost::char_separator<char>> object_name_tokens(object_name, separators);
+		vector<string> tokens(object_name_tokens.begin(), object_name_tokens.end());
+		if (tokens.size() > 1)
 		{
-			//context.batch_mode = true;
-			for (const auto& obj_name : selected_objects)
+			if (tokens[0] != "batch")
 			{
-				queue<std::string> singleVector;
-				singleVector.push(obj_name);
-				objects_to_process.push(singleVector);
+				LOG_ERROR("Incorrect format for batch mode");
+				return 0;
+			}
+
+			auto filetype = tokens[1];
+			LOG_INFO("Batch mode detected for file type: " + filetype);
+
+			vector<string> selected_objects;
+			if (library->select_objects_by_ext(filetype, selected_objects))
+			{
+				LOG_INFO("Found " + std::to_string(selected_objects.size()) + " objects for batch processing");
+				//context.batch_mode = true;
+				for (const auto& obj_name : selected_objects)
+				{
+					queue<std::string> singleVector;
+					singleVector.push(obj_name);
+					objects_to_process.push(singleVector);
+				}
+			}
+			else
+			{
+				LOG_ERROR("No objects selected for batch - extension is wrong?");
+				return 0;
 			}
 		}
 		else
 		{
-			cout << "no object selected for batch - extension is wrong?";
-			return 0;
+			// normalize filename
+			replace_if(object_name.begin(), object_name.end(), [](const char& value) { return value == '\\'; }, '/');
+			if (library->is_object_present(object_name))
+			{
+				LOG_INFO("Object found directly: " + object_name);
+				queue<std::string> singleVector;
+				singleVector.push(object_name);
+				objects_to_process.push(singleVector);
+			}
+			else if (library->get_object_name(object_name, full_name))
+			{
+				LOG_INFO("Object found with full name: " + full_name);
+				queue<std::string> singleVector;
+				singleVector.push(full_name);
+				objects_to_process.push(singleVector);
+			}
+			else
+			{
+				LOG_ERROR("Object with name \"" + object_name + "\" has not been found");
+			}
 		}
-	}
-	else
-	{
-		// normalize filename
-		replace_if(object_name.begin(), object_name.end(), [](const char& value) { return value == '\\'; }, '/');
-		if (library->is_object_present(object_name))
+
+		LOG_INFO("Starting processing of " + std::to_string(objects_to_process.size()) + " object(s)...");
+
+		while (objects_to_process.empty() == false)
 		{
-			queue<std::string> singleVector;
-			singleVector.push(object_name);
-			objects_to_process.push(singleVector);
+			queue<std::string> frontValue = objects_to_process.front();
+			objects_to_process.pop();
+
+			LOG_INFO("Processing object queue with " + std::to_string(frontValue.size()) + " items");
+
+			SWGMainObject SWGObject;
+			SWGObject.SetLibrary(library);
+
+			SWGObject.beginParsingProcess(frontValue, output_pathname, overwriteResult);
+			SWGObject.resolveDependecies();
+			SWGObject.storeObject(output_pathname);
 		}
-		else if (library->get_object_name(object_name, full_name))
-		{
-			queue<std::string> singleVector;
-			singleVector.push(full_name);
-			objects_to_process.push(singleVector);
-		}
-		else
-			std::cout << "Object with name \"" << object_name << "\" has not been found" << std::endl;
+
+		LOG_INFO("All objects processed successfully");
+		CoUninitialize();
+		return 0;
 	}
-
-
-	while (objects_to_process.empty() == false)
+	catch (const std::exception& e)
 	{
-		queue<std::string> frontValue = objects_to_process.front();
-		objects_to_process.pop();
-
-		SWGMainObject SWGObject;
-		SWGObject.SetLibrary(library);
-
-		SWGObject.beginParsingProcess(frontValue, output_pathname, overwriteResult);
-		SWGObject.resolveDependecies();
-		SWGObject.storeObject(output_pathname);
+		LOG_ERROR("Exception occurred: " + std::string(e.what()));
+		CoUninitialize();
+		return -1;
 	}
-
-	CoUninitialize();
-	return 0;
+	catch (...)
+	{
+		LOG_ERROR("Unknown exception occurred");
+		CoUninitialize();
+		return -1;
+	}
 }

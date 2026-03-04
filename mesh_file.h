@@ -269,7 +269,7 @@ public:
 		m_shaders.reserve(value);
 	}
 
-	uint8_t GetShaderCount() { return m_ShaderCount; }
+	uint8_t GetShaderCount() { return static_cast<uint8_t>(m_ShaderCount); }
 private:
 	std::string m_name;
 	std::vector<std::string> m_LODName;

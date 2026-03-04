@@ -58,3 +58,6 @@
 
 // DirectXTex
 #include <DirectXTex.h>
+
+// Custom Logger
+#include "Logger.h"

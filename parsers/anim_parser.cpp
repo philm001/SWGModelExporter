@@ -182,7 +182,7 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 	{
 		if (p_isKFATFORM)
 		{
-			uint16_t dataCounterSize = data_size / 16;
+			uint16_t dataCounterSize = static_cast<uint16_t>(data_size / 16);
 			
 			for (int i = 0; i < dataCounterSize; i++)
 			{
@@ -198,12 +198,12 @@ void anim_parser::parse_data(const string& name, uint8_t* data_ptr, size_t data_
 				ROTValues.push_back(YValue);
 				ROTValues.push_back(ZValue);
 				
-				m_animation->getStaticKFATRotationValues().push_back(ROTValues);
-			}
-		}
-		else
-		{
-			uint16_t dataCounterSize = data_size / 7;
+						m_animation->getStaticKFATRotationValues().push_back(ROTValues);
+					}
+				}
+				else
+				{
+					uint16_t dataCounterSize = static_cast<uint16_t>(data_size / 7);
 			for (int i = 0; i < dataCounterSize; i++)
 			{
 				auto xFormat = buffer.read_uint8();

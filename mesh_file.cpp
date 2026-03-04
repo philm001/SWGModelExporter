@@ -462,7 +462,7 @@ void meshObject::store(const std::string& path, const Context& context)
 	for (auto shader : m_shaders)
 	{
 		meshVerticies += shader.getNumberofMeshVertices();
-		triangleVertices += shader.GetTriangleVertices().size();
+		triangleVertices += static_cast<uint32_t>(shader.GetTriangleVertices().size());
 	}
 
 	mesh_ptr->SetControlPointCount(meshVerticies);
@@ -481,7 +481,7 @@ void meshObject::store(const std::string& path, const Context& context)
 		*/
 			mesh_vertices[vertex_id + lastTriCount] = FbxVector4(shader.GetTriangleVertices()[vertex_id].at(0), shader.GetTriangleVertices()[vertex_id].at(1), shader.GetTriangleVertices()[vertex_id].at(2));
 		}
-		lastTriCount += shader.GetTriangleVertices().size();
+		lastTriCount += static_cast<uint32_t>(shader.GetTriangleVertices().size());
 	}
 
 	// add material layer
@@ -589,7 +589,7 @@ void meshObject::store(const std::string& path, const Context& context)
 
 						if (primed_uvs.size() != 0 && primed_uvs.size() > j)
 						{
-							offsetValue = primed_uvs.at(j).size();
+							offsetValue = static_cast<uint32_t>(primed_uvs.at(j).size());
 						}
 						
 						if (uv_indexes.size() < j + 1)

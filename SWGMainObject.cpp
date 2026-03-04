@@ -1,6 +1,6 @@
 ﻿#include "stdafx.h"
 #include "SWGMainObject.h"
-
+#include <iomanip>
 
 void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray, std::string output_pathname, bool overwrite)
 {
@@ -238,57 +238,126 @@ void SWGMainObject::store(const std::string& path, const Context& context)
 
 SWGMainObject::EulerAngles SWGMainObject::ConvertCombineCompressQuat(Geometry::Vector4 DecompressedQuaterion, Skeleton::Bone BoneReference, bool isStatic)
 {
-	// =========================================================================
-	// ✅ CRITICAL FIX: Bone Rotation 180-Degree Issue Resolution
-	// =========================================================================
-	// This function was completely rewritten to fix the 180-degree bone rotation bug.
-	// Previous issues fixed:
-	// 1. Mathematically incorrect sqrt-based pitch calculation
-	// 2. Missing gimbal lock handling causing sudden flips
-	// 3. No quaternion normalization leading to precision drift
-	// 4. Missing angle normalization causing 180° jumps
-	// =========================================================================
-	
 	const double pi = 3.14159265358979323846;
 	double rotationFactor = 180.0 / pi;
 	EulerAngles angles;
 
-	// Apply bone transform chain: post_rot * (animation_rot * bind_rot) * pre_rot
-	auto Quat = BoneReference.post_rot_quaternion * (DecompressedQuaterion * BoneReference.bind_pose_rotation) * BoneReference.pre_rot_quaternion;
-	
-	// ✅ FIXED: Normalize quaternion to prevent precision errors
-	double length = std::sqrt(Quat.x * Quat.x + Quat.y * Quat.y + Quat.z * Quat.z + Quat.a * Quat.a);
-	if (length > 1e-6) {
-		Quat.x /= length;
-		Quat.y /= length;
-		Quat.z /= length;
-		Quat.a /= length;
+	// 🔍 DEBUG: Focus on problematic bones
+	std::string boneName = BoneReference.name;
+	boost::to_lower(boneName);
+	bool isTargetBone = (boneName == "r_f_leg3" || boneName == "r_f_leg_finger" || 
+		boneName == "l_f_leg3" || boneName == "l_f_leg_finger" ||
+		boneName.find("leg") != std::string::npos);
+
+	FbxQuaternion anim_quat(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
+	FbxQuaternion bind_rot_quat(BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a);
+	FbxQuaternion pre_rot_quat(BoneReference.pre_rot_quaternion.x, BoneReference.pre_rot_quaternion.y, BoneReference.pre_rot_quaternion.z, BoneReference.pre_rot_quaternion.a);
+	FbxQuaternion post_rot_quat(BoneReference.post_rot_quaternion.x, BoneReference.post_rot_quaternion.y, BoneReference.post_rot_quaternion.z, BoneReference.post_rot_quaternion.a);
+
+	anim_quat.Normalize();
+	bind_rot_quat.Normalize();
+	pre_rot_quat.Normalize();
+	post_rot_quat.Normalize();
+
+	FbxQuaternion combined1 = pre_rot_quat * bind_rot_quat * post_rot_quat;
+	FbxQuaternion combined2 = bind_rot_quat * post_rot_quat * pre_rot_quat;
+	combined1.Normalize();
+	combined2.Normalize();
+
+	// Get expected quaternion from bone node
+	FbxQuaternion expected_quat;
+	if (BoneReference.boneNodeptr) {
+		if (isStatic) {
+			expected_quat = BoneReference.boneNodeptr->EvaluateGlobalTransform().GetQ();
+		} else {
+			expected_quat = BoneReference.boneNodeptr->EvaluateLocalTransform().GetQ();
+		}
+		expected_quat.Normalize();
 	}
 
-	// ✅ FIXED: Correct quaternion to Euler conversion with gimbal lock handling
+	double dot1 = std::abs(combined1.DotProduct(expected_quat));
+	double dot2 = std::abs(combined2.DotProduct(expected_quat));
+
+	FbxQuaternion selected_quat = (dot1 > dot2) ? combined1 : combined2;
+
+	if (selected_quat.DotProduct(expected_quat) < 0)
+	{
+		selected_quat = -selected_quat;
+	}
+
+	// 🔍 CONDENSED DEBUG: Only show critical data for target bones
+	if (isTargetBone) {
+		double final_dot = selected_quat.DotProduct(expected_quat);
+		std::cout << "[BONE] " << BoneReference.name << (isStatic ? " (static)" : "") 
+			<< " | Input: (" << std::fixed << std::setprecision(3) 
+			<< DecompressedQuaterion.x << "," << DecompressedQuaterion.y << "," << DecompressedQuaterion.z << "," << DecompressedQuaterion.a << ")";
+		std::cout << " | Dots: " << std::setprecision(3) << dot1 << "/" << dot2 
+			<< " | Final: " << final_dot;
+	}
+
+	Geometry::Vector4 Quat(selected_quat[0], selected_quat[1], selected_quat[2], selected_quat[3]);
+
 	double sinp = 2.0 * (Quat.a * Quat.y - Quat.z * Quat.x);
-	
+
 	if (std::abs(sinp) >= 1.0) {
-		// ✅ Gimbal lock case
-		angles.pitch = std::copysign(pi / 2.0, sinp); // Use 90° or -90°
-		angles.yaw = std::atan2(2.0 * (Quat.a * Quat.z + Quat.x * Quat.y), 
-		                       1.0 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z));
-		angles.roll = 0.0; // Can be set to 0 in gimbal lock
-	} else {
-		// ✅ Normal case - no gimbal lock
+		angles.pitch = std::copysign(pi / 2.0, sinp);
+		angles.yaw = std::atan2(2.0 * (Quat.a * Quat.z + Quat.x * Quat.y), 1.0 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z));
+		angles.roll = 0.0;
+	}
+	else {
 		angles.pitch = std::asin(sinp);
-		angles.yaw = std::atan2(2.0 * (Quat.a * Quat.z + Quat.x * Quat.y),
-		                       1.0 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z));
-		angles.roll = std::atan2(2.0 * (Quat.a * Quat.x + Quat.y * Quat.z),
-		                        1.0 - 2.0 * (Quat.x * Quat.x + Quat.y * Quat.y));
+		angles.yaw = std::atan2(2.0 * (Quat.a * Quat.z + Quat.x * Quat.y), 1.0 - 2.0 * (Quat.y * Quat.y + Quat.z * Quat.z));
+		angles.roll = std::atan2(2.0 * (Quat.a * Quat.x + Quat.y * Quat.z), 1.0 - 2.0 * (Quat.x * Quat.x + Quat.y * Quat.y));
 	}
 
-	// Convert to degrees and normalize to [-180, 180] range to prevent 180-degree flips
 	angles.roll = std::fmod(angles.roll * rotationFactor + 180.0, 360.0) - 180.0;
 	angles.pitch = std::fmod(angles.pitch * rotationFactor + 180.0, 360.0) - 180.0;
 	angles.yaw = std::fmod(angles.yaw * rotationFactor + 180.0, 360.0) - 180.0;
 
+	if (isTargetBone) {
+		// Validate round-trip conversion
+		FbxQuaternion test_quat;
+		test_quat.ComposeSphericalXYZ(FbxVector4(angles.roll, angles.pitch, angles.yaw));
+		double round_trip_dot = test_quat.DotProduct(selected_quat);
+		double final_dot = selected_quat.DotProduct(expected_quat);
+		
+		std::cout << " | Euler: (" << std::setprecision(1) << angles.roll << "," << angles.pitch << "," << angles.yaw << ")";
+		std::cout << " | RoundTrip: " << std::setprecision(3) << round_trip_dot;
+		
+		if (std::abs(round_trip_dot) < 0.99 || std::abs(final_dot) < 0.95) {
+			std::cout << " [POOR]";
+		}
+		std::cout << "\n";
+	}
+
 	return angles;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

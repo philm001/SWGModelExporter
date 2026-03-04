@@ -41,7 +41,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 	if (!result)
 	{
 		auto status = exporter_ptr->GetStatus();
-		std::cout << "FBX error: " << status.GetErrorString() << std::endl;
+		LOG_ERROR("FBX error: " << status.GetErrorString());
 		return;
 	}
 	FbxScene* scene_ptr = FbxScene::Create(fbx_manager_ptr, mainObjectName.c_str());
@@ -82,7 +82,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 			const auto& pt = modelIterator.get_vertices()[vertexCounter].get_position();
 			mesh_vertices[counter + vertexCounter] = FbxVector4(pt.x, pt.y, pt.z);
 		}
-		counter += modelIterator.get_vertices().size();
+		counter += static_cast<uint32_t>(modelIterator.get_vertices().size());
 	}
 
 	// add material layer
@@ -232,7 +232,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 				}
 			}
 		}
-		shaderCounter += modelIterator.getShaders().size();
+		shaderCounter += static_cast<uint32_t>(modelIterator.getShaders().size());
 		counter += static_cast<uint32_t>(modelIterator.get_vertices().size());
 		normalCounter += static_cast<uint32_t>(modelIterator.getNormals().size());
 	}
@@ -451,6 +451,24 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 
 		if (animationObject)
 		{
+			// 🔍 LOG: Clear identification of which animation is being processed
+			LOG_ANIMATION("================================================================================");
+			LOG_ANIMATION("PROCESSING ANIMATION [" << i << "/" << (animationList.size() - 1) << "]: " << animationObject->get_object_name());
+			LOG_ANIMATION("Animation details: " << animationObject->get_info().frame_count << " frames, " 
+				<< animationObject->get_info().FPS << " FPS, " << animationObject->get_bones().size() << " bones");
+			LOG_ANIMATION("Mesh LOD Level: " << lodLevel << " (debug logs only for LOD 0)");
+			if (i == 0 && lodLevel == 0) {
+				LOG_ANIMATION("📋 DEBUG MODE: First animation + LOD 0 - detailed bone logs will be generated");
+			} else {
+				std::string reason = "";
+				if (i != 0) reason += "animation " + std::to_string(i) + " (not first)";
+				if (lodLevel != 0) {
+					if (!reason.empty()) reason += " + ";
+					reason += "LOD " + std::to_string(lodLevel) + " (not LOD 0)";
+				}
+				LOG_ANIMATION("⏩ SKIPPING detailed logs for " << reason << " (debug mode: first animation + LOD 0 only)");
+			}
+			LOG_ANIMATION("================================================================================");
 
 			std::string stackName = animationObject->get_object_name();
 			std::string firstErase = "appearance/animation/";
@@ -519,7 +537,6 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 					FbxNode* rootSkeleton = mesh_node_ptr;
 					FbxNode* boneToUse = skeletonBone.boneNodeptr;
 
-
 					// =============================================================================
 					// 🔖 BOOKMARK - REVERT POINT FOR FBX ANIMATION FIXES 
 					// =============================================================================
@@ -561,18 +578,47 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 						FbxVector4 TranslationVector;
 						FbxVector4 RotationVector;
 
+						// 🔍 DEBUG: Focus on problematic bones, first animation, first frame, and LOD 0 only
+						bool isTargetBone = (skeletonBone.name == "r_f_leg3" || skeletonBone.name == "r_f_leg_finger" || 
+							skeletonBone.name == "l_f_leg3" || skeletonBone.name == "l_f_leg_finger" ||
+							skeletonBone.name.find("leg") != std::string::npos);
+						bool debugFrame = (i == 0 && frameCounter < 1 && isTargetBone && lodLevel == 0);
+
+						// 🔍 CRITICAL DEBUG: Verify bone node pointer is valid
+						if (debugFrame) {
+							LOG_ANIMATION("BONE NODE CHECK for " << skeletonBone.name);
+							LOG_ANIMATION("   Skeleton bone found: " << (skeletonBone.name != "test" ? "YES" : "NO"));
+							LOG_ANIMATION("   FBX node pointer: " << (boneToUse ? "VALID" : "NULL"));
+							if (boneToUse) {
+								FbxVector4 current_rotation = boneToUse->LclRotation.Get();
+								FbxVector4 current_translation = boneToUse->LclTranslation.Get();
+								LOG_ANIMATION("   Current node rotation: (" << std::fixed << std::setprecision(1) 
+									<< current_rotation[0] << "," << current_rotation[1] << "," << current_rotation[2] << ")");
+								LOG_ANIMATION("   Current node translation: (" << std::setprecision(3) 
+									<< current_translation[0] << "," << current_translation[1] << "," << current_translation[2] << ")");
+							}
+							
+							LOG_ANIMATION("FBX CURVES for " << skeletonBone.name);
+							for (int curveIdx = 0; curveIdx < 9; curveIdx++) {
+								std::string curveType = (curveIdx < 3) ? "Translation" : (curveIdx < 6) ? "Rotation" : "Scale";
+								std::string coordName = ((curveIdx % 3) == 0) ? "X" : ((curveIdx % 3) == 1) ? "Y" : "Z";
+								LOG_ANIMATION("   Curve[" << curveIdx << "] " << curveType << " " << coordName 
+									<< ": " << (Curves[curveIdx] ? "CREATED" : "FAILED"));
+							}
+						}
+
+						// 🔍 LOG: Frame processing confirmation - only log for first animation, first frame, target bones, and LOD 0
+						if (i == 0 && frameCounter < 1 && isTargetBone && lodLevel == 0) {
+							LOG_ANIMATION("FRAME " << frameCounter << " | Animation[" << i << "] | LOD[" << lodLevel << "] | Bone: " << skeletonBone.name 
+								<< " | Total frames: " << animationObject->get_info().frame_count);
+						}
+
 						// -------------------------------------- Translation Extraction -------------------------------------
 						if (animatedBoneIterator.hasXAnimatedTranslation)  // ✅ FIXED: Use correct translation flag
 						{
 							std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.x_translation_channel_index);
 							float translationValue = translationValues.at(frameCounter);
-
-							if (translationValue != -1000)
-							{
-								TranslationVector.mData[0] = translationValue;
-							}
-							else
-								TranslationVector.mData[0] = -1000.0;
+							TranslationVector.mData[0] = (translationValue != -1000) ? translationValue : -1000.0;
 						}
 						else
 						{
@@ -584,13 +630,7 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 						{
 							std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.y_translation_channel_index);
 							float translationValue = translationValues.at(frameCounter);
-
-							if (translationValue != -1000)
-							{
-								TranslationVector.mData[1] = translationValue;
-							}
-							else
-								TranslationVector.mData[1] = -1000.0;
+							TranslationVector.mData[1] = (translationValue != -1000) ? translationValue : -1000.0;
 						}
 						else
 						{
@@ -602,19 +642,14 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 						{
 							std::vector<float> translationValues = animationObject->getCHNLValues().at(animatedBoneIterator.z_translation_channel_index);
 							float translationValue = translationValues.at(frameCounter);
-
-							if (translationValue != -1000)
-							{
-								TranslationVector.mData[2] = translationValue;
-							}
-							else
-								TranslationVector.mData[2] = -1000.0;
+							TranslationVector.mData[2] = (translationValue != -1000) ? translationValue : -1000.0;
 						}
 						else
 						{
 							float translationValue = animationObject->getStaticTranslationValues().at(animatedBoneIterator.z_translation_channel_index);
 							TranslationVector.mData[2] = translationValue;
 						}
+
 						// --------------------------------------------------- Rotation extraction --------------------------------------
 						if (animatedBoneIterator.has_rotations)
 						{
@@ -633,12 +668,29 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 								if (compressedValue != 100)
 								{
 									Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(compressedValue, FormatValues[0], FormatValues[1], FormatValues[2]);
+									
+									// 🔍 CONDENSED DEBUG: Show decompression data for target bones
+									if (debugFrame) {
+										LOG_ANIMATION("[F" << frameCounter << "] " << skeletonBone.name 
+											<< " | Compressed: fmt=" << formatValue << " val=" << compressedValue 
+											<< " | Decomp: (" << std::fixed << std::setprecision(3) 
+											<< Quat.x << "," << Quat.y << "," << Quat.z << "," << Quat.a << ")");
+									}
+									
 									result = ConvertCombineCompressQuat(Quat, skeletonBone);
 									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+									
+									if (debugFrame) {
+										LOG_ANIMATION(" | FinalEuler: (" << std::setprecision(1) 
+											<< result.roll << "," << result.pitch << "," << result.yaw << ")");
+									}
 								}
 								else
 								{
 									RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+									if (debugFrame) {
+										LOG_ANIMATION("[F" << frameCounter << "] " << skeletonBone.name << " | SKIP (compressed=100)");
+									}
 								}
 							}
 							else
@@ -646,15 +698,32 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 								// For objects that are not compressed
 								auto uncompressedValues = animationObject->getKFATQCHNValues().at(animatedBoneIterator.rotation_channel_index);
 								std::vector<float> QuatValues = uncompressedValues.at(frameCounter);
+								
 								if (QuatValues.at(0) != 100)
 								{
 									Geometry::Vector4 Quat = { QuatValues.at(1), QuatValues.at(2), QuatValues.at(3), QuatValues.at(0) };
+									
+									// 🔍 CONDENSED DEBUG: Show uncompressed data for target bones
+									if (debugFrame) {
+										LOG_ANIMATION("[F" << frameCounter << "] " << skeletonBone.name 
+											<< " | Uncompressed: (" << std::fixed << std::setprecision(3) 
+											<< Quat.x << "," << Quat.y << "," << Quat.z << "," << Quat.a << ")");
+									}
+									
 									result = ConvertCombineCompressQuat(Quat, skeletonBone);
 									RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+									
+									if (debugFrame) {
+										LOG_ANIMATION(" | FinalEuler: (" << std::setprecision(1) 
+											<< result.roll << "," << result.pitch << "," << result.yaw << ")");
+									}
 								}
 								else
 								{
 									RotationVector = FbxVector4(-1000.0, -1000.0, -1000.0);
+									if (debugFrame) {
+										LOG_ANIMATION("[F" << frameCounter << "] " << skeletonBone.name << " | SKIP (uncompressed=100)");
+									}
 								}
 							}
 						}
@@ -669,41 +738,76 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 
 								Geometry::Vector4 Quat = decompressValues.ExpandCompressedValue(staticValue, formatValues[0], formatValues[1], formatValues[2]);
 
-								EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
+								if (debugFrame) {
+									LOG_ANIMATION("[F" << frameCounter << "] " << skeletonBone.name 
+										<< " | Static Comp: val=" << staticValue 
+										<< " | Quat: (" << std::fixed << std::setprecision(3) 
+										<< Quat.x << "," << Quat.y << "," << Quat.z << "," << Quat.a << ")");
+								}
 
+								EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
 								RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+								
+								if (debugFrame) {
+									LOG_ANIMATION(" | FinalEuler: (" << std::setprecision(1) 
+										<< result.roll << "," << result.pitch << "," << result.yaw << ")");
+								}
 							}
 							else
 							{
 								std::vector<float> uncompressedValues = animationObject->getStaticKFATRotationValues().at(animatedBoneIterator.rotation_channel_index);
 								Geometry::Vector4 Quat = { uncompressedValues.at(1), uncompressedValues.at(2), uncompressedValues.at(3), uncompressedValues.at(0) };
+								
+								if (debugFrame) {
+									LOG_ANIMATION("[F" << frameCounter << "] " << skeletonBone.name 
+										<< " | Static Uncomp: (" << std::fixed << std::setprecision(3) 
+										<< Quat.x << "," << Quat.y << "," << Quat.z << "," << Quat.a << ")");
+								}
+								
 								EulerAngles result = ConvertCombineCompressQuat(Quat, skeletonBone, true);
 								RotationVector = FbxVector4(result.roll, result.pitch, result.yaw);
+								
+								if (debugFrame) {
+									LOG_ANIMATION(" | FinalEuler: (" << std::setprecision(1) 
+										<< result.roll << "," << result.pitch << "," << result.yaw << ")");
+								}
 							}
 						}
 
-						// ✅ ADDITIONAL FIX: Validate rotation values before applying
-						// Check for NaN or infinite values that could cause issues
-						if (std::isnan(RotationVector[0]) || std::isnan(RotationVector[1]) || std::isnan(RotationVector[2]) ||
-							std::isinf(RotationVector[0]) || std::isinf(RotationVector[1]) || std::isinf(RotationVector[2]))
+						if (std::isnan(RotationVector[0]) || std::isinf(RotationVector[0]) ||
+							std::isnan(RotationVector[1]) || std::isinf(RotationVector[1]) ||
+							std::isnan(RotationVector[2]) || std::isinf(RotationVector[2]))
 						{
-							// Use identity rotation if invalid
-							RotationVector = FbxVector4(0.0, 0.0, 0.0);
-							std::cout << "Warning: Invalid rotation detected for bone " << skeletonBone.name << " at frame " << frameCounter << std::endl;
+							RotationVector.Set(0.0, 0.0, 0.0);
+							if (debugFrame) {
+								LOG_WARNING("NaN/inf detected for " << skeletonBone.name << " - using identity");
+							}
 						}
 
 						// ---------------------------------- Matrix setup ---------------------------------
 
 						FbxVector4 ScalingVector(1.0, 1.0, 1.0);
-						// ✅ FIXED: Correct vector order to match curve order - Translation, Rotation, Scale
 						FbxVector4 Vectors[3] = { TranslationVector, RotationVector, ScalingVector };
 						double timeValue = (double)frameCounter * ((double)1.0 / (double)animationObject->get_info().FPS);
 						FbxTime setTime;
 						setTime.SetSecondDouble(timeValue);
 
-						fbxsdk::FbxAMatrix& globalNode = boneToUse->EvaluateLocalTransform(0);
-						// ✅ FIXED: Correct final vector order to match curves and vectors
+						fbxsdk::FbxAMatrix globalNode = boneToUse->EvaluateLocalTransform(0);
 						FbxVector4 finalVector[3] = { globalNode.GetT() + TranslationVector, RotationVector, ScalingVector };
+
+						// 🔍 CONDENSED DEBUG: Show FBX validation for target bones
+						if (debugFrame) {
+							FbxQuaternion rotation_from_vector;
+							rotation_from_vector.ComposeSphericalXYZ(RotationVector);
+							FbxQuaternion node_local_quat = boneToUse->EvaluateLocalTransform(setTime).GetQ();
+							double dot = rotation_from_vector.DotProduct(node_local_quat);
+							
+							LOG_FBX("F" << frameCounter << " " << skeletonBone.name 
+								<< " | Trans: (" << std::fixed << std::setprecision(2) 
+								<< TranslationVector[0] << "," << TranslationVector[1] << "," << TranslationVector[2] << ")"
+								<< " | FBX NodeDot: " << std::setprecision(3) << dot 
+								<< (std::abs(dot) < 0.95 ? " [MISMATCH]" : ""));
+						}
 
 						FbxAnimCurveFilterUnroll unrollFilter;
 						unrollFilter.SetForceAutoTangents(true);
@@ -718,19 +822,42 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 									int offsetCurveIndex = (curveIndex * 3) + coordinateIndex;
 
 									uint32_t keyIndex = Curves[offsetCurveIndex]->KeyAdd(setTime);
-									Curves[offsetCurveIndex]->KeySet(keyIndex, setTime, finalVector[curveIndex][coordinateIndex], frameCounter == animationObject->get_info().frame_count ? FbxAnimCurveDef::eInterpolationConstant : FbxAnimCurveDef::eInterpolationCubic);
+									FbxAnimCurveDef::EInterpolationType interpType = (frameCounter == animationObject->get_info().frame_count) ? 
+										FbxAnimCurveDef::eInterpolationConstant : FbxAnimCurveDef::eInterpolationCubic;
 
+									Curves[offsetCurveIndex]->KeySet(keyIndex, setTime, static_cast<float>(finalVector[curveIndex][coordinateIndex]), interpType);
+
+									// 🔍 DETAILED CURVE DEBUG: Log every curve assignment for target bones
+									if (debugFrame) {
+										std::string curveType = (curveIndex == 0) ? "Translation" : (curveIndex == 1) ? "Rotation" : "Scale";
+										std::string coordName = (coordinateIndex == 0) ? "X" : (coordinateIndex == 1) ? "Y" : "Z";
+										LOG_ANIMATION("📊 CURVE[" << offsetCurveIndex << "] " << curveType << " " << coordName 
+											<< " | Time: " << std::fixed << std::setprecision(3) << timeValue 
+											<< "s | Value: " << std::setprecision(6) << finalVector[curveIndex][coordinateIndex]
+											<< " | Vector[" << curveIndex << "][" << coordinateIndex << "]: " << Vectors[curveIndex][coordinateIndex]);
+									}
 
 									if (frameCounter == animationObject->get_info().frame_count)
 									{
 										Curves[offsetCurveIndex]->KeySetConstantMode(keyIndex, FbxAnimCurveDef::eConstantStandard);
 									}
 								}
+								else if (debugFrame) {
+									// 🔍 DEBUG: Log skipped values
+									std::string curveType = (curveIndex == 0) ? "Translation" : (curveIndex == 1) ? "Rotation" : "Scale";
+									std::string coordName = (coordinateIndex == 0) ? "X" : (coordinateIndex == 1) ? "Y" : "Z";
+									LOG_ANIMATION("⏭️  SKIPPED " << curveType << " " << coordName << " (value = -1000)");
+								}
 							}
 						}
 
-						//if(unrollFilter.NeedApply(Curves, 3))
-						//	unrollFilter.Apply(Curves, 3);
+						// Check if unroll filter should be applied
+						if (frameCounter == animationObject->get_info().frame_count && unrollFilter.NeedApply(Curves, 9)) {
+							unrollFilter.Apply(Curves, 9);
+							if (isTargetBone && lodLevel == 0) { // Only log unroll filter for LOD 0
+								LOG_ANIMATION("Applied unroll filter to " << skeletonBone.name);
+							}
+						}
 					}
 
 					for (fbxsdk::FbxAnimCurve* Curve : Curves)
@@ -740,9 +867,12 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 				}
 				else
 				{
-					std::cout << "Invalid bone found" << std::endl;
+					LOG_ERROR("Invalid bone found");
 				}
 			}
+			
+			// 🔍 LOG: Animation processing completion
+			LOG_ANIMATION("✅ COMPLETED ANIMATION [" << i << "]: " << animationObject->get_object_name());
 		}
 	}
 
