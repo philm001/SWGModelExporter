@@ -9,6 +9,28 @@
 #include "objects/animated_object.h"
 #include "SWGMainObject.h"
 
+//#define DEBUG_MODE
+
+/*
+Dependency Files — Resolved Automatically, No Need to Batch
+These are pulled in by the entry points above via get_referenced_objects() cascading through the queue. You only need to batch these directly if you want to extract a specific type in isolation.
+Command	SWG File Type	Resolved By
+batch:lmg	LOD Mesh Group	sat / cat
+batch:mgn	Skeletal Mesh Geometry	lmg → sat
+batch:msh	Static Mesh	apt
+batch:skt	Skeleton	sat / cat
+batch:sht	Shader Template	mgn / msh
+batch:dds	DirectX Texture	sht
+batch:ans	Compressed Animation	sat
+batch:kat	Keyframe Animation (uncompressed)	sat
+batch:att	Animation Table (.latt files)	sat — note: select_objects_by_ext matches last 3 chars, so att matches .latt
+---
+TL;DR — To get everything in one go, you need three runs:
+1.	batch:apt — static models
+2.	batch:sat — animated models
+3.	batch:pob — buildings (if needed)
+*/
+
 using namespace std;
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
@@ -45,7 +67,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::string output_pathname;
 	bool overwriteResult = true;
 
-#ifdef _DEBUG
+#ifdef DEBUG_MODE
 	// Debug mode: Use hardcoded values for development
 	swg_path = "C:\\SWG";
 	output_pathname = "C:\\extraction";
@@ -57,7 +79,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	
 	/* These animations export. However, the animations themselves have a couple of minor bugs (all animations do) */
 	//object_name = "bageraset.sat";
-	object_name = "acklay.sat";
+	//object_name = "acklay.sat";
 	//object_name = "krayt_dragon.sat";
 	//object_name = "bantha_hue.sat"; // bone rotation 4th one
 	
@@ -71,7 +93,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//object_name = "thm_corl_skyskraper_s01.pob";
 
 	/* Example for batch mode */
-	//object_name = "batch:pob";
+	object_name = "batch:sat";
 	
 	LOG_INFO("Debug Mode - Using hardcoded values:");
 	LOG_INFO("SWG Path: " + swg_path);

@@ -887,7 +887,9 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 				}
 				else
 				{
-					LOG_ERROR("Invalid bone found");
+					LOG_WARNING("Bone not found in skeleton (likely a weapon slot bone) - Animation: [" << i << "] " << animationObject->get_object_name()
+						<< " | Bone: \"" << animatedBoneIterator.name << "\""
+						<< " | Skeleton has " << m_bones.at(0).size() << " bones");
 				}
 			}
 			
