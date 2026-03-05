@@ -40,7 +40,6 @@
 #include <queue>
 
 // ZLIB
-#include <zconf.h>
 #include <zlib.h>
 
 // boost

@@ -76,6 +76,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	/* These animations have known bugs and will not export correctly */
 	//object_name = "dress_s06_f.sat";// bug here
 	//object_name = "bikini_s01_f.sat";// This one still has issue
+	object_name = "ackbar.lmg";
 	
 	/* These animations export. However, the animations themselves have a couple of minor bugs (all animations do) */
 	//object_name = "bageraset.sat";
@@ -93,7 +94,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//object_name = "thm_corl_skyskraper_s01.pob";
 
 	/* Example for batch mode */
-	object_name = "batch:sat";
+	//object_name = "batch:sat";
 	
 	LOG_INFO("Debug Mode - Using hardcoded values:");
 	LOG_INFO("SWG Path: " + swg_path);
