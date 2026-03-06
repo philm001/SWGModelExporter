@@ -40,8 +40,11 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 	bool result = exporter_ptr->Initialize(target_path.string().c_str(), -1, fbx_manager_ptr->GetIOSettings());
 	if (!result)
 	{
-		auto status = exporter_ptr->GetStatus();
-		LOG_ERROR("FBX error: " << status.GetErrorString());
+		if (DebugConfig::shouldLog())
+		{
+			auto status = exporter_ptr->GetStatus();
+			LOG_ERROR("FBX error: " << status.GetErrorString());
+		}
 		return;
 	}
 	FbxScene* scene_ptr = FbxScene::Create(fbx_manager_ptr, mainObjectName.c_str());
@@ -895,10 +898,11 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 						}
 					}
 					else {
-						LOG_WARNING("Bone not found in skeleton (likely a weapon slot bone) - Animation: [" << i << "] " << animationObject->get_object_name()
-							<< " | Bone: \"" << animatedBoneIterator.name << "\""
-							<< " | Skeleton has " << m_bones.at(0).size() << " bones");
-
+						if (DebugConfig::shouldLog()) {
+							LOG_WARNING("Bone not found in skeleton (likely a weapon slot bone) - Animation: [" << i << "] " << animationObject->get_object_name()
+								<< " | Bone: \"" << animatedBoneIterator.name << "\""
+								<< " | Skeleton has " << m_bones.at(0).size() << " bones");
+						}
 					}
 				}
 
