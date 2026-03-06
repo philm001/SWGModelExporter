@@ -12,9 +12,13 @@ void SWGMainObject::storeObject(const std::string& path)
 			std::cout << "Object : " << item.first;
 			if (item.first.find("mgn") != std::string::npos)
 			{
-				for (auto& listIterator : ModelCopy)
+				// === LOD FILTERING: Limit export loop if --no-lod enabled ===
+				int lodLimit = DebugConfig::isNoLODEnabled() ? 1 : ModelCopy.size();
+
+				for (int i = 0; i < lodLimit; i++)
 				{
-					//std::vector<Animated_mesh> listIterator = ModelCopy[0];
+					auto& listIterator = ModelCopy[i];
+
 					for (Animated_mesh meshIterator : listIterator)
 					{
 						if (meshIterator.get_object_name() == item.first)

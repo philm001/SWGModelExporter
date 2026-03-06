@@ -8,15 +8,16 @@
 #include "parsers/parser_selector.h"
 #include "objects/animated_object.h"
 #include "SWGMainObject.h"
+#include "DebugConfig.h"
 
-//#define DEBUG_MODE
+#define DEBUG_MODE
 
 /*
 Dependency Files — Resolved Automatically, No Need to Batch
 These are pulled in by the entry points above via get_referenced_objects() cascading through the queue. You only need to batch these directly if you want to extract a specific type in isolation.
 Command	SWG File Type	Resolved By
 batch:lmg	LOD Mesh Group	sat / cat
-batch:mgn	Skeletal Mesh Geometry	lmg → sat
+batch:sat	Skeletal Mesh Geometry	lmg → sat
 batch:msh	Static Mesh	apt
 batch:skt	Skeleton	sat / cat
 batch:sht	Shader Template	mgn / msh
@@ -66,6 +67,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::string object_name;
 	std::string output_pathname;
 	bool overwriteResult = true;
+	bool verbose = false;
+	bool no_lod = false;
+	bool no_lod_animation = true;
 
 #ifdef DEBUG_MODE
 	// Debug mode: Use hardcoded values for development
@@ -80,7 +84,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	
 	/* These animations export. However, the animations themselves have a couple of minor bugs (all animations do) */
 	//object_name = "bageraset.sat";
-	//object_name = "acklay.sat";
+	object_name = "lom.sat";
 	//object_name = "krayt_dragon.sat";
 	//object_name = "bantha_hue.sat"; // bone rotation 4th one
 	
@@ -95,11 +99,23 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	/* Example for batch mode */
 	//object_name = "batch:sat";
-	
+
+	// Enable verbose mode in debug builds for maximum diagnostics
+	DebugConfig::setVerboseMode(verbose);
+
+	// Enable LOD 0-only mode in debug builds
+	DebugConfig::setNoLODMode(no_lod);
+
+	// Enable LOD animation mode in debug builds (or not, based on no_lod_animation variable)
+	DebugConfig::setNoLODAnimationMode(no_lod_animation);
+
 	LOG_INFO("Debug Mode - Using hardcoded values:");
 	LOG_INFO("SWG Path: " + swg_path);
 	LOG_INFO("Output Path: " + output_pathname);
 	LOG_INFO("Object: " + object_name);
+	LOG_INFO("Verbose Mode: ENABLED (Debug build)");
+	LOG_INFO("LOD Export Mode: " + std::string(no_lod ? "LOD 0 ONLY" : "ALL LODS"));
+	LOG_INFO("Animation Export Mode: " + std::string(no_lod_animation ? "LOD 0 ANIMATIONS ONLY" : "ALL LODS ANIMATED"));
 	LOG_INFO("");
 #else
 	// Release mode: Use command line arguments
@@ -109,19 +125,34 @@ int _tmain(int argc, _TCHAR* argv[])
 		("swg-path", po::value<string>(&swg_path)->required(), "Path to Star Wars Galaxies. Ex: C:\\swg\\SWGEmu")
 		("object", po::value<string>(&object_name)->required(), "Name of object to extract. use batch:<ext> to extract all files of given ext. Ex: asteroid_acid_large_s01.apt")
 		("output-path", po::value<string>(&output_pathname)->required(), "Path to output location Ex: C:\\extraction\\test")
-		("overwrite-result", po::value<bool>(&overwriteResult)->required(), "Set to 1 to overwrite current file. Default is to skip file if it exists Ex: 1");
+		("overwrite-result", po::value<bool>(&overwriteResult)->required(), "Set to 1 to overwrite current file. Default is to skip file if it exists Ex: 1")
+		("verbose", po::bool_switch(&verbose)->default_value(false), "Enable verbose logging output to console and log file")
+		("no-lod", po::bool_switch(&no_lod)->default_value(false), "Skip LOD levels - only export LOD 0 (highest detail mesh)")
+		("no-lod-animation", po::bool_switch(&no_lod_animation)->default_value(false), "Skip animations for LOD 1+ - only LOD 0 gets animations");
 
 	try
 	{
 		po::variables_map vm;
 		po::store(po::parse_command_line(argc, argv, flags), vm);
 		po::notify(vm);
-		
+
+		// Set verbose mode in DebugConfig before any processing
+		DebugConfig::setVerboseMode(verbose);
+
+		// Set LOD mode in DebugConfig before any processing
+		DebugConfig::setNoLODMode(no_lod);
+
+		// Set LOD animation mode in DebugConfig before any processing
+		DebugConfig::setNoLODAnimationMode(no_lod_animation);
+
 		LOG_INFO("Release Mode - Using command line arguments:");
 		LOG_INFO("SWG Path: " + swg_path);
 		LOG_INFO("Output Path: " + output_pathname);
 		LOG_INFO("Object: " + object_name);
 		LOG_INFO("Overwrite: " + std::to_string(overwriteResult));
+		LOG_INFO("Verbose Mode: " + std::string(verbose ? "ENABLED" : "DISABLED"));
+		LOG_INFO("LOD Export Mode: " + std::string(no_lod ? "LOD 0 ONLY" : "ALL LODS"));
+		LOG_INFO("Animation Export Mode: " + std::string(no_lod_animation ? "LOD 0 ANIMATIONS ONLY" : "ALL LODS ANIMATED"));
 		LOG_INFO("");
 	}
 	catch (...)

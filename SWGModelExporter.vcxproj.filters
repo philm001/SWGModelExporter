@@ -44426,6 +44426,9 @@
     <ClCompile Include="Logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DebugConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Scene.fbx" />
@@ -44443,5 +44446,21 @@
       <Filter>Debug</Filter>
     </None>
     <None Include="PROJECT_SUMMARY.md" />
+    <None Include="VERBOSE_FLAG_IMPLEMENTATION.md" />
+    <None Include="VERBOSE_FLAG_QUICK_REFERENCE.md" />
+    <None Include="NO_LOD_FLAG_IMPLEMENTATION_PLAN.md" />
+    <None Include="NO_LOD_FLAG_ARCHITECTURE.md" />
+    <None Include="NO_LOD_FLAG_QUICK_REFERENCE.md" />
+    <None Include="NO_LOD_FLAG_COMPLETE_SUMMARY.md" />
+    <None Include="NO_LOD_FLAG_CODE_SNIPPETS.md" />
+    <None Include="NO_LOD_FLAG_IMPLEMENTATION_COMPLETE.md" />
+    <None Include="NO_ANIMATIONS_FLAG_IMPLEMENTATION_PLAN.md" />
+    <None Include="NO_ANIMATIONS_FLAG_CODE_SNIPPETS.md" />
+    <None Include="NO_ANIMATIONS_FLAG_QUICK_REFERENCE.md" />
+    <None Include="NO_ANIMATIONS_FLAG_COMPLETE_PLAN.md" />
+    <None Include="NO_LOD_ANIMATION_FLAG_IMPLEMENTATION_PLAN.md" />
+    <None Include="NO_LOD_ANIMATION_FLAG_CODE_SNIPPETS.md" />
+    <None Include="NO_LOD_ANIMATION_FLAG_QUICK_REFERENCE.md" />
+    <None Include="NO_LOD_ANIMATION_FLAG_FINAL_PLAN.md" />
   </ItemGroup>
 </Project>

@@ -1,33 +1,76 @@
 #pragma once
 
 /// <summary>
-/// Global debug configuration constants.
-/// Set a flag to true to enable that category of debug logging, false to suppress it.
-/// This class is non-instantiable; all members are static constexpr.
+/// Global debug configuration for verbose logging and LOD export control.
+/// Verbose mode is controlled by the --verbose command-line flag.
+/// When disabled (default), only minimal logging is output.
+/// When enabled, comprehensive debug information is logged across all systems.
+/// 
+/// LOD mode is controlled by the --no-lod command-line flag.
+/// When enabled, only LOD 0 (highest detail) meshes are exported.
+/// When disabled (default), all LOD levels are exported.
 /// </summary>
 class DebugConfig
 {
 public:
     DebugConfig() = delete;
 
+    // ===== VERBOSE MODE =====
     /// <summary>
-    /// Enables detailed animation export debug logging in SWGAnimationParsing.cpp.
-    /// Covers per-animation headers, bone node checks, compressed/uncompressed quaternion
-    /// decompression, Euler conversion results, FBX curve assignments, and skip markers.
+    /// Set verbose mode from command line flag.
+    /// Must be called early in program initialization.
     /// </summary>
-    static constexpr bool ANIM_DEBUG_LOGGING = false;
+    /// <param name="enabled">true to enable verbose logging, false for minimal logging</param>
+    static void setVerboseMode(bool enabled);
 
     /// <summary>
-    /// Enables bone rotation debug logging in SWGMainObject.cpp (ConvertCombineCompressQuat).
-    /// Prints input quaternion, dot products, Euler angles, and round-trip validation
-    /// for bones matching the target bone filter (e.g. leg bones).
+    /// Check if verbose mode is currently enabled.
     /// </summary>
-    static constexpr bool BONE_DEBUG_LOGGING = false;
+    /// <returns>true if verbose logging is enabled, false otherwise</returns>
+    static bool isVerboseEnabled();
 
     /// <summary>
-    /// Enables skeleton generation debug logging in SWGSkeletonExport.cpp.
-    /// Covers LOD 0 bone count, large rotation corrections, bind pose application,
-    /// verification dot products, and low vertex-count warnings for target bones.
+    /// Helper function to check if a debug category should log.
+    /// This respects the global verbose mode flag.
     /// </summary>
-    static constexpr bool SKELETON_DEBUG_LOGGING = false;
+    /// <returns>true if verbose mode is enabled, false otherwise</returns>
+    static bool shouldLog();
+
+    // ===== LOD MODE =====
+    /// <summary>
+    /// Set LOD export mode from command line flag.
+    /// When enabled, only LOD 0 (highest detail) meshes are exported.
+    /// When disabled (default), all LOD levels are exported.
+    /// Must be called early in program initialization.
+    /// </summary>
+    /// <param name="enabled">true to export LOD 0 only, false to export all LODs</param>
+    static void setNoLODMode(bool enabled);
+
+    /// <summary>
+    /// Check if LOD 0-only mode is currently enabled.
+    /// </summary>
+    /// <returns>true if only LOD 0 should be exported, false to export all LODs</returns>
+    static bool isNoLODEnabled();
+
+    // ===== LOD ANIMATION MODE =====
+    /// <summary>
+    /// Set LOD animation mode from command line flag.
+    /// When enabled, only LOD 0 (highest detail) gets animations.
+    /// LOD 1, 2, 3 meshes export without animation data (static pose).
+    /// When disabled (default), all LODs get animations.
+    /// Must be called early in program initialization.
+    /// </summary>
+    /// <param name="enabled">true to skip animations for LOD > 0, false to export all animations</param>
+    static void setNoLODAnimationMode(bool enabled);
+
+    /// <summary>
+    /// Check if LOD animation mode is currently enabled.
+    /// </summary>
+    /// <returns>true if LOD 1/2/3 should skip animations, false to animate all LODs</returns>
+    static bool isNoLODAnimationEnabled();
+
+private:
+    static bool g_verbose_mode;
+    static bool g_no_lod_mode;
+    static bool g_no_lod_animation_mode;
 };

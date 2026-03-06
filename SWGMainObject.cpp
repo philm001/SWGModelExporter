@@ -87,6 +87,15 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray, std:
 					Animated_mesh meshStore = *meshPtr;
 					uint32_t level = meshStore.getLodLevel();
 
+					// === LOD FILTERING: Skip non-LOD0 meshes if --no-lod enabled ===
+					if (DebugConfig::isNoLODEnabled() && level != 0) {
+						if (DebugConfig::shouldLog()) {
+							LOG_INFO("Skipping LOD " << level << " mesh: " << assetName << " (--no-lod enabled)");
+						}
+						// Skip this mesh, don't add to p_CompleteModels
+					}
+					else {
+
 					switch (level)
 					{
 						case 0:
@@ -132,6 +141,8 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray, std:
 						default:
 							break;
 					}
+
+					}  // Close else block
 
 					int a = 0;
 					a++;
@@ -263,7 +274,7 @@ SWGMainObject::EulerAngles SWGMainObject::ConvertCombineCompressQuat(Geometry::V
 		selected_quat = -selected_quat;
 
 	// 🔍 CONDENSED DEBUG: Only show critical data for target bones
-	if (DebugConfig::BONE_DEBUG_LOGGING && isTargetBone) {
+	if (DebugConfig::shouldLog() && isTargetBone) {
 		std::cout << "[BONE] " << BoneReference.name << (isStatic ? " (static)" : "")
 			<< " | Input: (" << std::fixed << std::setprecision(3) 
 			<< DecompressedQuaterion.x << "," << DecompressedQuaterion.y << "," << DecompressedQuaterion.z << "," << DecompressedQuaterion.a << ")";
@@ -288,7 +299,7 @@ SWGMainObject::EulerAngles SWGMainObject::ConvertCombineCompressQuat(Geometry::V
 	angles.pitch = std::fmod(angles.pitch * rotationFactor + 180.0, 360.0) - 180.0;
 	angles.yaw = std::fmod(angles.yaw * rotationFactor + 180.0, 360.0) - 180.0;
 
-	if (DebugConfig::BONE_DEBUG_LOGGING && isTargetBone) {
+	if (DebugConfig::shouldLog() && isTargetBone) {
 		std::cout << " | Euler: (" << std::setprecision(1) << angles.roll << "," << angles.pitch << "," << angles.yaw << ")";
 		std::cout << "\n";
 	}
