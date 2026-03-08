@@ -319,16 +319,12 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 			{
 				if (item.second->get_lod_count() > m_lod_level)
 				{
-					//item.second->set_current_lod(m_lod_level);
-					// Might need to check for duplicates here
+					while (m_bones.size() <= m_lod_level)
+						m_bones.push_back(std::vector<Skeleton::Bone>());
+
 					for (auto& boneIterator : item.second->getBonesatLOD(0))
 					{
 						bool foundBone = false;
-						if (m_bones.size() == m_lod_level)
-						{
-							std::vector<Skeleton::Bone> firstOne;
-							m_bones.push_back(firstOne);
-						}
 
 						for (auto otherBoneIterator : m_bones.at(m_lod_level))
 						{
@@ -469,8 +465,10 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 			scene_ptr->GetGlobalSettings().SetCustomFrameRate(firstAnim->get_info().FPS);
 	}
 
+	bool lodAnimationFlag = !DebugConfig::isNoLODAnimationEnabled();
+
 	// === LOD ANIMATION MODE: Skip animations for LOD 1, 2, 3 if flag enabled ===
-	bool shouldProcessAnimations = !DebugConfig::isNoLODAnimationEnabled() || lodLevel == 0;
+	bool shouldProcessAnimations = lodAnimationFlag || lodLevel == 0;
 
 	if (!shouldProcessAnimations) {
 		// Skip all animation processing for LOD 1, 2, 3

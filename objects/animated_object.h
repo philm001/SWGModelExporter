@@ -569,30 +569,22 @@ public:
 	virtual void resolve_dependencies(const Context& context) override;
 	virtual void set_object_name(const std::string& obj_name) override { m_object_name = obj_name; }
 	virtual std::string get_object_name() const override { return m_object_name; }
-	uint32_t getLodLevel() 
+
+	uint32_t getLodLevel()
 	{ 
-		std::string name = m_object_name;
-		if (name.find("0") != std::string::npos)
+		// The LOD digit is always the last character before ".mgn"
+		// e.g. "appearance/mesh/aqualish_f_01_arms_l1.mgn" -> LOD 1
+		const std::string ext = ".mgn";
+		auto pos = m_object_name.rfind(ext);
+		if (pos != std::string::npos && pos > 0)
 		{
-			return 0;
-		}
-
-		if (name.find("1") != std::string::npos)
-		{
-			return 1;
-		}
-
-		if (name.find("2") != std::string::npos)
-		{
-			return 2;
-		}
-
-		if (name.find("3") != std::string::npos)
-		{
-			return 3;
+			char lodChar = m_object_name[pos - 1];
+			if (lodChar >= '0' && lodChar <= '9')
+				return static_cast<uint32_t>(lodChar - '0');
 		}
 		return m_lod_level;
 	}
+
 	Info m_mesh_info;
 private:
 
