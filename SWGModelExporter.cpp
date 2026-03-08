@@ -66,7 +66,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::string swg_path;
 	std::string object_name;
 	std::string output_pathname;
-	bool overwriteResult = true;
+	bool overwriteResult = false;
 	bool verbose = false;
 	bool no_lod = false;
 	bool no_lod_animation = true;
@@ -99,6 +99,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	/* Example for batch mode */
 	object_name = "batch:sat";
+	//object_name = "bageraset.sat";
 
 	// Enable verbose mode in debug builds for maximum diagnostics
 	DebugConfig::setVerboseMode(verbose);
@@ -243,11 +244,22 @@ int _tmain(int argc, _TCHAR* argv[])
 			queue<std::string> frontValue = objects_to_process.front();
 			objects_to_process.pop();
 
+			std::string name = "";
+
 			LOG_INFO("Processing object queue with " + std::to_string(frontValue.size()) + " items");
+			{
+				queue<std::string> printCopy = frontValue;
+				while (!printCopy.empty())
+				{
+					LOG_INFO("Object queued for processing: " + printCopy.front());
+					name = printCopy.front();
+					printCopy.pop();
+				}
+			}
 
 			SWGMainObject SWGObject;
 			SWGObject.SetLibrary(library);
-
+			
 			SWGObject.beginParsingProcess(frontValue, output_pathname, overwriteResult);
 			SWGObject.resolveDependecies();
 			SWGObject.storeObject(output_pathname);

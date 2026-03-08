@@ -95,54 +95,10 @@ void SWGMainObject::beginParsingProcess(std::queue<std::string> queueArray, std:
 						// Skip this mesh, don't add to p_CompleteModels
 					}
 					else {
-
-					switch (level)
-					{
-						case 0:
-						{
-							if (p_CompleteModels.size() == 0)
-							{
-								std::vector<Animated_mesh> firstOne;
-								p_CompleteModels.push_back(firstOne);
-							}
-							p_CompleteModels.at(0).push_back(meshStore);
-							break;
-						}
-						case 1:
-						{
-							if (p_CompleteModels.size() == 1)
-							{
-								std::vector<Animated_mesh> firstOne;
-								p_CompleteModels.push_back(firstOne);
-							}
-							p_CompleteModels.at(1).push_back(meshStore);
-							break;
-						}
-						case 2:
-						{
-							if (p_CompleteModels.size() == 2)
-							{
-								std::vector<Animated_mesh> firstOne;
-								p_CompleteModels.push_back(firstOne);
-							}
-							p_CompleteModels.at(2).push_back(meshStore);
-							break;
-						}
-						case 3:
-						{
-							if (p_CompleteModels.size() == 3)
-							{
-								std::vector<Animated_mesh> firstOne;
-								p_CompleteModels.push_back(firstOne);
-							}
-							p_CompleteModels.at(3).push_back(meshStore);
-							break;
-						}
-						default:
-							break;
+						while (p_CompleteModels.size() <= level)
+							p_CompleteModels.push_back(std::vector<Animated_mesh>());
+						p_CompleteModels.at(level).push_back(meshStore);
 					}
-
-					}  // Close else block
 
 					int a = 0;
 					a++;
