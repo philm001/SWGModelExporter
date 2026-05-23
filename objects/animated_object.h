@@ -35,6 +35,7 @@ public:
 	// anim maps
 	size_t get_animation_maps() const { return m_animations_map.size(); }
 	std::string get_animation_for_skeleton(const std::string& skt_name) { return m_animations_map[skt_name]; }
+	const std::unordered_map<std::string, std::string>& get_animation_maps_by_skeleton() const { return m_animations_map; }
 
 	// fillers
 	void add_mesh_name(const std::string& mesh_name) { m_mesh_names.push_back(mesh_name); }
@@ -537,6 +538,7 @@ public:
 
 	void add_skeleton_name(const std::string& name) { m_skeletons_names.emplace_back(name); }
 	std::vector<std::string>& getSkeletonNames() { return m_skeletons_names; }
+	const std::vector<std::string>& getSkeletonNames() const { return m_skeletons_names; }
 	
 	void add_joint_name(const std::string& name) { m_joint_names.emplace_back(name); }
 
@@ -555,6 +557,10 @@ public:
 
 	std::vector<std::pair<std::string, std::shared_ptr<Skeleton>>>& getSkeleton() 
 	{ 
+		return m_used_skeletons;
+	}
+	const std::vector<std::pair<std::string, std::shared_ptr<Skeleton>>>& getSkeleton() const
+	{
 		return m_used_skeletons;
 	}
 

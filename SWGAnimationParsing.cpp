@@ -1,6 +1,130 @@
 ﻿#include "stdafx.h"
 #include "SWGMainObject.h"
 
+namespace
+{
+	bool is_animation_asset_name(const std::string& object_name)
+	{
+		return boost::iends_with(object_name, ".ans") || boost::iends_with(object_name, ".kat");
+	}
+
+	std::shared_ptr<Animated_object_descriptor> find_mesh_descriptor(const Context& context, const std::string& mesh_name)
+	{
+		auto opened_by_it = context.opened_by.find(mesh_name);
+		std::string root_name;
+		std::set<std::string> visited_names;
+		while (opened_by_it != context.opened_by.end())
+		{
+			root_name = opened_by_it->second;
+			if (!visited_names.insert(root_name).second)
+				return nullptr;
+			opened_by_it = context.opened_by.find(root_name);
+		}
+
+		if (root_name.empty())
+			return nullptr;
+
+		auto object_it = context.object_list.find(root_name);
+		if (object_it == context.object_list.end())
+			return nullptr;
+
+		return std::dynamic_pointer_cast<Animated_object_descriptor>(object_it->second);
+	}
+
+	void append_animation_object(
+		const Context& context,
+		const std::string& animation_name,
+		std::vector<std::shared_ptr<Animation>>& animations,
+		std::set<std::string>& seen_names)
+	{
+		auto object_it = context.object_list.find(animation_name);
+		if (object_it == context.object_list.end())
+			return;
+
+		auto animation = std::dynamic_pointer_cast<Animation>(object_it->second);
+		if (!animation)
+			return;
+
+		if (seen_names.insert(animation_name).second)
+			animations.push_back(animation);
+	}
+
+	std::vector<std::shared_ptr<Animation>> collect_animations_for_mesh(const Context& context, const std::vector<Animated_mesh>& mesh)
+	{
+		std::vector<std::shared_ptr<Animation>> animations;
+		std::set<std::string> seen_animation_names;
+
+		if (mesh.empty())
+			return animations;
+
+		std::set<std::string> mesh_skeleton_names;
+		for (const auto& mesh_part : mesh)
+		{
+			for (const auto& skeleton_info : mesh_part.getSkeleton())
+			{
+				std::string skeleton_name = skeleton_info.first;
+				boost::to_lower(skeleton_name);
+				mesh_skeleton_names.insert(skeleton_name);
+			}
+
+			for (const auto& skeleton_name : mesh_part.getSkeletonNames())
+			{
+				std::string lowered_name = skeleton_name;
+				boost::to_lower(lowered_name);
+				mesh_skeleton_names.insert(lowered_name);
+			}
+		}
+
+		std::set<std::string> animation_sources;
+		auto descriptor = find_mesh_descriptor(context, mesh.front().get_object_name());
+		if (descriptor)
+		{
+			for (const auto& animation_map : descriptor->get_animation_maps_by_skeleton())
+			{
+				std::string skeleton_name = animation_map.first;
+				boost::to_lower(skeleton_name);
+				if (mesh_skeleton_names.empty() || mesh_skeleton_names.find(skeleton_name) != mesh_skeleton_names.end())
+					animation_sources.insert(animation_map.second);
+			}
+		}
+
+		for (const auto& animation_source : animation_sources)
+		{
+			if (is_animation_asset_name(animation_source))
+			{
+				append_animation_object(context, animation_source, animations, seen_animation_names);
+				continue;
+			}
+
+			auto object_it = context.object_list.find(animation_source);
+			if (object_it == context.object_list.end())
+				continue;
+
+			auto animation_file_list = std::dynamic_pointer_cast<Animated_file_list>(object_it->second);
+			if (!animation_file_list)
+				continue;
+
+			for (const auto& animation_name : animation_file_list->get_referenced_objects())
+				append_animation_object(context, animation_name, animations, seen_animation_names);
+		}
+
+		if (!animations.empty())
+			return animations;
+
+		for (const auto& object_pair : context.object_list)
+		{
+			auto animation = std::dynamic_pointer_cast<Animation>(object_pair.second);
+			if (!animation)
+				continue;
+
+			if (seen_animation_names.insert(object_pair.first).second)
+				animations.push_back(animation);
+		}
+
+		return animations;
+	}
+}
+
 void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>& mesh)
 {
 
@@ -433,18 +557,11 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 	if (blend_shape_ptr->GetBlendShapeChannelCount() > 0)
 		mesh_node_ptr->GetGeometry()->AddDeformer(blend_shape_ptr);
 
-	// Build Animations (Note: Not sure if this is the best place to put them. But should be after the skeletons
-	std::vector<std::shared_ptr<Animation>> animationList;
-
-	// First sort out the animation objects first
-	for (auto baseObjectiterator : p_Context.object_list)
-	{
-		if (baseObjectiterator.second->get_object_name().find("ans") != std::string::npos)
-		{
-			std::shared_ptr<Animation> inputObject = std::dynamic_pointer_cast<Animation>(baseObjectiterator.second);
-			animationList.push_back(inputObject);
-		}
-	}
+	// Build only the animation set referenced by this SAT/CAT/LATT chain.
+	// Falling back to all parsed animations preserves older behavior when
+	// descriptor data is unavailable, but avoids attaching unrelated batch data
+	// to every skinned mesh in the common creature-export path.
+	std::vector<std::shared_ptr<Animation>> animationList = collect_animations_for_mesh(p_Context, mesh);
 
 	QuatExpand::UncompressQuaternion decompressValues;
 	decompressValues.install();
@@ -507,16 +624,15 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 				}
 
 				std::string stackName = animationObject->get_object_name();
-				std::string firstErase = "appearance/animation/";
-				std::string secondErase = ".ans";
+				const std::string animationRoot = "appearance/animation/";
 
-				size_t pos = stackName.find(firstErase);
+				size_t pos = stackName.find(animationRoot);
 				if (pos != std::string::npos)
-					stackName.erase(pos, firstErase.length());
+					stackName.erase(pos, animationRoot.length());
 
-				size_t pos2 = stackName.find(secondErase);
-				if (pos2 != std::string::npos)
-					stackName.erase(pos2, secondErase.length());
+				boost::filesystem::path stackPath(stackName);
+				stackPath.replace_extension();
+				stackName = stackPath.string();
 
 				FbxString animationStackName = FbxString(stackName.c_str());
 				fbxsdk::FbxAnimStack* animationStack = fbxsdk::FbxAnimStack::Create(scene_ptr, animationStackName);
@@ -825,8 +941,8 @@ void SWGMainObject::storeMGN(const std::string& path, std::vector<Animated_mesh>
 							FbxTime setTime;
 							setTime.SetSecondDouble(timeValue);
 
-							fbxsdk::FbxAMatrix globalNode = boneToUse->EvaluateLocalTransform(0);
-							FbxVector4 finalVector[3] = { globalNode.GetT() + TranslationVector, RotationVector, ScalingVector };
+							FbxVector4 bindTranslation = boneToUse->LclTranslation.Get();
+							FbxVector4 finalVector[3] = { bindTranslation + TranslationVector, RotationVector, ScalingVector };
 
 							// 🔍 CONDENSED DEBUG: Show FBX validation for target bones
 							if (debugFrame) {

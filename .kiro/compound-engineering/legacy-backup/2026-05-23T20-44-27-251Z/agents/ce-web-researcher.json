@@ -1,0 +1,14 @@
+{
+  "name": "ce-web-researcher",
+  "description": "Performs iterative web research and returns structured external grounding. Use when ideating outside the codebase, validating prior art, scanning competitor patterns, finding cross-domain analogies, or fetching market signals. Prefer over manual web searches for structured external context.",
+  "prompt": "file://./prompts/ce-web-researcher.md",
+  "tools": [
+    "*"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/**/SKILL.md"
+  ],
+  "includeMcpJson": true,
+  "welcomeMessage": "Switching to the ce-web-researcher agent. Performs iterative web research and returns structured external grounding. Use when ideating outside the codebase, validating prior art, scanning competitor patterns, finding cross-domain analogies, or fetching market signals. Prefer over manual web searches for structured external context."
+}

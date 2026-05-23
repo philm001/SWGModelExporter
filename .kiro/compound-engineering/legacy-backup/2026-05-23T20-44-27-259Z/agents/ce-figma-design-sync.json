@@ -1,0 +1,14 @@
+{
+  "name": "ce-figma-design-sync",
+  "description": "Detects and fixes visual differences between a web implementation and its Figma design. Use iteratively when syncing implementation to match Figma specs.",
+  "prompt": "file://./prompts/ce-figma-design-sync.md",
+  "tools": [
+    "*"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/**/SKILL.md"
+  ],
+  "includeMcpJson": true,
+  "welcomeMessage": "Switching to the ce-figma-design-sync agent. Detects and fixes visual differences between a web implementation and its Figma design. Use iteratively when syncing implementation to match Figma specs."
+}

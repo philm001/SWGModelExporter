@@ -45,13 +45,13 @@ This repository also includes a Linux-hosted Windows cross-build based on `clang
 2. Extract the Windows FreeImage binary package and point `FREEIMAGE_ROOT` at it.
 3. Prepare a local Windows SDK/CRT sysroot with `xwin` under `.xwin`.
 4. Configure:
-   `cmake --preset windows-clangcl-release`
+   `FBXSDK_ROOT=/path/to/fbx-sdk FREEIMAGE_ROOT=/path/to/freeimage cmake --preset windows-clangcl-release`
 5. Build:
    `cmake --build build-windows-clangcl-release -j`
 6. Install the runnable bundle:
    `cmake --install build-windows-clangcl-release --prefix out/windows-clangcl-release`
 
-The resulting Windows bundle contains `SWGModelExporter.exe` and `FreeImage.dll`. The FBX SDK is linked statically in this configuration.
+The `windows-clangcl-release` preset intentionally leaves `FBXSDK_ROOT` and `FREEIMAGE_ROOT` unset so the configure step can honor your environment or explicit `-D...` overrides. The resulting Windows bundle contains `SWGModelExporter.exe` and `FreeImage.dll`. The FBX SDK is linked statically in this configuration.
 
 # Additional Notes
 

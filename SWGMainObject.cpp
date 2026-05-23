@@ -217,14 +217,16 @@ SWGMainObject::EulerAngles SWGMainObject::ConvertCombineCompressQuat(Geometry::V
 		boneName.find("leg") != std::string::npos);
 
 	FbxQuaternion anim_quat(DecompressedQuaterion.x, DecompressedQuaterion.y, DecompressedQuaterion.z, DecompressedQuaterion.a);
+	FbxQuaternion bind_rot_quat(BoneReference.bind_pose_rotation.x, BoneReference.bind_pose_rotation.y, BoneReference.bind_pose_rotation.z, BoneReference.bind_pose_rotation.a);
 	FbxQuaternion pre_rot_quat(BoneReference.pre_rot_quaternion.x, BoneReference.pre_rot_quaternion.y, BoneReference.pre_rot_quaternion.z, BoneReference.pre_rot_quaternion.a);
 	FbxQuaternion post_rot_quat(BoneReference.post_rot_quaternion.x, BoneReference.post_rot_quaternion.y, BoneReference.post_rot_quaternion.z, BoneReference.post_rot_quaternion.a);
 
 	anim_quat.Normalize();
+	bind_rot_quat.Normalize();
 	pre_rot_quat.Normalize();
 	post_rot_quat.Normalize();
 
-	FbxQuaternion selected_quat = post_rot_quat * anim_quat * pre_rot_quat;
+	FbxQuaternion selected_quat = post_rot_quat * (anim_quat * bind_rot_quat) * pre_rot_quat;
 	selected_quat.Normalize();
 	if (selected_quat[3] < 0)
 		selected_quat = -selected_quat;
@@ -262,7 +264,6 @@ SWGMainObject::EulerAngles SWGMainObject::ConvertCombineCompressQuat(Geometry::V
 
 	return angles;
 }
-
 
 
 
