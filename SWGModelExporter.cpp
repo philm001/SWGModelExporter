@@ -9,8 +9,7 @@
 #include "objects/animated_object.h"
 #include "SWGMainObject.h"
 #include "DebugConfig.h"
-
-#define DEBUG_MODE
+#include <cwctype>
 
 /*
 Dependency Files — Resolved Automatically, No Need to Batch
@@ -38,6 +37,119 @@ namespace po = boost::program_options;
 
 using namespace Tre_navigator;
 
+#ifdef _WIN32
+static std::string utf8_from_wide(const std::wstring& value)
+{
+	if (value.empty())
+		return {};
+
+	const int size = WideCharToMultiByte(CP_UTF8, 0, value.c_str(), static_cast<int>(value.size()), nullptr, 0, nullptr, nullptr);
+	if (size <= 0)
+		throw std::runtime_error("Failed to convert command line to UTF-8");
+
+	std::string utf8(size, '\0');
+	WideCharToMultiByte(CP_UTF8, 0, value.c_str(), static_cast<int>(value.size()), utf8.data(), size, nullptr, nullptr);
+	return utf8;
+}
+
+static std::wstring parse_windows_argument(const std::wstring& command_line, size_t& index)
+{
+	std::wstring argument;
+	bool in_quotes = false;
+
+	while (index < command_line.size())
+	{
+		const wchar_t ch = command_line[index];
+
+		if (!in_quotes && std::iswspace(ch))
+			break;
+
+		if (ch == L'"')
+		{
+			in_quotes = !in_quotes;
+			++index;
+			continue;
+		}
+
+		if (in_quotes && ch == L'\\')
+		{
+			size_t slash_start = index;
+			while (index < command_line.size() && command_line[index] == L'\\')
+				++index;
+
+			const size_t slash_count = index - slash_start;
+			if (index < command_line.size() && command_line[index] == L'"')
+			{
+				const bool closes_argument = (index + 1 == command_line.size()) || std::iswspace(command_line[index + 1]);
+				if (closes_argument)
+				{
+					argument.append(slash_count, L'\\');
+					in_quotes = false;
+					++index;
+					continue;
+				}
+			}
+
+			argument.append(slash_count, L'\\');
+			continue;
+		}
+
+		argument.push_back(ch);
+		++index;
+	}
+
+	return argument;
+}
+
+static std::vector<std::string> get_windows_command_line_args_utf8()
+{
+	const std::wstring command_line = GetCommandLineW();
+	std::vector<std::string> args;
+	size_t index = 0;
+
+	const auto skip_whitespace = [&]()
+	{
+		while (index < command_line.size() && std::iswspace(command_line[index]))
+			++index;
+	};
+
+	skip_whitespace();
+	if (index < command_line.size())
+	{
+		parse_windows_argument(command_line, index);
+	}
+
+	while (index < command_line.size())
+	{
+		skip_whitespace();
+		if (index >= command_line.size())
+			break;
+
+		args.push_back(utf8_from_wide(parse_windows_argument(command_line, index)));
+	}
+
+	return args;
+}
+#endif
+
+class Progress_display
+{
+public:
+	explicit Progress_display(unsigned long total) : m_total(total) {}
+
+	void increment()
+	{
+		++m_current;
+		std::cout << "\rLoaded " << m_current << "/" << m_total << " TRE files" << std::flush;
+		if (m_current >= m_total)
+			std::cout << std::endl;
+	}
+
+private:
+	unsigned long m_total = 0;
+	unsigned long m_current = 0;
+};
+
 class File_read_callback : public Tre_library_reader_callback
 {
 public:
@@ -46,22 +158,22 @@ public:
 	virtual void number_of_files(size_t file_num) override
 	{
 		if (m_display == nullptr)
-			m_display = make_shared<boost::progress_display>(static_cast<unsigned long>(file_num));
+			m_display = make_shared<Progress_display>(static_cast<unsigned long>(file_num));
 	}
 	virtual void file_read() override
 	{
 		if (m_display)
-			m_display->operator++();
+			m_display->increment();
 	}
 
 private:
-	std::shared_ptr<boost::progress_display> m_display;
+	std::shared_ptr<Progress_display> m_display;
 };
 
-int _tmain(int argc, _TCHAR* argv[])
+int main(int argc, char* argv[])
 {
 	// Initialize logging system - this will delete any existing log file and create a new one
-	INIT_LOGGER("SWGModelExporter_Debug.log");
+	INIT_LOGGER("SWGModelExporter.log");
 
 	std::string swg_path;
 	std::string object_name;
@@ -71,7 +183,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	bool no_lod = false;
 	bool no_lod_animation = true;
 
-#ifdef DEBUG_MODE
+#ifdef SWGME_DEBUG_MODE
 	// Debug mode: Use hardcoded values for development
 	swg_path = "C:\\SWG";
 	output_pathname = "C:\\extraction";
@@ -126,7 +238,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		("swg-path", po::value<string>(&swg_path)->required(), "Path to Star Wars Galaxies. Ex: C:\\swg\\SWGEmu")
 		("object", po::value<string>(&object_name)->required(), "Name of object to extract. use batch:<ext> to extract all files of given ext. Ex: asteroid_acid_large_s01.apt")
 		("output-path", po::value<string>(&output_pathname)->required(), "Path to output location Ex: C:\\extraction\\test")
-		("overwrite-result", po::value<bool>(&overwriteResult)->required(), "Set to 1 to overwrite current file. Default is to skip file if it exists Ex: 1")
+		("overwrite-result", po::value<bool>(&overwriteResult)->default_value(false), "Set to 1 to overwrite current file. Default is to skip file if it exists Ex: 1")
 		("verbose", po::bool_switch(&verbose)->default_value(false), "Enable verbose logging output to console and log file")
 		("no-lod", po::bool_switch(&no_lod)->default_value(false), "Skip LOD levels - only export LOD 0 (highest detail mesh)")
 		("no-lod-animation", po::bool_switch(&no_lod_animation)->default_value(false), "Skip animations for LOD 1+ - only LOD 0 gets animations");
@@ -134,7 +246,23 @@ int _tmain(int argc, _TCHAR* argv[])
 	try
 	{
 		po::variables_map vm;
+#ifdef _WIN32
+		try
+		{
+			po::store(po::parse_command_line(argc, argv, flags), vm);
+		}
+		catch (const po::error&)
+		{
+			po::store(po::command_line_parser(get_windows_command_line_args_utf8()).options(flags).run(), vm);
+		}
+#else
 		po::store(po::parse_command_line(argc, argv, flags), vm);
+#endif
+		if (vm.count("help"))
+		{
+			std::cout << flags << std::endl;
+			return 0;
+		}
 		po::notify(vm);
 
 		// Set verbose mode in DebugConfig before any processing
@@ -156,9 +284,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		LOG_INFO("Animation Export Mode: " + std::string(no_lod_animation ? "LOD 0 ANIMATIONS ONLY" : "ALL LODS ANIMATED"));
 		LOG_INFO("");
 	}
-	catch (...)
+	catch (const std::exception& ex)
 	{
-		LOG_ERROR("Invalid command line arguments provided");
+		LOG_ERROR("Invalid command line arguments provided: " + std::string(ex.what()));
 		std::cout << flags << std::endl;
 		return -1;
 	}
@@ -166,7 +294,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	try
 	{
-		CoInitialize(NULL);
+#ifdef _WIN32
+		CoInitialize(nullptr);
+#endif
 
 		fs::path output_path(output_pathname);
 
@@ -266,19 +396,25 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 
 		LOG_INFO("All objects processed successfully");
+#ifdef _WIN32
 		CoUninitialize();
+#endif
 		return 0;
 	}
 	catch (const std::exception& e)
 	{
 		LOG_ERROR("Exception occurred: " + std::string(e.what()));
+#ifdef _WIN32
 		CoUninitialize();
+#endif
 		return -1;
 	}
 	catch (...)
 	{
 		LOG_ERROR("Unknown exception occurred");
+#ifdef _WIN32
 		CoUninitialize();
+#endif
 		return -1;
 	}
 }

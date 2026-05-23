@@ -535,7 +535,7 @@ void meshObject::store(const std::string& path, const Context& context)
 				texture->SetScale(1.0, 1.0);
 				texture->SetTranslation(0.0, 0.0);
 
-				switch (texture_def.texture_type)
+				switch (texture_def.type)
 				{
 				case Shader::texture_type::main:
 					material_ptr->Diffuse.ConnectSrcObject(texture);

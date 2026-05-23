@@ -1,0 +1,70 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-linux",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/.third_party/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "SWGME_FBXSDK_SHARED": "OFF",
+        "VCPKG_TARGET_TRIPLET": "x64-linux"
+      }
+    },
+    {
+      "name": "windows-vs2022-release",
+      "displayName": "Windows VS 2022 Release",
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "x64"
+      },
+      "binaryDir": "${sourceDir}/build-windows-vs2022-release",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/windows-vs2022-release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "SWGME_FBXSDK_SHARED": "OFF",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      }
+    },
+    {
+      "name": "windows-clangcl-release",
+      "displayName": "Windows Clang-CL Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-windows-clangcl-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/windows-clangcl-release",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/.third_party/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "FBXSDK_ROOT": "${sourceDir}/.sdk/fbx-windows-2020.3.7",
+        "FREEIMAGE_ROOT": "${sourceDir}/.sdk/freeimage-windows-3.18.0",
+        "SWGME_FBXSDK_SHARED": "OFF",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/windows-clangcl-xwin.cmake",
+        "VCPKG_OVERLAY_PORTS": "${sourceDir}/vcpkg-ports",
+        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/vcpkg-triplets",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-xwin"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "linux-release",
+      "configurePreset": "linux-release"
+    },
+    {
+      "name": "windows-vs2022-release",
+      "configurePreset": "windows-vs2022-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-clangcl-release",
+      "configurePreset": "windows-clangcl-release"
+    }
+  ]
+}

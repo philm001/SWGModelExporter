@@ -7,35 +7,69 @@ into FBX format for further processing.
 
 # Installing
 
-Leaving a zipped copy of the DirectxTex library here for new installs.
-1) Extract the contents of this zipped file into the directory above the solution directory.
-2) Also rename the folder by removing the wording "-main"
+The project now supports a CMake-based build for both Linux and Windows.
 
-Install the FBXSDK
-Make sure in the project settings under Additional Directories under C/C++->General, the include directories are pointing to the installed FBX include headers.
+## Dependencies
 
-Installing everything else:
-1) Create a folder in the main solution directory called Boost
-2) Extract the contents of boost.7z into this new folder
-3) Extract teh contents of the lib.7z folder to the solution directory
+- Autodesk FBX SDK 2020.x
+- Boost (`filesystem`, `program_options`)
+- zlib
+- FreeImage
+
+On Linux, the included `linux-release` preset is designed to work with a local `vcpkg` checkout at `.third_party/vcpkg` for the non-FBX dependencies.
+
+## Linux build
+
+1. Install or extract the Autodesk Linux FBX SDK and point `FBXSDK_ROOT` at it.
+2. Configure:
+   `FBXSDK_ROOT=/path/to/fbx-sdk cmake --preset linux-release`
+3. Build:
+   `FBXSDK_ROOT=/path/to/fbx-sdk cmake --build build-linux -j`
+
+The checked-in build now uses command-line arguments by default. If you want the old hardcoded developer inputs, enable `SWGME_ENABLE_DEBUG_MODE=ON` when configuring.
+
+## Windows build
+
+1. Install the Autodesk Windows FBX SDK and point `FBXSDK_ROOT` at it.
+2. Set `VCPKG_ROOT` to a `vcpkg` checkout with the `x64-windows-static` triplet available.
+3. Configure:
+   `cmake --preset windows-vs2022-release`
+4. Build:
+   `cmake --build --preset windows-vs2022-release`
+
+## Windows cross-build from Linux
+
+This repository also includes a Linux-hosted Windows cross-build based on `clang-cl`, `xwin`, and `lld-link`-compatible tooling.
+
+1. Extract the Autodesk Windows FBX SDK and point `FBXSDK_ROOT` at it.
+2. Extract the Windows FreeImage binary package and point `FREEIMAGE_ROOT` at it.
+3. Prepare a local Windows SDK/CRT sysroot with `xwin` under `.xwin`.
+4. Configure:
+   `cmake --preset windows-clangcl-release`
+5. Build:
+   `cmake --build build-windows-clangcl-release -j`
+6. Install the runnable bundle:
+   `cmake --install build-windows-clangcl-release --prefix out/windows-clangcl-release`
+
+The resulting Windows bundle contains `SWGModelExporter.exe` and `FreeImage.dll`. The FBX SDK is linked statically in this configuration.
 
 # Additional Notes
 
 Please remember to check all include directory paths for any changes. This version used FBX SDK 2020.0.1
 
-Another thing to note is that you might get linker error: 
+Another thing to note is that you might get linker error:
 error LNK2038 mismatch detected for 'RuntimeLibrary': value 'MDd_DynamicDebug' doesn't match value 'MTd_StaticDebug'
 
 See this forum post for a fix:
 https://stackoverflow.com/questions/14714877/mismatch-detected-for-runtimelibrary
 
-Also there may be two versions of the FBX 2020 installers floating around. One installed to 2020.0.1 and another 2020.1. Right now, the program is configured for 2020.0.1. If you get 2020.1, then you will need to change settings for the C/C++ include directories, Linker Directories, and stdafx.h
+Also there may be two versions of the FBX 2020 installers floating around. One installed to 2020.0.1 and another 2020.1. The current CMake finder is version-agnostic as long as `FBXSDK_ROOT` points at the installed SDK root.
 
 # Resources
 
 Autodesk FBS SDX - https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-0
 
-DirectXTex - https://github.com/Microsoft/DirectXTex/
+FreeImage - https://freeimage.sourceforge.io/
 
 # Concluding Words
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base_buffer.h"
-#include "objects\base_object.h"
+#include "objects/base_object.h"
 
 class IFF_visitor
 {
@@ -61,4 +61,3 @@ namespace IFF_utility
   uint32_t swap_bytes(uint32_t value);
   uint64_t swap_bytes(uint64_t value);
 }
-

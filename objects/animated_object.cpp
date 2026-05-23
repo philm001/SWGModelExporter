@@ -3,12 +3,28 @@
 #include "animated_object.h"
 #include "tre_library.h"
 #include <fbxsdk.h>
+#include <FreeImage.h>
 #include <cmath>
 #include <math.h>
 #include <iomanip>
+#include <cstdlib>
 
 using namespace std;
 namespace fs = boost::filesystem;
+
+namespace
+{
+	void ensureFreeImageInitialized()
+	{
+		static const bool initialized = []()
+			{
+				FreeImage_Initialise(FALSE);
+				std::atexit([]() { FreeImage_DeInitialise(); });
+				return true;
+			}();
+		(void)initialized;
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -269,7 +285,7 @@ void Animated_mesh::store(const std::string& path, const Context& context)
 					texture->SetTranslation(0.0, 0.0);
 					texture->SetScale(1.0, 1.0);
 					texture->SetTranslation(0.0, 0.0);
-					switch (texture_def.texture_type)
+					switch (texture_def.type)
 					{
 					case Shader::texture_type::main:
 						material_ptr->Diffuse.ConnectSrcObject(texture);
@@ -1107,7 +1123,7 @@ std::vector<Skeleton::Bone> Skeleton::generate_skeleton_in_scene(FbxScene* scene
 		node_ptr->LclRotation.Set(full_rot.DecomposeSphericalXYZ());
 		node_ptr->LclTranslation.Set(FbxDouble3{ bone.bind_pose_transform.x, bone.bind_pose_transform.y, bone.bind_pose_transform.z });
 		
-		// ? REMOVED: These conflicting rotation setups that cause 180° issues
+		// ? REMOVED: These conflicting rotation setups that cause 180ï¿½ issues
 		// node_ptr->SetPreRotation(FbxNode::eSourcePivot, pre_rot_quat.DecomposeSphericalXYZ());
 		// node_ptr->SetPostTargetRotation(post_rot_quat.DecomposeSphericalXYZ());
 		
@@ -1318,44 +1334,63 @@ set<string> Shader::get_referenced_objects() const
 
 shared_ptr<DDS_Texture> DDS_Texture::construct(const string& name, const uint8_t* buffer, size_t buf_size)
 {
-	DirectX::TexMetadata meta;
-	shared_ptr<DirectX::ScratchImage> image = make_shared<DirectX::ScratchImage>();
-	HRESULT hr = DirectX::LoadFromDDSMemory(buffer, buf_size, DirectX::DDS_FLAGS_NONE, &meta, *image);
-	if (SUCCEEDED(hr))
+	ensureFreeImageInitialized();
+
+	auto memory = FreeImage_OpenMemory(const_cast<BYTE*>(reinterpret_cast<const BYTE*>(buffer)), static_cast<DWORD>(buf_size));
+	if (memory == nullptr)
+		return nullptr;
+
+	std::unique_ptr<FIMEMORY, decltype(&FreeImage_CloseMemory)> memory_guard(memory, &FreeImage_CloseMemory);
+
+	FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeFromMemory(memory, 0);
+	if (format == FIF_UNKNOWN)
+		format = FIF_DDS;
+
+	FIBITMAP* bitmap = FreeImage_LoadFromMemory(format, memory, 0);
+	if (bitmap == nullptr && format != FIF_DDS)
+		bitmap = FreeImage_LoadFromMemory(FIF_DDS, memory, 0);
+
+	if (bitmap == nullptr)
+		return nullptr;
+
+	if (FreeImage_GetBPP(bitmap) != 32)
 	{
-		shared_ptr<DDS_Texture> ret_object = make_shared<DDS_Texture>();
-		ret_object->set_object_name(name);
-		ret_object->m_image = image;
-		return ret_object;
+		FIBITMAP* converted = FreeImage_ConvertTo32Bits(bitmap);
+		FreeImage_Unload(bitmap);
+		bitmap = converted;
 	}
 
-	return nullptr;
+	if (bitmap == nullptr)
+		return nullptr;
+
+	shared_ptr<DDS_Texture> ret_object = make_shared<DDS_Texture>();
+	ret_object->set_object_name(name);
+	ret_object->m_image = std::shared_ptr<FIBITMAP>(bitmap, [](FIBITMAP* image)
+		{
+			if (image != nullptr)
+				FreeImage_Unload(image);
+		});
+	return ret_object;
 }
 
 void DDS_Texture::store(const string& path, const Context& context)
 {
+	ensureFreeImageInitialized();
+
 	boost::filesystem::path out_path(path);
 
 	out_path /= m_name;
 	out_path.replace_extension("tga");
-	out_path.normalize();
+	out_path = out_path.lexically_normal();
 
 	auto directory = out_path.parent_path();
 	if (!boost::filesystem::exists(directory))
 		boost::filesystem::create_directories(directory);
 
-	auto image = m_image->GetImage(0, 0, 0);
-	const DirectX::Image* out_image = nullptr;
-	DirectX::ScratchImage decompressed;
-	if (DirectX::IsCompressed(image->format))
+	if (!FreeImage_Save(FIF_TARGA, m_image.get(), out_path.string().c_str(), 0))
 	{
-		DirectX::Decompress(*image, DXGI_FORMAT_R8G8B8A8_UNORM, decompressed);
-		out_image = decompressed.GetImage(0, 0, 0);
+		throw std::runtime_error("Failed to write texture to " + out_path.string());
 	}
-	else
-		out_image = image;
-
-	DirectX::SaveToTGAFile(*out_image, out_path.wstring().c_str());
 }
 
 bool Animation::is_object_correct() const
@@ -1401,9 +1436,6 @@ std::string Animation::get_object_name() const
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
 
 
 

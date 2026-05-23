@@ -103,6 +103,8 @@ private:
 	std::string m_name;
 };
 
+struct FIBITMAP;
+
 class DDS_Texture : public Base_object
 {
 public:
@@ -118,7 +120,7 @@ public:
 
 private:
 	std::string m_name;
-	std::shared_ptr<DirectX::ScratchImage> m_image = nullptr;
+	std::shared_ptr<FIBITMAP> m_image = nullptr;
 };
 
 class Shader : public Base_object
@@ -172,7 +174,7 @@ public:
 		filter_mode mipmap;
 		filter_mode minification;
 		filter_mode magnification;
-		texture_type texture_type;
+		texture_type type;
 		std::string texture_tag;
 		std::string tex_file_name;
 	};

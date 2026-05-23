@@ -63,7 +63,7 @@ void sht_parser::parse_data(const string & name, uint8_t * data_ptr, size_t data
     this_texture.mipmap = Shader::filter_mode(buffer.read_uint8());
     this_texture.minification = Shader::filter_mode(buffer.read_uint8());
     this_texture.magnification = Shader::filter_mode(buffer.read_uint8());
-    this_texture.texture_type = Shader::get_texture_type(this_texture.texture_tag);
+    this_texture.type = Shader::get_texture_type(this_texture.texture_tag);
   }
   else if (name == "NAME" && m_texture_mode)
   {

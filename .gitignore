@@ -12,6 +12,7 @@
 [Rr]elease/
 x64/
 build/
+build-*/
 bld/
 [Bb]in/
 [Oo]bj/
@@ -63,6 +64,14 @@ Boost/**
 zlib/**
 lib/**
 .vs/**
+/.third_party/
+/.downloads/
+/.sdk/
+/.xwin/
+/.xwin-cache/
+/.llvm-win-tools/
+/out/
+CMakeUserPresets.json
 
 
 # Chutzpah Test files

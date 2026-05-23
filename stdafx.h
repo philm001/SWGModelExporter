@@ -12,12 +12,17 @@
 #include "targetver.h"
 
 #include <stdio.h>
-#include <tchar.h>
 #include <assert.h>
+
+#ifdef _WIN32
+#include <tchar.h>
+#endif
 
 
 // TODO: reference additional headers your program requires here
+#ifdef _WIN32
 #include <Windows.h>
+#endif
 
 // STL
 #include <cctype>
@@ -43,7 +48,6 @@
 #include <zlib.h>
 
 // boost
-#include <boost/progress.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -53,10 +57,7 @@
 //#pragma comment(lib, "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2016.1.2\\lib\\vs2015\\x64\\debug\\libfbxsdk-mt.lib")
 ////#include "C:\Program Files\Autodesk\FBX\FBX SDK\2016.1.2\include\fbxsdk.h"
 //#pragma comment(lib, "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2020.0.1\\lib\\vs2017\\x64\\debug\\libfbxsdk-mt.lib")
-#include "C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include\fbxsdk.h"
-
-// DirectXTex
-#include <DirectXTex.h>
+#include <fbxsdk.h>
 
 // Custom Logger
 #include "Logger.h"
